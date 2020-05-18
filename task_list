@@ -1,0 +1,16 @@
+Task List
+
+Week 1
+
+2017 Point-by-Point data:
+make player column
+
+2017 point-by-point importance data.
+do players handle important points differently? If so, why? Serve speed, return speed?
+
+match data (could do non-GS and the GS).
+make player column
+make plot for a particular player
+
+Keep track missing values, and see if you can figure out where they come from.
+Figure out what each relevant variable means and is recording.
