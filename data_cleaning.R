@@ -168,6 +168,12 @@ ggplot(data = wta_df, aes(x = importance, y = serverwin)) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
   stat_smooth()
 
+##Kovalchik & Ingram Hot heads, cool heads, and tacticians: Measuring the mental game in tennis found this pattern as well....is it fewer aces?
+##slower serves? more double faults? longer rallies? worse placement?
+##more returns in?
+
+
+
 ## plot empirical probabilities for the higher importance levels:
 atp_df %>% filter(importance > 0.25) %>%
   group_by(factor(importance)) %>%
