@@ -80,6 +80,7 @@ allslams2017 <- allslams2017 %>% group_by(match_id) %>%
     settotal == 4 & setaddition == 7 ~ "1-3",
     settotal == 5 & setaddition == 7 ~ "3-2",
     settotal == 5 & setaddition == 8 ~ "2-3"))
+
 allslams2017 %>% select(set_score, everything())
 
 ## similarly, create variables for game score and point score
