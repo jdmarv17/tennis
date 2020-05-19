@@ -115,7 +115,7 @@ roger_rafa <-
 
 *how can we merge importance with allslams2017_long?*
 
-
+ 
 ```{r}
 # serverwin vs importance for Roger, Rafa
 # same strategy as before -- subset atp_df with selected players then plot
@@ -129,11 +129,18 @@ selected_players <-
          player_name == "Rafael Nadal" |
       player_name == "Novak Djokovic") %>%
   select(player_name, player_num, PointServer, serverwin, everything()) %>%
+  mutate(returnerwin = case_when(
+    PointServer == 1 & PointWinner == 1 ~ 0,
+    PointServer == 1 & PointWinner == 2 ~ 1,
+    PointServer == 2 & PointWinner == 1 ~ 1,
+    PointServer == 2 & PointWinner == 2 ~ 0)) %>%
   filter((player_num == "player1" & PointServer == 1) |
       player_num == "player2" & PointServer == 2)
 ## does this last filter solve the issue? if interested in serve metrics,
 ## would only care about points where the server was the same as the 
 ## player_num? Then would have a separate plot for returning?
+
+## added returnerwin column to see opposite
 
 ## this is pretty surprising though....I would not have expected such
 ## a strong pattern anyway
@@ -142,6 +149,18 @@ selected_players <-
 ggplot(selected_players, aes(importance, serverwin, color = player_name)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) 
+
+ggplot(selected_players, aes(Speed_MPH, serverwin, color = player_name)) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
+
+
+ggplot(selected_players, aes(importance, returnerwin, color = player_name)) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
+# pretty interesting that each players' trend flips for returning
+
+ggplot(selected_players, aes(importance, Speed_MPH, color = player_name)) +
+  geom_point()
+# cant figure out where the 0's are coming from. Most aren't double faults so why are they recorded as 0 MPH?
 ```
 *same surprising result*
 *especially with Roger and Rafa I would expect better performance at higher importance*

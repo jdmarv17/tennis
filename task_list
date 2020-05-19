@@ -5,7 +5,7 @@ Link to match data: https://github.com/JeffSackmann/tennis_atp
 Week 1
 
 2017 Point-by-Point data:
-make player column ## done but potential complication
+make player column          ## done but potential complication
 
 2017 point-by-point importance data.
 do players handle important points differently? If so, why? Serve speed, return speed?
