@@ -16,3 +16,14 @@ make plot for a particular player ## made plot for all players and plot for Roge
 
 Keep track missing values, and see if you can figure out where they come from.
 Figure out what each relevant variable means and is recording.
+
+
+Mixed Effects Models (thinking about serving player as one random effect and
+returning player as another random effect)
+PDM Model: http://www.sloansportsconference.com/wp-content/uploads/2016/02/1464-Hot-heads-cool-heads-and-tacticians.pdf
+
+intro to mixed effecs: beginning through controlling for non-independence
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5970551/
+
+mixed effects tutorial
+https://www.jaredknowles.com/journal/2014/5/17/mixed-effects-tutorial-2-fun-with-mermod-objects
