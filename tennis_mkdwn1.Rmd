@@ -104,7 +104,7 @@ allslams2017_long %>%
     player_number == "player2" & PointWinner == 1 ~ 0,
     player_number == "player2" & PointWinner == 2 ~ 1))
 
-roger_rafa< -
+roger_rafa <-
   allslams2017_long %>%
   subset(., player_name == "Rafael Nadal"| player_name == "Roger Federer")
 
@@ -126,8 +126,19 @@ selected_players <-
                names_to = "player_num",
                values_to = "player_name") %>%
   subset(player_name == "Roger Federer" |
-         player_name == "Rafael Nadal")
+         player_name == "Rafael Nadal" |
+      player_name == "Novak Djokovic") %>%
+  select(player_name, player_num, PointServer, serverwin, everything()) %>%
+  filter((player_num == "player1" & PointServer == 1) |
+      player_num == "player2" & PointServer == 2)
+## does this last filter solve the issue? if interested in serve metrics,
+## would only care about points where the server was the same as the 
+## player_num? Then would have a separate plot for returning?
 
+## this is pretty surprising though....I would not have expected such
+## a strong pattern anyway
+## it might be interesting to look at all the matches for the year, not
+## just GS matches and see if the pattern holds up.
 ggplot(selected_players, aes(importance, serverwin, color = player_name)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) 
