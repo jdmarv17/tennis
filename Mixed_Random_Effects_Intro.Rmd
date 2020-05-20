@@ -119,9 +119,14 @@ coef(mod_random)
 Finally, we can look into plotting the results. There, unfortunately isn't an easy way to do this that I know of, and `fortify()` won't work on random effects models. Ideally, you'd want the global fit as a big line and then the lines for each subject as little smaller lines. But I couldn't immediately figure out how to make a line for the global fit so we can just leave that off for now. The line for the global fit would just plug in a `0` for all random effects, so if you really wanted to, you could do this by hand by grabbing the fixed effect intercept and slope and manually drawing on a line with `geom_abline`. 
 
 ```{r}
+newdat <- data.frame(servingplayer = c("Global", "Global"), importance = c(min(small_df$importance,
+  na.rm = TRUE), max(small_df$importance, na.rm = TRUE)))
+predict(mod_random, newdata= newdat, re.form = ~0)
+
+
 ggplot(small_df, aes(x = importance, y = serverwin, colour = servingplayer)) +
   geom_point() +
-  geom_line(aes(y = predict(mod_random), group = servingplayer), size = 2)  + ##the line above this should be changed to be a global fit.
+  geom_line(data = newdat, aes(y = predict(mod_random, newdata = newdat, re.form = ~0)), size = 2)  + ##the line above this should be changed to be a global fit.
   geom_line(aes(y = predict(mod_random), group = servingplayer))  +
   theme_grey(base_size=17) 
 ```
