@@ -120,6 +120,7 @@ roger_rafa <-
 # serverwin vs importance for Roger, Rafa
 # same strategy as before -- subset atp_df with selected players then plot
 
+#big 3
 selected_players <-
   atp_df %>%
   pivot_longer(., cols = c(player1, player2),
@@ -136,11 +137,22 @@ selected_players <-
     PointServer == 2 & PointWinner == 2 ~ 0)) %>%
   filter((player_num == "player1" & PointServer == 1) |
       player_num == "player2" & PointServer == 2)
-## does this last filter solve the issue? if interested in serve metrics,
-## would only care about points where the server was the same as the 
-## player_num? Then would have a separate plot for returning?
 
-## added returnerwin column to see opposite
+# all players
+all_players <- 
+  atp_df %>%
+  pivot_longer(., cols = c(player1, player2),
+               names_to = "player_num",
+               values_to = "player_name") %>%
+  select(player_name, player_num, PointServer, serverwin, everything()) %>%
+  mutate(returnerwin = case_when(
+    PointServer == 1 & PointWinner == 1 ~ 0,
+    PointServer == 1 & PointWinner == 2 ~ 1,
+    PointServer == 2 & PointWinner == 1 ~ 1,
+    PointServer == 2 & PointWinner == 2 ~ 0)) %>%
+  filter((player_num == "player1" & PointServer == 1) |
+      player_num == "player2" & PointServer == 2)
+  
 
 ## this is pretty surprising though....I would not have expected such
 ## a strong pattern anyway
@@ -158,11 +170,56 @@ ggplot(selected_players, aes(importance, returnerwin, color = player_name)) +
   stat_smooth(method = "glm", method.args = c("binomial"))
 # pretty interesting that each players' trend flips for returning
 
+# no apparent patter for big 3
 ggplot(selected_players, aes(importance, Speed_MPH, color = player_name)) +
   geom_point()
-# cant figure out where the 0's are coming from. Most aren't double faults so why are they recorded as 0 MPH?
+
+#no apparent patten for all players
+ggplot(all_players, aes(importance, Speed_MPH)) +
+  geom_point()
 ```
 *same surprising result*
 *especially with Roger and Rafa I would expect better performance at higher importance*
-
 *maybe the higher importance motivates the returner more than the server for some reason??*
+
+
+```{r}
+#replace 0's in Speed_MPH with NA
+cleaned_selected_players <-
+  selected_players %>%
+  mutate(ServeSpeed = ifelse(Speed_MPH == 0 & doublefault == 0, NA, 
+                            ifelse(Speed_MPH == 0 & doublefault == 1, 0,
+                                   ifelse(Speed_MPH != 0, parse_number(Speed_MPH), NULL))))
+
+cleaned_selected_players <-
+  selected_players %>%
+  mutate(ServeSpeed = case_when(
+    Speed_MPH == 0 & doublefault == 0 ~ NA,
+    Speed_MPH == 0 & doublefault == 1 ~ 0,
+    Speed_MPH != 0 ~ Speed_MPH
+  ))
+# need help here, cant figure out a way to get rid of 0's if doublefault == 0 and Speed_MPH == 0
+
+# No NA's in Speed_MPH
+any(is.na(all_players$Speed_MPH))
+```
+
+
+```{r}
+# does importance impact return depth?
+
+# big 3 (make indicator for whether it was deep)
+selected_players %>%
+  mutate(ReturnDeep = ifelse(ReturnDepth == "D", 1, 0), na.rm = T) %>%
+  ggplot(., aes(importance, ReturnDeep)) +
+  stat_smooth(method = "glm", method.args = "binomial") +
+  coord_cartesian(ylim = c(0, 1))
+
+# all players (make indicator for whether it was deep)
+all_players %>%
+  mutate(ReturnDeep = ifelse(ReturnDepth == "D", 1, 0), na.rm = T) %>%
+  ggplot(., aes(importance, ReturnDeep)) +
+  stat_smooth(method = "glm", method.args = "binomial") +
+  coord_cartesian(ylim = c(0, 1))
+```
+*looks like big 3 are slightly better at getting the return deep than all players*

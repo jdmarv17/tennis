@@ -5,13 +5,16 @@ Link to match data: https://github.com/JeffSackmann/tennis_atp
 Week 1
 
 2017 Point-by-Point data:
-make player column          ## done but potential complication
+make player column         
+## done 
 
 2017 point-by-point importance data.
-do players handle important points differently? If so, why? Serve speed, return speed?
+do players handle important points differently? If so, why? Serve speed, return speed? 
+## points in importance vs Speed_MPH dont appear to have a pattern
+## looked at big 3 specifically and all players
 
 match data (could do non-GS and the GS). ## made separate df for each
-make player column ## done but potential complocation
+make player column ## done 
 make plot for a particular player ## made plot for all players and plot for Roger, Rafa
 
 Keep track missing values, and see if you can figure out where they come from.
@@ -27,3 +30,10 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5970551/
 
 mixed effects tutorial
 https://www.jaredknowles.com/journal/2014/5/17/mixed-effects-tutorial-2-fun-with-mermod-objects
+
+
+get rid of speed_mph after replacing 0's with na
+# need help here
+
+look for NA's in speed_mph
+# No NA's in Speed_MPH

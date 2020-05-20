@@ -36,3 +36,9 @@ coef(mod) ## coef are random effects plus fixed effects
 
 ## could then make a plot with a line for each player, importance (or whatever)
 ## on x-axis and whether the player won the point on the y-axis.
+
+ggplot(test_df, aes(serverwin, importance, color = servingplayer)) +
+  geom_point() +
+  geom_line(aes(y = predict(mod)))
+
+

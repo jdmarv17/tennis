@@ -1,0 +1,137 @@
+---
+title: "Mixed_Random_Effects_Practice"
+author: "Josh Marvald"
+date: "5/20/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(lme4)
+```
+
+```{r}
+# following guide to make data frames
+atp_practice_df<- atp_df %>% group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 14 & is.na(name) == FALSE)
+
+atp_practice2 <- atp_df %>% filter(player1 %in% atp_practice_df$name &
+    player2 %in% atp_practice_df$name)
+
+atp_small_df <- atp_practice2 %>% mutate(servingplayer = case_when(PointServer == 1 ~ player1,
+  PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2,
+    PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance) == FALSE)
+```
+
+
+```{r}
+# different models 
+
+# atp_mod1 has random slopes and intercepts for servingplayer and returningplayer
+atp_mod1 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer) + 
+                   (1 + returningplayer| returningplayer), data = atp_small_df)
+summary(atp_mod1)
+
+# atp_mod2 has random intercept and slope for servingplayer
+atp_mod2 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer), data = atp_small_df)
+summary(atp_mod2)
+
+#atp_mod3 has random intercept and slope for servingplayer and slam -- maybe surface improves model
+atp_mod3 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer) +
+                   (1 + slam | slam), data = atp_small_df)
+summary(atp_mod3)
+
+# atp_mod4 has random intercept and slope for slam
+atp_mod4 <- lmer(serverwin ~ importance + (1 + slam | slam), data = atp_small_df)
+summary(atp_mod4)
+```
+
+
+```{r}
+# trying out new functions
+predict(atp_mod2)
+ranef(atp_mod2)
+coef(atp_mod2)
+```
+
+
+```{r}
+# following Mixed_Random_Effects_Intro 
+new_df <- data.frame(servingplayer = c("Global", "Global"), returningplayer = c("Global", "Global"), importance = c(min(atp_small_df$importance, na.rm = TRUE), max(atp_small_df$importance, na.rm = TRUE)))
+
+predict(atp_mod1, newdata = new_df, re.form = ~0)
+
+# plot for mixed model effect with random slopes and intercepts with 2 random effects
+ggplot(atp_small_df, aes(x = importance, y = serverwin, color = servingplayer)) +
+  geom_point() +
+  geom_line(data = new_df, aes(y = predict(atp_mod1, newdata = new_df, re.form = ~0)), size = 2) + 
+  geom_line(aes(y = predict(atp_mod1), group = servingplayer))  +
+  theme_bw() 
+```
+*Im still surprised how most players trend downwards as importance goes up*
+*if there is someway to figure out why this is the case it could be an interesting result I think*
+
+
+```{r}
+# following Mixed_Random_Effects_Intro 
+new_df2 <- data.frame(servingplayer = c("Global", "Global"), importance = c(min(atp_small_df$importance,
+  na.rm = TRUE), max(atp_small_df$importance, na.rm = TRUE)))
+
+# plot for mixed effects model with random intercept and slopes with 1 random effect
+ggplot(atp_small_df, aes(x = importance, y = serverwin, colour = servingplayer)) +
+  geom_point() +
+  geom_line(data = new_df2, aes(y = predict(atp_mod2, newdata = new_df2, re.form = ~0)), size = 2)  + 
+  geom_line(aes(y = predict(atp_mod2), group = servingplayer))  +
+  theme_bw() 
+```
+*taking out returningplayer didnt change intercepts much*
+
+```{r}
+new_df3 <- data.frame(servingplayer = c("Global", "Global"), slam = c("Global", "Global"), importance = c(min(atp_small_df$importance, na.rm = TRUE), max(atp_small_df$importance, na.rm = TRUE)))
+
+# plot for mixed effects model with random intercept and slopes with slam and servingplayer
+ggplot(atp_small_df, aes(x = importance, y = serverwin, colour = servingplayer)) +
+  geom_point() +
+  geom_line(data = new_df3, aes(y = predict(atp_mod3, newdata = new_df3, re.form = ~0)), size = 2)  + 
+  geom_line(aes(y = predict(atp_mod3), group = servingplayer))  +
+  theme_bw() 
+```
+
+
+```{r}
+new_df4 <- data.frame(slam = c("Global", "Global"), importance = c(min(atp_small_df$importance, na.rm = TRUE), max(atp_small_df$importance, na.rm = TRUE)))
+
+# plot for mixed effects model with random intercept and slopes with slam 
+ggplot(atp_small_df, aes(x = importance, y = serverwin, colour = slam)) +
+  geom_point() +
+  geom_line(data = new_df4, aes(y = predict(atp_mod4, newdata = new_df4, re.form = ~0)), size = 2)  + 
+  geom_line(aes(y = predict(atp_mod4), group = slam))  +
+  theme_bw() 
+```
+
+
+```{r}
+
+AIC(atp_mod1)
+BIC(atp_mod1)
+
+AIC(atp_mod2)
+BIC(atp_mod2)
+
+AIC(atp_mod3)
+BIC(atp_mod3)
+
+AIC(atp_mod4)
+BIC(atp_mod4)
+```
+*models seem to perfrom similarly*
+*this surprises me considering how different the slopes are at certain importance levels*
+*slam didnt improve model for atp_mod3*
+
