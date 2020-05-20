@@ -1,0 +1,127 @@
+---
+title: "Random Effects Introduction"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+  results = "hide")
+```
+
+Let's suppose that we just want to model probability of winning a point based on importance and the serving player for just 3 players in the WTA. Based on the Kovalchik paper (and they also reference a couple of others), for this type of data, the normal regression model gives approximately the same results as a logistic regression model. Therefore, probably for computational reasons, the authors use the normal model. 
+
+```{r}
+source("data_cleaning.R")
+
+
+player1df <- wta_df %>% group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 17 & is.na(name) == FALSE)
+
+wta3 <- wta_df %>% filter(player1 %in% player1df$name &
+    player2 %in% player1df$name)
+
+## create a serving player variable
+small_df <- wta3 %>% mutate(servingplayer = case_when(PointServer == 1 ~ player1,
+  PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2,
+    PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance) == FALSE)
+
+```
+
+In STAT 213, all models were fixed effects. The model would be:
+
+$$
+Y = \beta_0 + \beta_1 importance + \beta_2 PliskIND + \beta_3 WilliamsIND + \epsilon
+$$
+
+where $PliskIND$ is a 1 if Pliskova is serving and a 0 otherwise and $WilliamsIND$ is a 1 if Venus Williams is serving and a 0 otherwise. Finally, $\epsilon \sim N(0, \sigma^2_{\epsilon})$. In `R`, you would fit the model as:
+
+```{r}
+mod_fixed <- lm(serverwin ~ importance + servingplayer, data = small_df)
+summary(mod_fixed)
+```
+
+To plot the model, you did something like:
+
+```{r}
+fortmod_fixed <- fortify(mod_fixed)
+ggplot(data = fortmod_fixed, aes(x = importance, y = serverwin, colour = 
+    servingplayer)) +
+  geom_point() +
+  geom_line(aes(y = .fitted), size = 1.25)
+```
+
+This was the parallel lines model since each group (player) has the same slope, but is allowed to have a different intercept.
+
+#####Random Effects
+
+The corresponding random effects model has serving player as a "random", not "fixed" effect. Writing out the model,
+
+$$
+Y = \beta_0 + \beta_1 importance + \alpha_1 u_1 + \alpha_2 u_2 + \alpha_3 u_3 + \epsilon,
+$$
+
+where $u_1$ is a 1 if Ostapenko is serving and a 0 otherwise, $\alpha_1$ is the "effect" of Jelena Ostapenko serving, $u_2$ is a 1 if Pliskova is serving and a 0 otherwise, $\alpha_2$ is the "effect" of Pliskova serving, .... etc. Just like the fixed effects model, $\epsilon \sim N(0, \sigma^2_{\epsilon})$.
+
+But, instead of being "fixed", like $\beta_1$, which is an unknown constant, the $\alpha$'s are assumed to be random, which is where the names random effects model (since the $\alpha$'s are random) and mixed effects model (since we have both random and fixed effects in this model) come from. In particular,
+
+$\alpha_1 \sim N(0, \sigma_a^2)$, $\alpha_2 \sim N(0, \sigma_a^2)$, $\alpha_3 \sim N(0, \sigma_a^2)$ so that each player effect is random, not fixed. Based on our model, we can still predict what each player's random effect is though. One advantage of fitting this type of model is that, if we have another player who is in the same "population" as Ostapenko, Pliskova, and Williams, we can "predict" the server win probability for varying values of point importance. This "prediction" will be what we get when we plug in a 0 for each $u$. We couldn't do this with a fixed effects model, where plugging in a 0 for each indicator variable would have only given us a prediction for the reference group.
+
+There is also a constraint in this model that $\alpha_1 + \alpha_2 + \alpha_3 = 0$, so that all player "effects" need to sum to 0. Since the player effects sum to 0, $\beta_0$ can be viewed as a kind of "global" intercept. This model also assumes that the association between importance and server winning the point is the same for each player (so that the slope is the same for each player). 
+
+Fitting the random effects model in `R`, the notation is slightly different. We need to use another package and we also need a way to tell `R` which effects we want as fixed and which effects we want as random (since it doesn't know just on its own).
+
+The following code says that we want importance as a fixed effect (these are specified in the same way as the fixed effects models from STAT 213). To specify a random effect, the convention for this package is to put the random effect on the right side of a `|`. Then, on the left side of the `|`, you put whether you want there to be random intercepts (by putting a `1` for intercept) or random slopes and intercepts (by putting a `1 + name_of_predictor`). For now, we want this to match up with what we did before, so we can stick with random intercepts.
+
+```{r}
+library(lme4)
+mod_random <- lmer(serverwin ~ importance + (1 | servingplayer), data = small_df)
+summary(mod_random)
+```
+
+The output is also a little bit different. The first major thing is a header called `Random Effects`. This gives $\hat{\sigma}^2_a$ (0.002592 in this example) as well as $\hat{\sigma}^2_{\epsilon}$ (0.239488 in this example). It also tells you the total number of observations as well as the number of groups for the random effect.
+
+The fixed effects output should look super similar to stuff you've seen before. There is a "global" intercept estimate as well as an estimated fixed effect of the slope for importance. We can also obtain some more information about the fixed effects:
+
+```{r}
+fixef(mod_random) ## will give just the fixed effects
+sigma(mod_random) ## will give \hat{\sigma}_{epsilon}
+predict(mod_random) ## gives the predicted probability of the server 
+## winning for each point.
+```
+
+We can also look at the random effects with
+
+```{r}
+ranef(mod_random)
+```
+
+The first prediction from `predict` is $0.6364268$. It might be helpful to see where this prediction is coming from.
+
+```{r}
+small_df[1, c("servingplayer", "importance", "serverwin")]
+0.61885 + -0.08609 * 0.03198296 + 0.02032915 * 1 ## a tiny bit off due to
+## rounding of the fixed effects in the output.
+```
+
+Finally, `coef` gives the random effects plus the fixed effects for each player. This isn't anything special: it's just a convenient way of adding the fixed intercept from `fixef(mod_random)` to each player's random effect from `ranef(mod_random)`.
+
+```{r}
+coef(mod_random)
+```
+
+Finally, we can look into plotting the results. There, unfortunately isn't an easy way to do this that I know of, and `fortify()` won't work on random effects models. Ideally, you'd want the global fit as a big line and then the lines for each subject as little smaller lines. But I couldn't immediately figure out how to make a line for the global fit so we can just leave that off for now. The line for the global fit would just plug in a `0` for all random effects, so if you really wanted to, you could do this by hand by grabbing the fixed effect intercept and slope and manually drawing on a line with `geom_abline`. 
+
+```{r}
+ggplot(small_df, aes(x = importance, y = serverwin, colour = servingplayer)) +
+  geom_point() +
+  geom_line(aes(y = predict(mod_random), group = servingplayer), size = 2)  + ##the line above this should be changed to be a global fit.
+  geom_line(aes(y = predict(mod_random), group = servingplayer))  +
+  theme_grey(base_size=17) 
+```
