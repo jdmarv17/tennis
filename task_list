@@ -37,3 +37,6 @@ get rid of speed_mph after replacing 0's with na
 
 look for NA's in speed_mph
 # No NA's in Speed_MPH
+
+I think some of the importance values are missing because they involve a 5th set that went to 8-6, 9-7, etc. The original importance data set didn't have importance values for these....they need to be manually created. A point at 0-0 at 5-5 in the 5th set should have the same importance as a point at 0-0 at 6-6 in the 5th set, etc. 
+This will be a little tricky because (1) need to split by men and women first since women need the same thing done but for the 3rd set and (2) need to be careful not to do this for the U.S. Open (the only slam that has a 5th set / 3rd set tiebreak). 

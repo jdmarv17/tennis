@@ -39,18 +39,40 @@ atp_mod1 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer) +
                    (1 + returningplayer| returningplayer), data = atp_small_df)
 summary(atp_mod1)
 
+## change to....
+atp_mod1 <- lmer(serverwin ~ importance + (1 + importance | servingplayer) + 
+                   (1 + importance| returningplayer), data = atp_small_df)
+summary(atp_mod1)
+## there is a warning that said the original was "singular"....this isn't
+## super important but a warning that a matrix is singular is bad...
+## we can talk about this more when we chat
+## the random slope model should allow a different slope between importance
+## and server win for each player. Therefore, importance needs to be on the 
+## Left of the | 
+
 # atp_mod2 has random intercept and slope for servingplayer
-atp_mod2 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer), data = atp_small_df)
+atp_mod2 <- lmer(serverwin ~ importance + (1 + importance | servingplayer), data = atp_small_df)
 summary(atp_mod2)
 
 #atp_mod3 has random intercept and slope for servingplayer and slam -- maybe surface improves model
-atp_mod3 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer) +
-                   (1 + slam | slam), data = atp_small_df)
+atp_mod3 <- lmer(serverwin ~ importance + (1 + importance | servingplayer) +
+                   (1 + importance | slam), data = atp_small_df)
 summary(atp_mod3)
+## probably want to change slam to be a fixed effect. There are only 4 slams ever
+## so that may make more sense. 
+## Can also think about it another way: the model needs to estimate 
+## $\hat{\sigma}_{slam}$, and, with just 4 slams, estimating the variance
+## of 4 things is __really__ difficult.
+## If you want slopes to differ by slam, can add the usual fixed
+## effect interaction
+
 
 # atp_mod4 has random intercept and slope for slam
-atp_mod4 <- lmer(serverwin ~ importance + (1 + slam | slam), data = atp_small_df)
+atp_mod4 <- lmer(serverwin ~ importance + (1 + importance | slam), data = atp_small_df)
 summary(atp_mod4)
+## same here....it's probably too difficult to estimate a variance
+## for the slam intercept and a variance for the slam slope with just
+## 4 slams.
 ```
 
 
@@ -134,4 +156,6 @@ BIC(atp_mod4)
 *models seem to perfrom similarly*
 *this surprises me considering how different the slopes are at certain importance levels*
 *slam didnt improve model for atp_mod3*
+
+<!-- I think you might get different results here after getting rid of those singularity problems -->
 
