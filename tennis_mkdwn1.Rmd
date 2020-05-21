@@ -82,8 +82,14 @@ players <-
   
 ggplot(players, aes(x = serve_percentage, y = win, color = winner_name)) +
   geom_jitter(height = 0.12, alpha = 0.1) +
-  stat_smooth(method = "glm", method.args = c("binomial")) 
-  
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  coord_cartesian(ylim = c(0, 1))
+
+ggplot(gs_matches_long, aes(serve_percentage, win)) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  coord_cartesian(ylim = c(0, 1))
+
+# is it possible to overlay these plots on each other?
 ```
 *general trend for each is as expected*
 *serve seems to be more of a deciding factor for Rafa*
@@ -162,15 +168,18 @@ ggplot(selected_players, aes(importance, serverwin, color = player_name)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) 
 
-ggplot(selected_players, aes(Speed_MPH, serverwin, color = player_name)) +
-  stat_smooth(method = "glm", method.args = c("binomial"))
 
+ggplot(selected_players, aes(Speed_MPH, serverwin, color = player_name)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
+# this one doesnt quite make sense to me
+# the 0's in Speed_MPH are messing this up a bit
 
 ggplot(selected_players, aes(importance, returnerwin, color = player_name)) +
   stat_smooth(method = "glm", method.args = c("binomial"))
 # pretty interesting that each players' trend flips for returning
 
-# no apparent patter for big 3
+# no apparent pattern for big 3
 ggplot(selected_players, aes(importance, Speed_MPH, color = player_name)) +
   geom_point()
 

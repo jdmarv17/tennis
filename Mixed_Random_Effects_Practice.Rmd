@@ -35,9 +35,9 @@ atp_small_df <- atp_practice2 %>% mutate(servingplayer = case_when(PointServer =
 # different models 
 
 # atp_mod1 has random slopes and intercepts for servingplayer and returningplayer
-atp_mod1 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer) + 
-                   (1 + returningplayer| returningplayer), data = atp_small_df)
-summary(atp_mod1)
+# atp_mod1 <- lmer(serverwin ~ importance + (1 + servingplayer | servingplayer) + 
+#                   (1 + returningplayer| returningplayer), data = atp_small_df)
+#summary(atp_mod1)
 
 ## change to....
 atp_mod1 <- lmer(serverwin ~ importance + (1 + importance | servingplayer) + 
@@ -56,7 +56,7 @@ summary(atp_mod2)
 
 #atp_mod3 has random intercept and slope for servingplayer and slam -- maybe surface improves model
 atp_mod3 <- lmer(serverwin ~ importance + (1 + importance | servingplayer) +
-                   (1 + importance | slam), data = atp_small_df)
+                   (1 | slam), data = atp_small_df)
 summary(atp_mod3)
 ## probably want to change slam to be a fixed effect. There are only 4 slams ever
 ## so that may make more sense. 
@@ -68,7 +68,7 @@ summary(atp_mod3)
 
 
 # atp_mod4 has random intercept and slope for slam
-atp_mod4 <- lmer(serverwin ~ importance + (1 + importance | slam), data = atp_small_df)
+atp_mod4 <- lmer(serverwin ~ importance + (1 | slam), data = atp_small_df)
 summary(atp_mod4)
 ## same here....it's probably too difficult to estimate a variance
 ## for the slam intercept and a variance for the slam slope with just
