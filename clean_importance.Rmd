@@ -14,17 +14,47 @@ atp_importance_USopen <- atp_importance5
 
 # dont know what to put for importance since it is the importance from another row 
 # within the data
-atp_importance_Otherslams <-
-  atp_importance5 %>%
-  add_row(., serve_game = 6, return_game = 6, serve_set = 2, return_set = 6, serve_point = 0, return_point = 0, importance = ______) %>%
-  mutate(importance2 = case_when(
-    serve_set == return_set & serve_game == return_game & serve_point == return_point ~  ,
-    serve_set == return_set & serve_game == return_game & serve_point == return_point + 1 ~
-  ))
+# atp_importance_Otherslams <-
+#   atp_importance5 %>%
+#   add_row(., serve_game = 6, return_game = 6, serve_set = 2, return_set = 6, serve_point = 0, return_point = 0, 
+#     importance = hmmm)  %>%
+#   mutate(importance2 = case_when(
+#     serve_set == return_set & serve_game == return_game & serve_point == return_point ~  ,
+#     serve_set == return_set & serve_game == return_game & serve_point == return_point + 1 ~
+#   ))
 # how can I tell R to set the value to the importance value from a different row?
 
 atp_importance_Otherslams <-
   atp_importance5 %>%
   mutate(importance2 )
+
+small_df <-atp_importance5 %>% filter(serve_set == 2 & return_set == 2) %>%
+  separate(game_score, into = c("score1", "score2"), sep = "-",
+    convert = TRUE) %>%
+  filter((score1 == 5 & score2 == 6) | (score1 == 6 & score2 == 5) |
+      (score1 == 5 & score2 == 5))
+small_df2 <- small_df
+small_df2 <- small_df2 %>% mutate(score1 = score1 + 1, score2 = score2 + 1)
+
+small_df3 <- small_df2
+small_df3 <- small_df3 %>% mutate(score1 = score1 + 1, score2 = score2 + 1)
+
+new_obs <- rbind(small_df2, small_df3) %>%
+  unite("game_score", c(score1, score2), sep = "-")
+
+rbind(atp_importance5, new_obs)
 ```
+
+This is definitely not the cleanest way to do this probably, as you'd have to repeat this up until the maximum number of games.
+
+One other strategy that you could do is work with the already merged data set. You could filter out the games where a tiebreak was played at 6 all filter out all games where the scores are "less than" 5-5 and then do three case-when's:
+
+case_when(gamescore1 >=5 & gamescore2 >= 5 & gamescore1 == gamescore2 ~ "A")
+case_when(gamescore1 >=5 & gamescore2 >= 5 & (gamescore1 - gamescore2) == 1 ~ "B")
+case_when(gamescore1 >=5 & gamescore2 >= 5 & (gamescore2 - gamescore1) == 1 ~ "C")
+
+Then, you should be able to do group_by the new grouping variable and also by game score and use the fill() function from tidyr to fill in the missing values with what was observed in that group. I think this might actually be the easier route to go....this is kind of a half-formed idea so give it a shot and let me know how it goes. You could also go with the idea in this markdown but you'd probably need to end up writing a loop to keep adding games, which I'm thinking would be more of a pain....
+
+
+
 
