@@ -150,14 +150,19 @@ tmp_importance <-
   separate(game_score, into = c("score1", "score2"), sep = "-",
            convert = TRUE) %>%
   filter(score1 >= 5 & score2 >= 5) %>%
+  filter(score1 != 6 | score2 != 6 & point_score == "0-0") %>% ## these were entered in as errors 
+  ## when the original merge happened....they received importance values at 0-0
+  ## when they should not have received importance values
   mutate(grouping = case_when(
     score1 == score2 ~ "A",
     (score1 - score2) == 1 ~ "B",
     (score2 - score1) == 1 ~ "C"
   )) %>%
-  group_by(grouping) %>%
-  group_by(point_score) 
-
+  group_by(point_score, grouping) %>%
+  select(grouping, score1, score2, point_score, importance, everything()) %>%
+  fill(importance, .direction = "downup") %>%
+  arrange(grouping, point_score) 
+View(tmp_importance)
 
 
 
