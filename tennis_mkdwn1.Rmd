@@ -43,6 +43,9 @@ gs_matches_long <-
   pivot_longer(cols = c(w_first_serve_p, l_first_serve_p),
                winner_or_loser = "winner_or_loser",
                values_to = "serve_percentage")
+
+gs_matches2017 %>%
+  
 ```
 *is there anyway to pivot longer without duplicating matches?*
 *first shows winner's first serve percent, duplicate shows loser's first serve percent*
@@ -80,15 +83,21 @@ players <-
   subset(winner_name == "Roger Federer"|
          winner_name == "Rafael Nadal")
   
-ggplot(players, aes(x = serve_percentage, y = win, color = winner_name)) +
+ggplot(players, aes(x = serve_percentage, y = win)) +
   geom_jitter(height = 0.12, alpha = 0.1) +
-  stat_smooth(method = "glm", method.args = c("binomial")) +
+  geom_jitter(data = gs_matches_long) +
+  stat_smooth(method = "glm", method.args = c("binomial"), aes(color = winner_name)) +
+  stat_smooth(data = gs_matches_long, method = "glm", method.args = c("binomial")) +
   coord_cartesian(ylim = c(0, 1))
 
 ggplot(gs_matches_long, aes(serve_percentage, win)) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
   coord_cartesian(ylim = c(0, 1))
 
+
+gs_matches_long %>%
+  filter(winner_name == "Roger Federer") %>%
+  select(win)
 # is it possible to overlay these plots on each other?
 ```
 *general trend for each is as expected*
@@ -203,7 +212,7 @@ cleaned_selected_players <-
 cleaned_selected_players <-
   selected_players %>%
   mutate(ServeSpeed = case_when(
-    Speed_MPH == 0 & doublefault == 0 ~ NA,
+    Speed_MPH == 0 & doublefault == 0 ~ NA_real_,
     Speed_MPH == 0 & doublefault == 1 ~ 0,
     Speed_MPH != 0 ~ Speed_MPH
   ))
@@ -228,6 +237,12 @@ selected_players %>%
 all_players %>%
   mutate(ReturnDeep = ifelse(ReturnDepth == "D", 1, 0), na.rm = T) %>%
   ggplot(., aes(importance, ReturnDeep)) +
+  stat_smooth(method = "glm", method.args = "binomial") +
+  coord_cartesian(ylim = c(0, 1))
+
+all_players %>%
+  mutate(ReturnDeep = ifelse(ReturnDepth == "D", 1, 0), na.rm = T) %>%
+  ggplot(., aes(ReturnDeep, returnerwin)) +
   stat_smooth(method = "glm", method.args = "binomial") +
   coord_cartesian(ylim = c(0, 1))
 ```

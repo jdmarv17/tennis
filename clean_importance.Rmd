@@ -1,0 +1,30 @@
+---
+title: "clean_importance"
+author: "Josh Marvald"
+date: "5/22/2020"
+output: html_document
+---
+
+
+```{r}
+# make new importance data set for all slams except US Open
+# atp_importance5 is good for all others
+
+atp_importance_USopen <- atp_importance5
+
+# dont know what to put for importance since it is the importance from another row 
+# within the data
+atp_importance_Otherslams <-
+  atp_importance5 %>%
+  add_row(., serve_game = 6, return_game = 6, serve_set = 2, return_set = 6, serve_point = 0, return_point = 0, importance = ______) %>%
+  mutate(importance2 = case_when(
+    serve_set == return_set & serve_game == return_game & serve_point == return_point ~  ,
+    serve_set == return_set & serve_game == return_game & serve_point == return_point + 1 ~
+  ))
+# how can I tell R to set the value to the importance value from a different row?
+
+atp_importance_Otherslams <-
+  atp_importance5 %>%
+  mutate(importance2 )
+```
+
