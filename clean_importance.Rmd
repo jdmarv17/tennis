@@ -55,6 +55,16 @@ case_when(gamescore1 >=5 & gamescore2 >= 5 & (gamescore2 - gamescore1) == 1 ~ "C
 
 Then, you should be able to do group_by the new grouping variable and also by game score and use the fill() function from tidyr to fill in the missing values with what was observed in that group. I think this might actually be the easier route to go....this is kind of a half-formed idea so give it a shot and let me know how it goes. You could also go with the idea in this markdown but you'd probably need to end up writing a loop to keep adding games, which I'm thinking would be more of a pain....
 
+```{r}
+testdf <- data.frame(point = c("0-0", "0-0", "0-15", "0-0", "15-15", "15-15"),
+  group = c("A", "A", "A", "B", "B", "B"), 
+  importance = c(0.1, NA, 0.12, 0.13, NA, 0.17))
+testdf
+testdf %>% group_by(point, group) %>%
+  fill(importance, .direction = "downup")
+
+```
+
 
 ```{r}
 tmp_importance <-
