@@ -144,6 +144,26 @@ nrow(atp_df); nrow(filter(allslams2017, gender == "Men"))
 ## matches, which means some of the data where the 5th set is 9-8 doesn't
 ## get merged with the importance data....this needs to be fixed eventually.
 
+tmp_importance <-
+  atp_df %>%
+  filter(set_score == "2-2") %>%
+  separate(game_score, into = c("score1", "score2"), sep = "-",
+           convert = TRUE) %>%
+  filter(score1 >= 5 & score2 >= 5) %>%
+  mutate(grouping = case_when(
+    score1 == score2 ~ "A",
+    (score1 - score2) == 1 ~ "B",
+    (score2 - score1) == 1 ~ "C"
+  )) %>%
+  group_by(grouping) %>%
+  group_by(point_score) 
+
+
+
+
+
+
+
 placeholder_df <- allslams2017 %>% filter(gender == "Women") 
 wta_df <- right_join(wta_importance_ad, placeholder_df,
     by = c("point_score", "game_score", "set_score"))

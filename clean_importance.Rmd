@@ -5,6 +5,11 @@ date: "5/22/2020"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+```
+
+
 
 ```{r}
 # make new importance data set for all slams except US Open
@@ -80,7 +85,8 @@ tmp_importance <-
     (score2 - score1) == 1 ~ "C"
   )) %>%
   group_by(grouping) %>%
-  group_by(point_score)
+  group_by(point_score) 
+
 
   
 ```
