@@ -24,9 +24,9 @@ atp_importance_USopen <- atp_importance5
 #   ))
 # how can I tell R to set the value to the importance value from a different row?
 
-atp_importance_Otherslams <-
-  atp_importance5 %>%
-  mutate(importance2 )
+#atp_importance_Otherslams <-
+ # atp_importance5 %>%
+ # mutate(importance2 )
 
 small_df <-atp_importance5 %>% filter(serve_set == 2 & return_set == 2) %>%
   separate(game_score, into = c("score1", "score2"), sep = "-",
@@ -42,7 +42,7 @@ small_df3 <- small_df3 %>% mutate(score1 = score1 + 1, score2 = score2 + 1)
 new_obs <- rbind(small_df2, small_df3) %>%
   unite("game_score", c(score1, score2), sep = "-")
 
-rbind(atp_importance5, new_obs)
+atp_importance_new <- rbind(atp_importance5, new_obs)
 ```
 
 This is definitely not the cleanest way to do this probably, as you'd have to repeat this up until the maximum number of games.
@@ -55,6 +55,25 @@ case_when(gamescore1 >=5 & gamescore2 >= 5 & (gamescore2 - gamescore1) == 1 ~ "C
 
 Then, you should be able to do group_by the new grouping variable and also by game score and use the fill() function from tidyr to fill in the missing values with what was observed in that group. I think this might actually be the easier route to go....this is kind of a half-formed idea so give it a shot and let me know how it goes. You could also go with the idea in this markdown but you'd probably need to end up writing a loop to keep adding games, which I'm thinking would be more of a pain....
 
+
+```{r}
+tmp_importance <-
+  atp_importance5 %>%
+  filter(serve_set == 2 & return_set == 2) %>%
+  separate(game_score, into = c("score1", "score2"), sep = "-",
+    convert = TRUE) %>%
+  filter(score1 >= 5 & score2 >= 5) %>%
+  filter(score1 < 6 | score2 < 6) %>%
+  mutate(grouping = case_when(
+    score1 == score2 ~ "A",
+    (score1 - score2) == 1 ~ "B",
+    (score2 - score1) == 1 ~ "C"
+  )) %>%
+  group_by(grouping) %>%
+  group_by(point_score)
+
+  
+```
 
 
 
