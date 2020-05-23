@@ -44,7 +44,7 @@ gs_matches_long <-
                winner_or_loser = "winner_or_loser",
                values_to = "serve_percentage")
 
-gs_matches2017 %>%
+
   
 ```
 *is there anyway to pivot longer without duplicating matches?*
