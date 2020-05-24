@@ -1,0 +1,70 @@
+---
+title: "First Presentation"
+author: "Josh Marvald"
+date: "5/24/2020"
+output: 
+  revealjs::revealjs_presentation:
+    theme: moon
+    transition: none
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Analyzing the Importance of the Serve in Professional Tennis
+Josh Marvald  
+Mentor: Dr. Matt Higham
+
+
+## Tennis Scoring for Games
+
+* The first point a player wins brings their point score to 15  
+* Second point brings point score to 30  
+* Third point brings point score to 40  
+* Winning a fourth point concludes the game as long as the other player doesn't have a point score of 40 as well  
+* 40-40 is referred to as deuce  
+* At deuce the next point won brings the score to Ad-40  
+* If the player who won the point at deuce wins the next point the game is over  
+* If the other player wins the point the score returns to deuce  
+* examples of scores: 0-15, 30-15, 40-30, 40-Ad, 30-30
+
+## Tennis Scoring for Matches
+
+* A match is won by winning either 2 sets (out of 3) or 3 sets (out of 5) depending on the tournament  
+* The first to 6 games (win by 2) wins the set  
+* If the score gets to 6-6 in a set a first to 7 tiebreaker (win by 2) is played to determine the winner of the set  
+* The only exception to the tiebreaker is at specific tournaments the last set will continue with games being played until one player leads by 2 games
+
+## Goal of the Project
+
+* Be able to characterize how important the serve is in determining the outcome of a match for a group of professional tennis players
+* Analyze how players' serves are effected by the importance of the point being played
+
+## Part 1: Serve Importance
+
+* Creating logistic regressions models to model individual professional tennis players' probability of winning a match as a function of different serve characteristics
+  + Serve characteristics looked at will include first serve percentage, second serve percentage, average serve speed
+  + Court surface will be included as a predictor since different surfaces react differently to speed and spin on the serve
+  
+
+## Part 2: Point Importance Impact on Serve
+
+* Using point importance data combined with point by point data from the past decade of Grand Slam tennis matches to analyze the effect a point's importance has on a player's serve
+  + Point by point data is from Jeff Sackmann's GitHub which has point and match data for all matches for the last decade (https://github.com/JeffSackmann/tennis_atp)
+  + Point importance data is from Stephanie Kovalchik's GitHub (https://github.com/skoval/deuce)
+
+
+
+## Point Importance
+* First introduced by Stephanie Kovalchik in her GitHub Deuce Repository 
+* Because of the unique scoring system, certain points are more important than others
+* Given a specific point, by looking at all matches' outcomes that reached that score Kovalchik is able to assign a relative importance value to winning that point
+* A good example of relative importance is comparing the first point in a tennis match to a point at 2 sets - 2 sets, 5-5, 40-40
+  + The first point is not very important in determining the outcome of a match so clearly the latter point would be much more important
+
+## Using Point Importance
+
+* My second goal for the project is to see how big of an influence a point's importance has on the serve speed and placement for first and second serves
+* Depending on the magnitude of the effect I will also try to build a model to predict a serve speed and placement given a serving player and a current score in a match
+
