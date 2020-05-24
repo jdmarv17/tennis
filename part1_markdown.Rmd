@@ -22,3 +22,36 @@ ggplot(big3, aes(win, serve_percentage, color = big3_name)) +
   stat_smooth(method = "glm", method.args = c("binomial"))
 ```
 
+when pivoting to long format, could try to create a variable called player name so that....
+
+```{r}
+test_df <- data.frame(matchid = c(1, 2), winningplayer = c("Nadal", "Djokovic"),
+  losingplayer = c("Thiem", "Nadal"), w_serveperc = c(90, 80), l_serveperc = c(50, 60))
+test_df
+```
+
+becomes....
+
+```{r}
+library(tidyverse)
+long_df <- test_df %>% pivot_longer(c(winningplayer, losingplayer), 
+  names_to = "winorlose", values_to = "player")
+```
+
+You could end up just stacking two data frames: one for the winning player and one for the losing player. This takes a little bit of work but it's the easiest way I could think of to figure out how to get the desired output.
+
+```{r}
+loser_stats <- long_df %>% select(-starts_with("w_")) %>% 
+  filter(winorlose == "losingplayer")
+names(loser_stats) <- c("matchid", "serveperc", "winorlose", "player")
+winner_stats <- long_df %>% select(-starts_with("l_")) %>%
+  filter(winorlose == "winningplayer")
+names(winner_stats) <- c("matchid", "serveperc", "winorlose", "player")
+
+df <- bind_rows(loser_stats, winner_stats)
+
+## then filter by big3 (or whatever) and plot. There will be one observation
+## per match if the member of the big 3 played someone else and two
+## observations if members of the big 3 played each other but the plot should
+## work out, colouring by player.
+```
