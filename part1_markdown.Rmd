@@ -1,0 +1,24 @@
+---
+title: "part1"
+author: "Josh Marvald"
+date: "5/23/2020"
+output: html_document
+---
+
+```{r}
+# gs_matches_long has duplicate matches
+# only want the matches where the winner_name or loser_name for big 3 matches the 
+# win indicator variable
+big3<- 
+  gs_matches_long %>%
+  filter((winner_name == "Roger Federer" & win == 1) | (loser_name == "Roger Federer" & win == 0) | (winner_name == "Rafael Nadal" & win == 1) | (loser_name == "Rafael Nadal" & win == 0) | (winner_name == "Novak Djokovic" & win == 1) | (loser_name == "Novak Djokovic" & win == 0)) %>%
+  mutate(big3_name = case_when(
+    winner_name == "Roger Federer" | loser_name == "Roger Federer" ~ "Roger Federer",
+    winner_name == "Rafael Nadal" | loser_name == "Rafael Nadal" ~ "Rafael Nadal",
+    winner_name == "Novak Djokovic" | loser_name == "Novak Djokovic" ~ "Novak Djokovic"
+  ))
+
+ggplot(big3, aes(win, serve_percentage, color = big3_name)) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
+```
+
