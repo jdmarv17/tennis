@@ -91,5 +91,22 @@ winners <- gs_matches_long %>%
   filter(win_loss == "winner_name")
 
 new_gs_matches <- bind_rows(losers, winners)
-```
 
+new_gs_matches <-
+  new_gs_matches %>%
+  mutate(win = case_when(
+    win_loss == "loser_name" ~ 0,
+    win_loss == "winner_name" ~ 1
+  )) 
+
+new_gs_matches %>%
+  filter(player == "Roger Federer" | player == "Rafael Nadal" | player == "Novak Djokovic") %>%
+  ggplot(., aes(x = serveperc, y = win, color = player)) +
+  stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
+  theme_bw()
+
+ggplot(new_gs_matches, aes(x = serveperc, y = win)) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
+  
+```
+*this does not make sense to me for Nadal and Djokovic*

@@ -246,3 +246,8 @@ all_players %>%
   coord_cartesian(ylim = c(0, 1))
 ```
 *looks like big 3 are slightly better at getting the return deep than all players*
+
+```{r}
+
+```
+
