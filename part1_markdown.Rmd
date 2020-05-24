@@ -55,3 +55,41 @@ df <- bind_rows(loser_stats, winner_stats)
 ## observations if members of the big 3 played each other but the plot should
 ## work out, colouring by player.
 ```
+
+
+```{r}
+atp_matches2017 <- read_csv("data/atp_matches_2017.csv")
+```
+
+
+```{r}
+atp_matches2017 <- 
+  atp_matches2017 %>%
+  mutate(`w_serveperc` = w_1stIn/w_svpt) %>%
+  mutate(`l_serveperc` = l_1stIn/l_svpt)
+```
+
+
+```{r}
+gs_matches2017 <-
+  atp_matches2017 %>%
+  filter(tourney_name == "Australian Open"| tourney_name == "Wimbledon"| tourney_name == "Roland Garros"| tourney_name == "US Open")  
+```
+
+
+```{r}
+gs_matches_long <-
+  gs_matches2017 %>%
+  pivot_longer(c(winner_name, loser_name), names_to = "win_loss", values_to = "player")
+
+losers <- gs_matches_long %>%
+  select(-starts_with("w_")) %>%
+  filter(win_loss == "loser_name")
+
+winners <- gs_matches_long %>%
+  select(-starts_with("l_")) %>%
+  filter(win_loss == "winner_name")
+
+new_gs_matches <- bind_rows(losers, winners)
+```
+
