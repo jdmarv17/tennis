@@ -180,7 +180,7 @@ new_atp_df <-
 nrow(atp_df); nrow(new_atp_df)
 
 ## one strategy to get the entire data set back is to create an id column
-## at the beginning. see line 147
+## at the beginning. see line 142
 
 ## then, can figure out which points need to be added to the tmp_importance
 ## by that id column:

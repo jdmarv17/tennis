@@ -1,7 +1,7 @@
 ---
-title: "First Presentation"
-author: "Josh Marvald"
-date: "5/24/2020"
+title: "Analyzing the Importance of the Serve in Professional Tennis"
+author: "Josh Marvald and Dr. Matt Higham"
+date: "5/25/2020"
 output: 
   revealjs::revealjs_presentation:
     theme: moon
@@ -11,10 +11,6 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
-
-## Analyzing the Importance of the Serve in Professional Tennis
-Josh Marvald  
-Mentor: Dr. Matt Higham
 
 
 ## Tennis Scoring for Games
@@ -29,11 +25,19 @@ Mentor: Dr. Matt Higham
 * If the other player wins the point the score returns to deuce  
 * examples of scores: 0-15, 30-15, 40-30, 40-Ad, 30-30
 
+## Scoring Graphic
+
+
+```{r, out.width = "700px"}
+knitr::include_graphics("scoring.png")
+```
+
+
 ## Tennis Scoring for Matches
 
 * A match is won by winning either 2 sets (out of 3) or 3 sets (out of 5) depending on the tournament  
 * The first to 6 games (win by 2) wins the set  
-* If the score gets to 6-6 in a set a first to 7 tiebreaker (win by 2) is played to determine the winner of the set  
+* If the score gets to 6-6 in a set a first to 7 point tiebreaker (win by 2) is played to determine the winner of the set  
 * The only exception to the tiebreaker is at specific tournaments the last set will continue with games being played until one player leads by 2 games
 
 ## Goal of the Project

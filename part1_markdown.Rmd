@@ -9,22 +9,6 @@ output: html_document
 
 <!-- Making sure each markdown file can run on its own will help you later too (it can get cumbersome to try to remember where certain data sets came from just from memory, especially the more and more stuff you do).  -->
 
-```{r}
-# gs_matches_long has duplicate matches
-# only want the matches where the winner_name or loser_name for big 3 matches the 
-# win indicator variable
-big3<- 
-  gs_matches_long %>%
-  filter((winner_name == "Roger Federer" & win == 1) | (loser_name == "Roger Federer" & win == 0) | (winner_name == "Rafael Nadal" & win == 1) | (loser_name == "Rafael Nadal" & win == 0) | (winner_name == "Novak Djokovic" & win == 1) | (loser_name == "Novak Djokovic" & win == 0)) %>%
-  mutate(big3_name = case_when(
-    winner_name == "Roger Federer" | loser_name == "Roger Federer" ~ "Roger Federer",
-    winner_name == "Rafael Nadal" | loser_name == "Rafael Nadal" ~ "Rafael Nadal",
-    winner_name == "Novak Djokovic" | loser_name == "Novak Djokovic" ~ "Novak Djokovic"
-  ))
-
-ggplot(big3, aes(win, serve_percentage, color = big3_name)) +
-  stat_smooth(method = "glm", method.args = c("binomial"))
-```
 
 when pivoting to long format, could try to create a variable called player name so that....
 
@@ -100,12 +84,19 @@ winners <- gs_matches_long %>%
 new_gs_matches <- bind_rows(losers, winners)
 
 # make just one variable for wether the player won
-#new_gs_matches <-
-#  new_gs_matches %>%
-#  mutate(win = case_when(
-#    win_loss == "loser_name" ~ 0,
-#    win_loss == "winner_name" ~ 1
-#  )) 
+new_gs_matches <-
+  new_gs_matches %>%
+  mutate(win = case_when(
+    win_loss == "loser_name" ~ 0,
+    win_loss == "winner_name" ~ 1
+  )) 
+
+new_gs_matches <-
+  new_gs_matches %>%
+  mutate(serveperc = case_when(
+    win == 0 ~ l_serveperc,
+    win == 1 ~ w_serveperc
+  ))
 
 # big 3 glm
 new_gs_matches %>%
