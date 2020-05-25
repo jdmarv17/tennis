@@ -55,7 +55,6 @@ Mentor: Dr. Matt Higham
   + Point importance data is from Stephanie Kovalchik's GitHub (https://github.com/skoval/deuce)
 
 
-
 ## Point Importance
 * First introduced by Stephanie Kovalchik in her GitHub Deuce Repository 
 * Because of the unique scoring system, certain points are more important than others
@@ -67,4 +66,14 @@ Mentor: Dr. Matt Higham
 
 * My second goal for the project is to see how big of an influence a point's importance has on the serve speed and placement for first and second serves
 * Depending on the magnitude of the effect I will also try to build a model to predict a serve speed and placement given a serving player and a current score in a match
+
+## Challenges
+
+* Manipulating large data sets into useable form
+* Ensuring the importance data is properly merged with point data
+* Dealing with missing data
+
+
+
+
 

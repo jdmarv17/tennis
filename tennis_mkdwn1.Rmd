@@ -129,7 +129,7 @@ roger_rafa <-
 
 *how can we merge importance with allslams2017_long?*
 
- 
+*this chunk uses old importance data*
 ```{r}
 # serverwin vs importance for Roger, Rafa
 # same strategy as before -- subset atp_df with selected players then plot
@@ -248,6 +248,66 @@ all_players %>%
 *looks like big 3 are slightly better at getting the return deep than all players*
 
 ```{r}
+# Federer does worse on more important points
+new_atp_df %>%
+  filter(player1 == "Roger Federer" | player2 == "Roger Federer") %>%
+  filter((player1 == "Roger Federer" & ServeIndicator == 1) | 
+           (player2 == "Roger Federer" & ServeIndicator == 2)) %>%
+  ggplot(., aes(importance, serverwin)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) 
 
+# rally count might get larger at more important points
+new_atp_df %>%
+  filter(player1 == "Roger Federer" | player2 == "Roger Federer") %>%
+  filter((player1 == "Roger Federer" & ServeIndicator == 1) | 
+           (player2 == "Roger Federer" & ServeIndicator == 2)) %>%
+  ggplot(., aes(importance, RallyCount)) +
+  geom_point(alpha = .5) +
+  stat_smooth(method = "lm")
+
+# serve speed not very influenced by importance
+new_atp_df %>%
+  filter(player1 == "Roger Federer" | player2 == "Roger Federer") %>%
+  filter((player1 == "Roger Federer" & ServeIndicator == 1) | 
+           (player2 == "Roger Federer" & ServeIndicator == 2)) %>%
+  ggplot(., aes(importance, Speed_MPH)) +
+  geom_point(alpha = .5) +
+  stat_smooth(method = "lm")
+
+
+
+# all players tend to do worse on important points while serving
+ggplot(new_atp_df, aes(importance, serverwin)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
+
+# no real relationship between importance and rally count
+ggplot(new_atp_df, aes(importance, RallyCount)) +
+  geom_point(alpha = .5) +
+  stat_smooth(method = "lm")
+
+# no real relationship between importance and rally count
+ggplot(new_atp_df, aes(importance, Speed_MPH)) +
+  geom_point(alpha = .5) +
+  stat_smooth(method = "lm")
+
+```
+
+
+```{r}
+# Federer possibly slightly more likely to have to hit a second serve on more important points
+new_atp_df %>%
+  mutate(secondServe_indicator = case_when(
+    ServeNumber == 1 ~ 0,
+    ServeNumber == 2 ~ 1,
+    ServeNumber == 0 ~ 1
+  )) %>%
+  filter(player1 == "Roger Federer" | player2 == "Roger Federer") %>%
+  filter((player1 == "Roger Federer" & ServeIndicator == 1) | 
+           (player2 == "Roger Federer" & ServeIndicator == 2)) %>%
+  ggplot(., aes(x = importance, y = secondServe_indicator)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial"))
 ```
 

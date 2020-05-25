@@ -78,33 +78,39 @@ gs_matches2017 <-
 
 
 ```{r}
+# player column
 gs_matches_long <-
   gs_matches2017 %>%
   pivot_longer(c(winner_name, loser_name), names_to = "win_loss", values_to = "player")
 
+# matches lost
 losers <- gs_matches_long %>%
   select(-starts_with("w_")) %>%
   filter(win_loss == "loser_name")
 
+# matches won
 winners <- gs_matches_long %>%
   select(-starts_with("l_")) %>%
   filter(win_loss == "winner_name")
 
 new_gs_matches <- bind_rows(losers, winners)
 
-new_gs_matches <-
-  new_gs_matches %>%
-  mutate(win = case_when(
-    win_loss == "loser_name" ~ 0,
-    win_loss == "winner_name" ~ 1
-  )) 
+# make just one variable for wether the player won
+#new_gs_matches <-
+#  new_gs_matches %>%
+#  mutate(win = case_when(
+#    win_loss == "loser_name" ~ 0,
+#    win_loss == "winner_name" ~ 1
+#  )) 
 
+# big 3 glm
 new_gs_matches %>%
   filter(player == "Roger Federer" | player == "Rafael Nadal" | player == "Novak Djokovic") %>%
   ggplot(., aes(x = serveperc, y = win, color = player)) +
   stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
   theme_bw()
 
+# all players glm
 ggplot(new_gs_matches, aes(x = serveperc, y = win)) +
   stat_smooth(method = "glm", method.args = c("binomial"))
   

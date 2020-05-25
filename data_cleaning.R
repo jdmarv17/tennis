@@ -165,6 +165,22 @@ tmp_importance <-
 View(tmp_importance)
 
 
+fifth_set_importance <-
+  atp_df %>%
+  filter(set_score == "2-2") %>%
+  separate(game_score, into = c("score1", "score2"), sep = "-", convert = TRUE) %>%
+  filter(score1 < 5 & score2 < 5)
+
+no_fifth_set_importance <-
+  atp_df %>%
+  separate(game_score, into = c("score1", "score2"), sep = "-", convert = TRUE) %>%
+  filter(set_score != "2-2")
+
+new_atp_df <-
+  bind_rows(tmp_importance, fifth_set_importance, no_fifth_set_importance)
+  
+  
+
 
 
 
