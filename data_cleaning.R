@@ -130,6 +130,8 @@ allslams2017 <- allslams2017 %>%
   mutate(gender = if_else(match_num < 2000, true = "Men",
   false = "Women"))
 
+## get rid of rows that are exact duplicates
+atp_importance5 <- atp_importance5 %>% distinct()
 
 placeholder_df <- allslams2017 %>% filter(gender == "Men")
 atp_df <- right_join(atp_importance5, placeholder_df,
@@ -137,12 +139,7 @@ atp_df <- right_join(atp_importance5, placeholder_df,
 atp_df %>% select(importance, everything())  
 
 
-
-nrow(atp_df); nrow(filter(allslams2017, gender == "Men"))
-## these don't match up exactly which is a problem....
-## !! I think it's actually because there is no 5th set tiebreak in the men's 
-## matches, which means some of the data where the 5th set is 9-8 doesn't
-## get merged with the importance data....this needs to be fixed eventually.
+atp_df$pointid <- 1:nrow(atp_df)
 
 tmp_importance <-
   atp_df %>%
@@ -161,8 +158,8 @@ tmp_importance <-
   group_by(point_score, grouping) %>%
   select(grouping, score1, score2, point_score, importance, everything()) %>%
   fill(importance, .direction = "downup") %>%
-  arrange(grouping, point_score) 
-View(tmp_importance)
+  arrange(grouping, point_score) %>%
+  unite("game_score", c(score1, score2), sep = "-")
 
 
 fifth_set_importance <-
@@ -179,9 +176,39 @@ no_fifth_set_importance <-
 new_atp_df <-
   bind_rows(tmp_importance, fifth_set_importance, no_fifth_set_importance)
   
-  
+## lost some rows in creating new_atp_df using this method:
+nrow(atp_df); nrow(new_atp_df)
 
+## one strategy to get the entire data set back is to create an id column
+## at the beginning. see line 147
 
+## then, can figure out which points need to be added to the tmp_importance
+## by that id column:
+
+## this reads "filter atp_df so that it gives me all of the points that have
+## point ids that are NOT (exclamation point)  in th set of point ids
+## in the tmp_importance data set
+nottmp_importance <- atp_df %>% filter(!pointid %in% tmp_importance$pointid)
+new_atp_df <- bind_rows(tmp_importance, nottmp_importance)
+nrow(new_atp_df); nrow(atp_df)
+
+## one last thing that needs to be done to get the importance data set into 
+## shape is to replace the importance values where the game score is 6-6
+## and the point score is 0-0 with what they should be when there is no
+## tiebreak:
+
+## just to look at:
+new_atp_df %>% filter(game_score == "6-6" & point_score == "0-0" &
+    set_score == "2-2") %>%
+  select(point_score, game_score, slam, everything()) 
+## those importance values are too high. They should match the importance
+## of points at 5-5 for those slams
+
+new_atp_df %>% filter(game_score == "5-5" & point_score == "0-0" &
+    set_score == "2-2")
+## or
+new_atp_df %>% filter(game_score == "7-7" & point_score == "0-0" &
+    set_score == "2-2")
 
 
 
