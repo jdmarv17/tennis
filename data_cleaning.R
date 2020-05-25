@@ -168,13 +168,13 @@ fifth_set_importance <-
   separate(game_score, into = c("score1", "score2"), sep = "-", convert = TRUE) %>%
   filter(score1 < 5 & score2 < 5)
 
-no_fifth_set_importance <-
-  atp_df %>%
-  separate(game_score, into = c("score1", "score2"), sep = "-", convert = TRUE) %>%
-  filter(set_score != "2-2")
+#no_fifth_set_importance <-
+#  atp_df %>%
+#  separate(game_score, into = c("score1", "score2"), sep = "-", convert = TRUE) %>%
+#  filter(set_score != "2-2")
 
-new_atp_df <-
-  bind_rows(tmp_importance, fifth_set_importance, no_fifth_set_importance)
+#new_atp_df <-
+#  bind_rows(tmp_importance, fifth_set_importance, no_fifth_set_importance)
   
 ## lost some rows in creating new_atp_df using this method:
 nrow(atp_df); nrow(new_atp_df)
@@ -210,6 +210,12 @@ new_atp_df %>% filter(game_score == "5-5" & point_score == "0-0" &
 new_atp_df %>% filter(game_score == "7-7" & point_score == "0-0" &
     set_score == "2-2")
 
+# make new importance column for 2-2, 6-6, 0-0 case
+new_atp_df <-
+  new_atp_df %>%
+  mutate(importance2 = ifelse(
+    set_score == "2-2" & game_score == "6-6", 0.108, importance))
+# I think this is good now, havent deleted old importance column yet
 
 
 placeholder_df <- allslams2017 %>% filter(gender == "Women") 
