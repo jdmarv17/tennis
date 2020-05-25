@@ -5,6 +5,10 @@ date: "5/23/2020"
 output: html_document
 ---
 
+<!-- I still can't run this....something I would try to do is to make each Markdown file it's own contained entity that can run entirely on its own.  If there's a lot of data prep code that you need to use but don't want  in the file, then you can put that code in an R file and use source("name_of_r _file") to not take up as much space. -->
+
+<!-- Making sure each markdown file can run on its own will help you later too (it can get cumbersome to try to remember where certain data sets came from just from memory, especially the more and more stuff you do).  -->
+
 ```{r}
 # gs_matches_long has duplicate matches
 # only want the matches where the winner_name or loser_name for big 3 matches the 
