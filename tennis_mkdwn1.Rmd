@@ -271,6 +271,8 @@ new_atp_df %>%
   filter(player1 == "Roger Federer" | player2 == "Roger Federer") %>%
   filter((player1 == "Roger Federer" & ServeIndicator == 1) | 
            (player2 == "Roger Federer" & ServeIndicator == 2)) %>%
+  filter(Speed_MPH > 0) %>% ## probably don't want the double faults 
+  ## as 0's for this graph
   ggplot(., aes(importance, Speed_MPH)) +
   geom_point(alpha = .5) +
   stat_smooth(method = "lm")
@@ -288,7 +290,7 @@ ggplot(new_atp_df, aes(importance, RallyCount)) +
   stat_smooth(method = "lm")
 
 # no real relationship between importance and rally count
-ggplot(new_atp_df, aes(importance, Speed_MPH)) +
+ggplot(filter(new_atp_df, Speed_MPH > 0), aes(importance, Speed_MPH)) +
   geom_point(alpha = .5) +
   stat_smooth(method = "lm")
 
@@ -309,5 +311,10 @@ new_atp_df %>%
   ggplot(., aes(x = importance, y = secondServe_indicator)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial"))
+## that's interesting....could be indicating that he is just missing 
+## his first serve more because of pressure or could also mean that he
+## is trying to hit his serve harder or aim it for the corners more on these
+## points. It's impossible to tell with this data set, but this is interesting
+## nonetheless.
 ```
 
