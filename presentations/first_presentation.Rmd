@@ -43,29 +43,33 @@ Mentor: Dr. Matt Higham
 
 ## Part 1: Serve Importance
 
-* Creating logistic regressions models to model individual professional tennis players' probability of winning a match as a function of different serve characteristics
-  + Serve characteristics looked at will include first serve percentage, second serve percentage, average serve speed
-  + Court surface will be included as a predictor since different surfaces react differently to speed and spin on the serve
+<!-- spacing of the sub-bullets in presentations is VERY picky. Need to be four spaces out exactly -->
+* Creating logistic regression models to model individual professional tennis players' probability of winning a match as a function of different serve characteristics
+    + Serve characteristics looked at will include first serve percentage, second serve percentage, average serve speed
+    + Court surface will be included as a predictor since different surfaces react differently to speed and spin on the serve
   
 
 ## Part 2: Point Importance Impact on Serve
 
 * Using point importance data combined with point by point data from the past decade of Grand Slam tennis matches to analyze the effect a point's importance has on a player's serve
-  + Point by point data is from Jeff Sackmann's GitHub which has point and match data for all matches for the last decade (https://github.com/JeffSackmann/tennis_atp)
-  + Point importance data is from Stephanie Kovalchik's GitHub (https://github.com/skoval/deuce)
+    + Point by point data is from Jeff Sackmann's GitHub which has point and match data for all matches for the last decade (https://github.com/JeffSackmann/tennis_atp)
+    + Point importance data is from Stephanie Kovalchik's GitHub (https://github.com/skoval/deuce)
 
 
 ## Point Importance
-* First introduced by Stephanie Kovalchik in her GitHub Deuce Repository 
+* First calculated in a paper by O'Donoghue, P. G. (2001) and put into an `R` data set by Stephanie Kovalchik
 * Because of the unique scoring system, certain points are more important than others
 * Given a specific point, by looking at all matches' outcomes that reached that score Kovalchik is able to assign a relative importance value to winning that point
 * A good example of relative importance is comparing the first point in a tennis match to a point at 2 sets - 2 sets, 5-5, 40-40
-  + The first point is not very important in determining the outcome of a match so clearly the latter point would be much more important
+  <!-- can just say this part to make the slide a little less text heavy. Also probably want to mention the reason why: two equally matched players still have about a 50/50 shot at winning the match no matter who wins the first point. But, the player who wins the 2 sets 5-5 deuce point has a much higher chance at taking the match.
+  + The first point is not very important in determining the outcome of a match so clearly the latter point would be much more important -->
 
 ## Using Point Importance
 
-* My second goal for the project is to see how big of an influence a point's importance has on the serve speed and placement for first and second serves
-* Depending on the magnitude of the effect I will also try to build a model to predict a serve speed and placement given a serving player and a current score in a match
+* My second goal for the project is to see 
+    - how big of an influence a point's importance has on the serve speed and placement for first and second serves 
+    - if these associations tend to be different for different players on tour
+* <!-- Depending on the magnitude of the effect I will also try to  --> build a model to predict a serve speed and placement given a serving player and a current score in a match
 
 ## Challenges
 
