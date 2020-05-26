@@ -99,10 +99,10 @@ new_gs_matches <-
   ))
 
 # big 3 glm
-new_gs_matches %>%
+gs_matches_final %>%
   filter(player == "Roger Federer" | player == "Rafael Nadal" | player == "Novak Djokovic") %>%
-  ggplot(., aes(x = serveperc, y = win, color = player)) +
-  stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
+  ggplot(., aes(x = first_serve, y = win, color = player)) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
   theme_bw()
 
 # all players glm
