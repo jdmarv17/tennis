@@ -68,6 +68,21 @@ gs_matches_final %>%
   stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
   theme_bw()
 
+gs_matches_final %>%
+  filter(player == "Rafael Nadal") %>%
+  ggplot(., aes(x = first_serve, y = win, color = tourney_name)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
+  theme_bw()
+## this is pretty interesting
+## only at the french does his chances of winning imporve with first_serve perc
+## his probability is also almost 1 past 70% first serve
+## the other lines dont make much sense to me
+
+gs_matches_final %>%
+  filter(player == "Rafael Nadal") %>%
+  summarise(n())
+## enough matches to make me think the pattern isnt just chance
 
 
 
