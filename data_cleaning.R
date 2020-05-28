@@ -336,8 +336,11 @@ new_atp_df2 <-
   new_atp_df2 %>%
   mutate(importance2 = ifelse(
     set_score == "2-2" & game_score == "6-6", 0.108, importance))
+# end of merging point data, duplicates for each manipulation
+# can get rid of the old ones once we know new_atp_df2 merged properly
 
-
+new_atp_df2 %>%
+  filter(set_score == "2-2", game_score == "7-7", point_score == "15-0")
 
 
 #wta importance
@@ -359,9 +362,14 @@ nrow(wta_df); nrow(filter(allslams2017, gender == "Women"))
 nrow(wta_df2); nrow(filter(allslams2017_18, gender == "Women"))
 
 
+
+
+
 both_df <- rbind(atp_df, wta_df)
 
 
+
+# plots
 ggplot(data = wta_df, aes(x = importance, y = netpoint)) +
   geom_point() +
   stat_smooth(method = "glm", method.args = c("binomial")) +
