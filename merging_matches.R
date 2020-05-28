@@ -61,6 +61,8 @@ gs_matches_final <-
     win == 0 ~ l_serveperc,
     win == 1 ~ w_serveperc
   ))
+# end of manipulating gs_matches_final
+
 
 gs_matches_final %>%
   filter(player == "Roger Federer" | player == "Rafael Nadal" | player == "Novak Djokovic") %>%
@@ -85,8 +87,21 @@ gs_matches_final %>%
 ## enough matches to make me think the pattern isnt just chance
 
 
+gs_matches_final %>%
+  filter(player == "Roger Federer") %>%
+  ggplot(., aes(x = first_serve, y = win, color = tourney_name)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
+  theme_bw()
+# for some reason Fed's wimbledon line trends downward?
 
-
+gs_matches_final %>%
+  filter(player == "Novak Djokovic") %>%
+  ggplot(., aes(x = first_serve, y = win, color = tourney_name)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial"), se = F) +
+  theme_bw()
+# very similar to Fed
 
 
 
