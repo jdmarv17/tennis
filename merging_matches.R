@@ -22,7 +22,10 @@ atp_decade <- bind_rows(atp2010, atp2011, atp2012, atp2013,atp2014, atp2015, atp
 atp_decade <-
   atp_decade %>%
   mutate(`w_serveperc` = w_1stIn/w_svpt) %>%
-  mutate(`l_serveperc` = l_1stIn/l_svpt)
+  mutate(`l_serveperc` = l_1stIn/l_svpt) %>%
+  mutate(`w_secondserve` = ((w_svpt - w_1stIn - w_df)/(w_svpt - w_1stIn ))) %>%
+  mutate(`l_secondserve` = ((l_svpt - l_1stIn - l_df)/(l_svpt - l_1stIn )))
+ 
 
 gs_decade <-
   atp_decade %>%
@@ -60,6 +63,14 @@ gs_matches_final <-
   mutate(first_serve = case_when(
     win == 0 ~ l_serveperc,
     win == 1 ~ w_serveperc
+  ))
+
+# one variable for second serve
+gs_matches_final <-
+  gs_matches_final %>%
+  mutate(second_serve = case_when(
+    win == 0 ~ l_secondserve,
+    win == 1 ~ w_secondserve
   ))
 # end of manipulating gs_matches_final
 

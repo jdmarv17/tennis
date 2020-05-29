@@ -1,0 +1,101 @@
+---
+title: "more_exploring"
+author: "Josh Marvald"
+date: "5/29/2020"
+output: html_document
+---
+
+```{r}
+# variable for ranking inside top 30 or outside top 30
+gs_matches_final2 <-
+  gs_matches_final %>%
+  mutate(top30 = case_when(
+    win == 0 & loser_rank <= 30 ~ "top30",
+    win == 0 & loser_rank > 30 ~ "outside_top30",
+    win == 0 & is.na(loser_rank) == TRUE ~ "outside_top30",
+    win == 1 & winner_rank <= 30 ~ "top30",
+    win == 1 & winner_rank > 30 ~ "outside_top30",
+    win == 1 & is.na(winner_rank) == TRUE ~ "outside_top30"
+  )) %>%
+  mutate(opponent_top30 = case_when(
+    win == 0 & winner_rank <= 30 ~ "top30",
+    win == 0 & winner_rank > 30 ~ "outside_top30",
+    win == 0 & is.na(winner_rank) == TRUE ~ "outside_top30",
+    win == 1 & loser_rank <= 30 ~ "top30",
+    win == 1 & loser_rank > 30 ~ "outside_top30",
+    win == 1 & is.na(loser_rank) == TRUE ~ "outside_top30"
+  ))
+```
+
+
+```{r}
+# win vs first serve
+
+ggplot(gs_matches_final2, aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.1) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+
+gs_matches_final2 %>%
+  filter(player == "Roger Federer") %>%
+  ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+# plot supports theory
+
+gs_matches_final2 %>%
+  filter(player == "Rafael Nadal") %>%
+  ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+# still showing downward trend for nadal
+
+gs_matches_final2 %>%
+  filter(player == "Novak Djokovic") %>%
+  ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+# novaks top30 line is nearly straight -- him winning not dependent on his serve percentage?
+```
+
+```{r}
+# win vs second serve
+
+ggplot(gs_matches_final2, aes(x = second_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.1) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw() +
+  coord_cartesian(xlim = c(.5, 1))
+
+gs_matches_final2 %>%
+  filter(player == "Roger Federer") %>%
+  ggplot(., aes(x = second_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+
+gs_matches_final2 %>%
+  filter(player == "Rafael Nadal") %>%
+  ggplot(., aes(x = second_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+
+gs_matches_final2 %>%
+  filter(player == "Novak Djokovic") %>%
+  ggplot(., aes(x = second_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+
+
+## is it possible to look at lines for first and second serve at the same time?
+## the only reason I can think of for downward sloping lines is if one statistic is 
+## high while the other is low and then flips
+```
+
+
+
