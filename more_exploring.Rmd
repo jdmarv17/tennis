@@ -82,20 +82,34 @@ gs_matches_final2 %>%
   ggplot(., aes(x = second_serve, y = win, color = opponent_top30)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
-  theme_bw()
+  theme_bw() +
+  stat_smooth(aes(x = first_serve), colour = "black")
+## something like this?
+## I would also knit this file to make sure it runs from start to finish...
+## you'll probably need to add some stuff at the beginning in order to make
+## that happen
+
 
 gs_matches_final2 %>%
   filter(player == "Novak Djokovic") %>%
   ggplot(., aes(x = second_serve, y = win, color = opponent_top30)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
-  theme_bw()
+  theme_bw() 
 
 
 ## is it possible to look at lines for first and second serve at the same time?
 ## the only reason I can think of for downward sloping lines is if one statistic is 
 ## high while the other is low and then flips
 ```
+
+All of this is really getting at having a random effect for the opponent. It would still be possible to include this and still make the Shiny app for different players. You'd end up setting the random effect for opponent to 0 to get this "global" graph of effect of first serve percentage on winning while also actually accounting for the level of the opponent within the model. But at some point, we'll have to think about balancing time with the extra work that this would entail. Something to just think about for now (no need to do anything with it, at least until we finish the mixed effects document thing).
+
+I think this would be the way to go if possible.  See Figure 8.15 on this document we've been reading: <https://bookdown.org/roback/bookdown-bysh/ch-multilevelintro.html> That really sums up the issue at hand. It might also be helpful to come up with an example in this data set. It won't be as "clear" as the toy example in this book but it could help get the point across.
+
+
+
+
 
 
 
