@@ -65,14 +65,6 @@ gs_matches_final2 %>%
   stat_smooth(method = "glm", method.args = c("binomial")) +
   theme_bw()
 # novaks top30 line is nearly straight -- him winning not dependent on his serve percentage?
-
-gs_matches_final2 %>%
-  filter(player == "John Isner") %>%
-  ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
-  geom_jitter(height = 0.12, alpha = 0.25) +
-  stat_smooth(method = "glm", method.args = c("binomial")) +
-  theme_bw()
-
 ```
 
 ```{r}
@@ -96,10 +88,8 @@ gs_matches_final2 %>%
   ggplot(., aes(x = second_serve, y = win, color = opponent_top30)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
-<<<<<<< HEAD
   theme_bw() +
-  stat_smooth(aes(x = first_serve, y = win, color = opponent_top30))
-=======
+  stat_smooth(aes(x = first_serve, y = win, color = opponent_top30))+
   theme_bw()  +
   scale_colour_manual(values = c("blue", "green", "purple", "pink")) +
     stat_smooth(method = "glm", method.args = c("binomial"), aes(x = first_serve, colour = opponent_top30))
@@ -129,11 +119,6 @@ gs_matches_final2 %>%
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
   theme_bw() 
-
-
-## is it possible to look at lines for first and second serve at the same time?
-## the only reason I can think of for downward sloping lines is if one statistic is 
-## high while the other is low and then flips
 ```
 
 
@@ -152,14 +137,53 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_top30))
   geom_jitter(height = 0.12, alpha = 0.15) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
   facet_wrap("player")
+
+ggplot(matches_to_facet2, aes(x = first_serve, color = opponent_top30)) +
+  geom_boxplot() +
+  facet_wrap("player")
 # weird results for some players
 # Isner in particular surprises me
 
 # Isner and Stan seem to be the only ones with significant downward slopes
 
+
+gs_matches_final2 %>%
+  filter(player == "John Isner") %>%
+  ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+
+## this is the most surprisng to me
+
+gs_matches_final2 %>%
+  filter(player == "John Isner") %>%
+  ggplot(., aes(x = first_serve, color = opponent_top30)) +
+  geom_boxplot()
+
 # how can we look into why this is happening?
 ```
 
+
+
+```{r}
+gs_matches_final2 %>%
+  filter(player == "Roger Federer") %>%
+  ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.15) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  facet_wrap("tourney_name")
+
+gs_matches_final2 %>%
+  filter(player == "Roger Federer") %>%
+  ggplot(., aes(x = first_serve, color = opponent_top30)) +
+  geom_boxplot() +
+  facet_wrap("tourney_name")
+
+# Fed never lost to someone outside of top 30 at Roland Garros?
+# Something weird is happening where wimbleodn is only tournament with both lines downward sloping
+# but also only tournament where first serve seems higher for top 30
+```
 
 
 

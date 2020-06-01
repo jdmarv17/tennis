@@ -61,13 +61,14 @@ match15_df %>% filter(is.na(ServeWidth) == FALSE &
   geom_point() +
   facet_wrap( ~ servingplayer) + 
   stat_smooth()
-
+# should this be ServeWidth == "BC"?
 
 match15_df %>% filter(is.na(ace) == FALSE) %>%
   ggplot(data = ., aes(x = importance, y = ace)) +
   geom_point() +
   facet_wrap( ~ servingplayer) + 
   stat_smooth()
+# serena seems like the only one with some upward trend
 
 match15_df %>% filter(is.na(ace) == FALSE) %>%
   ggplot(data = ., aes(x = importance, y = doublefault)) +
