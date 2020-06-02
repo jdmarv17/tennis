@@ -158,10 +158,23 @@ gs_matches_final2 %>%
 
 gs_matches_final2 %>%
   filter(player == "John Isner") %>%
-  ggplot(., aes(x = first_serve, color = opponent_top30)) +
+  ggplot(., aes(x = first_serve, color = interaction(opponent_top30, surface))) +
   geom_boxplot()
 
 # how can we look into why this is happening?
+# one thought: top 30 or outside might not be "good enough" to as a 
+# covariate: there's considerable difference between playing someone in
+# the top 3 and someone ranked 29. For example, Isner had a win against
+# a top 30 player in Milos raonic, ranked 24, that has some leverage
+gs_matches_final2 %>%
+  filter(player == "John Isner" & first_serve < 0.60) %>%
+  select(opponent, loser_rank)
+## as far as looking into why, you could use the information in the 
+## point-level data set to gain some understanding. In particular, 
+## how fast is he serving? Is he serving slower, on average,
+##  in matches where he is
+## getting more 1st serves in? That on its own could explain the 
+## downward sloping trend.
 ```
 
 
@@ -183,6 +196,11 @@ gs_matches_final2 %>%
 # Fed never lost to someone outside of top 30 at Roland Garros?
 # Something weird is happening where wimbleodn is only tournament with both lines downward sloping
 # but also only tournament where first serve seems higher for top 30
+
+## That's fine, I think. The outside top 30 wimbledon line just has one
+## loss observation to go on, and the standard errors on the curves are
+## very large, probably too large to think that there is a decreasing pattern
+## at Wimbledon.
 ```
 
 
