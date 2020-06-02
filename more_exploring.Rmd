@@ -30,7 +30,18 @@ gs_matches_final2 <-
     win == 1 & loser_rank <= 30 ~ "top30",
     win == 1 & loser_rank > 30 ~ "outside_top30",
     win == 1 & is.na(loser_rank) == TRUE ~ "outside_top30"
-  ))
+  )) %>%
+  mutate(opponent_ranking = case_when(
+    win == 0 & winner_rank <= 10 ~ "top10",
+    win == 0 & 10 < winner_rank & winner_rank <= 30 ~ "10_to_30",
+    win == 0 & winner_rank > 30 ~ "outside_top30",
+    win == 0 & is.na(winner_rank) == TRUE ~ "outside_top30",
+    win == 1 & loser_rank <= 10 ~ "top10",
+    win == 1 & 10 < loser_rank & loser_rank <= 30 ~ "10_to_30",
+    win == 1 & loser_rank > 30 ~ "outside_top30",
+    win == 1 & is.na(loser_rank) == TRUE ~ "outside_top30"))
+
+
 ```
 
 
@@ -138,18 +149,30 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_top30))
   stat_smooth(method = "glm", method.args = c("binomial")) +
   facet_wrap("player")
 
+ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_ranking)) +
+  geom_jitter(height = 0.12, alpha = 0.15) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  facet_wrap("player")
+
 ggplot(matches_to_facet2, aes(x = first_serve, color = opponent_top30)) +
   geom_boxplot() +
   facet_wrap("player")
-# weird results for some players
-# Isner in particular surprises me
 
-# Isner and Stan seem to be the only ones with significant downward slopes
+
+
+
 
 
 gs_matches_final2 %>%
   filter(player == "John Isner") %>%
   ggplot(., aes(x = first_serve, y = win, color = opponent_top30)) +
+  geom_jitter(height = 0.12, alpha = 0.25) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  theme_bw()
+
+gs_matches_final2 %>%
+  filter(player == "John Isner") %>%
+  ggplot(., aes(x = first_serve, y = win, color = opponent_ranking)) +
   geom_jitter(height = 0.12, alpha = 0.25) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
   theme_bw()
@@ -166,6 +189,11 @@ gs_matches_final2 %>%
 # covariate: there's considerable difference between playing someone in
 # the top 3 and someone ranked 29. For example, Isner had a win against
 # a top 30 player in Milos raonic, ranked 24, that has some leverage
+
+
+
+
+
 gs_matches_final2 %>%
   filter(player == "John Isner" & first_serve < 0.60) %>%
   select(opponent, loser_rank)
@@ -176,6 +204,9 @@ gs_matches_final2 %>%
 ## getting more 1st serves in? That on its own could explain the 
 ## downward sloping trend.
 ```
+
+
+
 
 
 
