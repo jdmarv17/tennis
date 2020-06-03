@@ -196,8 +196,6 @@ tmp_importance2 <-
   unite("game_score", c(score1, score2), sep = "-")
 
 
-## lost some rows in creating new_atp_df using this method:
-
 
 
 ## one strategy to get the entire data set back is to create an id column
@@ -234,8 +232,8 @@ new_atp_df2 <-
     set_score == "2-2" & game_score == "6-6" & point_score == "0-0" &
       slam != "usopen", 0.108, importance))
 
-# end of merging point data
-# can get rid of the old ones once we know new_atp_df2 merged properly
+# end of merging atp point data
+
 
 new_atp_df2 %>%
   filter(set_score == "2-2", game_score == "6-6", point_score == "30-0") %>%
@@ -244,7 +242,18 @@ new_atp_df2 %>%
 
 
 
-#wta importance
+# wta importance
+## repeat for the wta
+data(wta_importance)
+
+rowsdupw <- subset(wta_importance, point_score == "30-40")
+rowsdupw$point_score <- "40-AD"
+rowsdup2w <- subset(wta_importance, point_score == "40-30")
+rowsdup2w$point_score <- "AD-40"
+
+wta_importance_ad <- rbind(wta_importance, rowsdupw, rowsdup2w)
+
+
 placeholder_df3 <- allslams2017_16 %>% filter(gender == "Women") 
 wta_df2 <- right_join(wta_importance_ad, placeholder_df3,
                      by = c("point_score", "game_score", "set_score"))
@@ -259,7 +268,7 @@ tmp_importance3 <-
   separate(game_score, into = c("score1", "score2"), sep = "-",
            convert = TRUE) %>%
   filter(score1 >= 5 & score2 >= 5) %>%
-  filter(score1 != 6 | score2 != 6 & point_score == "0-0") %>%
+  filter((score1 != 6 | score2 != 6) | (score1 == 6 & score2 == 6 & point_score != "0-0")) %>%
   mutate(grouping = case_when(
     score1 == score2 ~ "A",
     (score1 - score2) == 1 ~ "B",
@@ -299,7 +308,7 @@ new_wta_df2 %>%
 
 
 
-both_df <- rbind(atp_df, wta_df)
+both_df <- rbind(new_atp_df2, new_wta_df2)
 
 
 
@@ -327,11 +336,11 @@ ggplot(data = wta_df, aes(x = importance, y = serverwin)) +
 
 
 ## plot empirical probabilities for the higher importance levels:
-atp_df %>% filter(importance > 0.25) %>%
-  group_by(factor(importance)) %>%
+new_atp_df2 %>% filter(importance2 > 0.25) %>%
+  group_by(factor(importance2)) %>%
   summarise(serverwinemp = mean(serverwin),
     n = n())
-ggplot(data = atp_df, aes(x = importance, y = serverwin)) +
+ggplot(data = new_atp_df2, aes(x = importance2, y = serverwin)) +
   geom_jitter(height = 0.12, alpha = 0.1) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
   stat_smooth()
