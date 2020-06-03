@@ -112,6 +112,8 @@ d %>% filter(term == ".$importance") %>%
 interceptmod <- lm(estimate ~ 1, data = d %>% filter(term == "(Intercept)"))
 summary(interceptmod) ## average rally length is different from 0
 ## obviously
+t.test(estimate ~ 1, data = d %>% filter(term == "(Intercept)"))
+
 slopemod <- lm(estimate ~ 1, data = d %>% filter(term == ".$importance"))
 summary(slopemod) ## strong evidence that, on average, the slope
 ## is greater than 0
