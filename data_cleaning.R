@@ -181,7 +181,7 @@ tmp_importance2 <-
   separate(game_score, into = c("score1", "score2"), sep = "-",
            convert = TRUE) %>%
   filter(score1 >= 5 & score2 >= 5) %>%
-  filter(score1 != 6 | score2 != 6 & point_score == "0-0") %>% ## these were entered in as errors 
+  filter((score1 != 6 | score2 != 6) | (score1 == 6 & score2 == 6 & point_score != "0-0")) %>% ## these were entered in as errors 
   ## when the original merge happened....they received importance values at 0-0
   ## when they should not have received importance values
   mutate(grouping = case_when(
@@ -195,7 +195,7 @@ tmp_importance2 <-
   arrange(grouping, point_score) %>%
   unite("game_score", c(score1, score2), sep = "-")
 
-  
+
 ## lost some rows in creating new_atp_df using this method:
 
 
@@ -231,13 +231,14 @@ new_atp_df2 %>% filter(game_score == "6-6" & point_score == "0-0" &
 new_atp_df2 <-
   new_atp_df2 %>%
   mutate(importance2 = ifelse(
-    set_score == "2-2" & game_score == "6-6" & point_score == "0-0", 0.108, importance))
+    set_score == "2-2" & game_score == "6-6" & point_score == "0-0" &
+      slam != "usopen", 0.108, importance))
 
 # end of merging point data
 # can get rid of the old ones once we know new_atp_df2 merged properly
 
 new_atp_df2 %>%
-  filter(set_score == "2-2", game_score == "6-6", point_score == "15-15") %>%
+  filter(set_score == "2-2", game_score == "6-6", point_score == "15-0") %>%
   select(importance2)
 
 
