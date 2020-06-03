@@ -238,7 +238,7 @@ new_atp_df2 <-
 # can get rid of the old ones once we know new_atp_df2 merged properly
 
 new_atp_df2 %>%
-  filter(set_score == "2-2", game_score == "6-6", point_score == "15-0") %>%
+  filter(set_score == "2-2", game_score == "6-6", point_score == "30-0") %>%
   select(importance2)
 
 
@@ -288,10 +288,11 @@ new_wta_df2 %>% filter(game_score == "7-7" & point_score == "0-0" &
 new_wta_df2 <-
   new_wta_df2 %>%
   mutate(importance2 = ifelse(
-    set_score == "1-1" & game_score == "6-6" & point_score == "0-0", 0.144, importance))
+    set_score == "1-1" & game_score == "6-6" & point_score == "0-0" &
+      slam != "usopen", 0.144, importance))
 
 new_wta_df2 %>%
-  filter(slam == "frenchopen" & set_score == "1-1" & game_score == "6-6") %>%
+  filter(slam == "frenchopen" & set_score == "1-1" & game_score == "6-6" & point_score == "0-15") %>%
   select(importance2, everything())
 
 
