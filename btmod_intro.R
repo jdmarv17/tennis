@@ -64,7 +64,7 @@ btmod$random
 ##playerA vs. playerB
 x <- seq(0.3, 0.9, by = 0.01) ## give a range of serve percentages for playerA
 
-logity <-  0 + 26.26 * x - (28.70 + (26.26 - 50.97) * 0.66)
+logity <-  0 + 26.26 * x - (28.70 + (26.26 - 50.97) * 0.66) ## where is the whole term after x coming from
 y <- exp(logity) / (1 + exp(logity))
 player2 <- "playerB"
 df1 <- data.frame(x = x, y = y, player2 = player2)
