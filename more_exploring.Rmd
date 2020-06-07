@@ -144,6 +144,11 @@ matches_to_facet <-
 
 matches_to_facet2 <- semi_join(gs_matches_final2, matches_to_facet, by = "player")
 
+ggplot(matches_to_facet2, aes(x = first_serve, y = win)) +
+  geom_jitter(height = 0.12, alpha = 0.15) +
+  stat_smooth(method = "glm", method.args = c("binomial")) +
+  facet_wrap("player")
+
 ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_top30)) +
   geom_jitter(height = 0.12, alpha = 0.15) +
   stat_smooth(method = "glm", method.args = c("binomial")) +
