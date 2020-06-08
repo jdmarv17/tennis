@@ -72,6 +72,10 @@ levels(losers_2015$id)
 mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df, formula = ~ id + first_serve:id + first_serve, id = "id", data = gs_decade_small)
 
 summary(mod1)
+
+mod2 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df, formula = ~ id + first_serve:id + first_serve + tourney_name, id = "id", data = gs_decade_small)
+
+summary(mod2)
 ```
 
 
@@ -79,5 +83,14 @@ summary(mod1)
 gs_decade_small_2015 <-
   gs_decade_small_2015 %>%
   mutate(pred = predict(mod1))
+
+newdata <- list(contests = data.frame(
+  winner = factor(gs_decade_small_2015$winner_name, levels = matches_keep$player),
+  loser = factor(gs_decade_small_2015$loser_name, levels = matches_keep$player)))
+
+predict(mod1, newdata)
+predict(mod1, gs_decade_small_2015)
+
+
 ```
 
