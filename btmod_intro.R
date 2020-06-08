@@ -52,7 +52,7 @@ levels(fulldf$player2) <- c("playerB", "playerC", "playerA")
 
 library(BradleyTerry2)
 ## model that allows players to have the association between serve and 
-## win probablility to be different for different players (interaction)
+## win probablility to be diffderent for different players (interaction)
 btmod <- BTm(cbind(win1, win2), player1 = dfplayer1, player2 = dfplayer2, formula = ~ id + serve:id + serve,
   id = "id", data = fulldf)
 summary(btmod)

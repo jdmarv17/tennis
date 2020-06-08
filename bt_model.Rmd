@@ -15,21 +15,21 @@ source("merging_matches.R")
 ```{r}
 # only keep players with enough matches
 matches_keep <-
-  gs_decade %>%
-  group_by(winner_name) %>%
-  summarise(nmatches = n()) %>%
-  filter(nmatches >= 50)
-# is it ok to filter based on wins?
-# not sure how to count overall matches
+  gs_matches_final2 %>%
+  group_by(player) %>%
+  summarise(matches = n()) %>%
+  filter(matches >= 100) 
 
 # leave out 2015 to check
 gs_decade_small <- 
-  semi_join(gs_decade, matches_keep, by = "winner_name") %>%
+  gs_decade %>%
+  filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
   separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
   filter(year != 2015) 
 
 gs_decade_small_2015 <-
-  semi_join(gs_decade, matches_keep, by = "winner_name") %>%
+  gs_decade %>%
+  filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
   separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
   filter(year == 2015)
 ```
@@ -59,9 +59,25 @@ losers_2015 <-
 
 
 ```{r}
-# fit model
+levels(winners_df$id)
+levels(losers_df$id)
 
+levels(winners_2015$id)
+levels(losers_2015$id)
+```
+
+
+```{r}
+# fit model
 mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df, formula = ~ id + first_serve:id + first_serve, id = "id", data = gs_decade_small)
 
+summary(mod1)
+```
+
+
+```{r}
+gs_decade_small_2015 <-
+  gs_decade_small_2015 %>%
+  mutate(pred = predict(mod1))
 ```
 
