@@ -1,0 +1,67 @@
+---
+title: "bt_model"
+author: "Josh Marvald"
+date: "6/8/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(BradleyTerry2)
+source("merging_matches.R")
+```
+
+
+```{r}
+# only keep players with enough matches
+matches_keep <-
+  gs_decade %>%
+  group_by(winner_name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 50)
+# is it ok to filter based on wins?
+# not sure how to count overall matches
+
+# leave out 2015 to check
+gs_decade_small <- 
+  semi_join(gs_decade, matches_keep, by = "winner_name") %>%
+  separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
+  filter(year != 2015) 
+
+gs_decade_small_2015 <-
+  semi_join(gs_decade, matches_keep, by = "winner_name") %>%
+  separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
+  filter(year == 2015)
+```
+
+```{r}
+# split data into winners and losers
+winners_df <-
+  gs_decade_small %>%
+  select(winner_name, w_serveperc, w_secondserve) %>%
+  mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
+
+winners_2015 <-
+  gs_decade_small_2015 %>%
+  select(winner_name, w_serveperc, w_secondserve) %>%
+  mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
+
+losers_df <-
+  gs_decade_small %>%
+  select(loser_name, l_serveperc, l_secondserve) %>%
+  mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
+
+losers_2015 <-
+  gs_decade_small_2015 %>%
+  select(loser_name, l_serveperc, l_secondserve) %>%
+  mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc)
+```
+
+
+```{r}
+# fit model
+
+mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df, formula = ~ id + first_serve:id + first_serve, id = "id", data = gs_decade_small)
+
+```
+
