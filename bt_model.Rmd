@@ -93,9 +93,54 @@ newdata <- list(contests = data.frame(
   winner = factor(gs_decade_small_2015$winner_name, levels = matches_keep$player),
   loser = factor(gs_decade_small_2015$loser_name, levels = matches_keep$player)))
 
-predict(mod1, newdata)
-predict(mod1, gs_decade_small_2015)
+mod1$coefficients
 
+
+test <- mod1$coefficients  ## extract model coefficients
+test2 <- names(mod1$coefficients) %>%
+  str_replace("id", "") ## extract names of model coefficients
+ref <- levels(mod1$player1$id)[1] ## see who is the reference group
+
+nonref <- data.frame(name = test2, coefficient = test) ## coefficients
+## for the non-reference group
+
+serve_coef <- mod1$coefficients[names(mod1$coefficients) == "first_serve"]
+## extract base serve coefficient
+
+## create a data frame for the reference group
+reference_group <- data.frame(name = c(ref, str_c(ref, ":first_serve")),
+  coefficient = c(0, 0))
+
+test_df <- bind_rows(reference_group, nonref) %>% ## bind reference and non-reference coefficients
+  separate(name, into = c("player", "term"), sep = ":") %>% ## separate names from the interaction with serve percentage
+  mutate(term = case_when(is.na(term) == TRUE ~ "intercept",
+    TRUE ~ "first_serve")) %>% ## label terms intercept for intercepts and first_serve for slopes
+  mutate(new_coefficient = case_when(term == "intercept" ~ coefficient,
+    term == "first_serve" ~ coefficient + serve_coef)) %>% ## define the slope by adding the serve coefficient to the value of first_serve for a particular player (similar to what you would do in STAT 213 when you had an interaction between a categorical and quantitative variable and you wanted to make predictions)
+  filter(player != "first_serve") %>% ## get rid of the slope that we just added: it's useless now
+  select(player, term, new_coefficient) %>% ## only keep relevant variables
+  pivot_wider(names_from = c(term), values_from = new_coefficient) ## tidy up by having each player occupy his own row
+
+## create fake data to make predictions on
+## will need to put the data set from 2015 into this format
+newdata1 <- data.frame(player = c("Rafael Nadal", "Rafael Nadal"), first_serve_perc = c(0.7, 0.5)) 
+newdata2 <- data.frame(player = c("Fernando Verdasco", "Roger Federer"), first_serve_perc = c(0.6, 0.8))
+
+## obtain predicted "abilities"
+ab1 <- newdata1 %>% left_join(test_df, by = "player") %>%
+  mutate(ability = intercept + first_serve * first_serve_perc)
+ab2 <- newdata2 %>% left_join(test_df, by = "player") %>%
+  mutate(ability = intercept + first_serve * first_serve_perc)
+
+## subtract player abilities to obtain the logodds that the player in ab1
+## beats the player in ab2
+logodds <- ab1 %>% select(ability) - 
+  ab2 %>% select(ability)
+
+## backtransform to get match predictions
+exp(logodds) / (1 + exp(logodds))
+
+## seems reasonable: 90% Nadal beats Verdasco, 52% Nadal beats Federer.
 
 ```
 
