@@ -56,6 +56,7 @@ wta_mod_df <-
 # split data
 set.seed(7) 
 
+
 # make variable for row number
 atp_mod_df$rowID <- 1:nrow(atp_mod_df)
 wta_mod_df$rowID <- 1:nrow(wta_mod_df)
@@ -100,8 +101,19 @@ atp_test_df <-
   select(Speed_MPH, pred, diff, importance2, everything())
 
 
+ggplot(data = atp_test_df, aes(x = diff)) + geom_histogram()
 
 ranef(atp_mod_basic)
 coef(atp_mod_basic)
+
+atp_mod_basic <- lmer(Speed_MPH ~  (1 | servingplayer), data = atp_train_df)
 ```
+
+Evaluating Models
+
+One thing you can think about is: if you were to predict speed without using importance (using a random effects model with only player, taking out the importance2 terms), would the predictions from this model be just as good? If yes, then importance isn't super important. If not, then importance is important. 
+
+In order to evaluate what models "better", you can just start with the metrics from STAT 213. Use your `diff` column to see which model has the smaller standard deviation of the residuals. And make a couple of new variables for mean square prediction error and mean absolute error....I think Jessica and I did very similar things with prediction in STAT 213 but let me know if these aren't familiar.
+
+You can then do the same thing with a model with a random effect for player and a fixed effect for importance. This model assumes that players have differing mean serve speeds (which they obviously do) but that the importance of the point affects each player in the same way (so that everyone has the same slope). If this modle performs the best, then that's evidence that importance is "important" (haha) in predicting serve speed but that each player responds in a similar way to point importance regarding his / her serve.
 
