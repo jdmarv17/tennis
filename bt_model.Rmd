@@ -9,6 +9,8 @@ output: html_document
 library(tidyverse)
 library(BradleyTerry2)
 source("merging_matches.R")
+
+gs_matches_final2 <- gs_matches_final
 ```
 
 
