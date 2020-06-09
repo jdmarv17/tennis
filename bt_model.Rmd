@@ -85,14 +85,6 @@ summary(mod2)
 
 
 ```{r}
-gs_decade_small_2015 <-
-  gs_decade_small_2015 %>%
-  mutate(pred = predict(mod1))
-
-newdata <- list(contests = data.frame(
-  winner = factor(gs_decade_small_2015$winner_name, levels = matches_keep$player),
-  loser = factor(gs_decade_small_2015$loser_name, levels = matches_keep$player)))
-
 mod1$coefficients
 
 

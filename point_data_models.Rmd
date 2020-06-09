@@ -84,29 +84,58 @@ wta_test_df <-
 
 ```{r}
 # fit model
-atp_mod_basic <- lmer(Speed_MPH ~ importance2 + (1 + importance2 | servingplayer), data = atp_train_df)
-summary(atp_mod_basic)
-plot(atp_mod_basic)
 
+atp_mod_basic <- lmer(Speed_MPH ~ importance2 + (1 + importance2 | servingplayer), data = atp_train_df)
+
+atp_mod_basic2 <- lmer(Speed_MPH ~  (1 | servingplayer), data = atp_train_df)
+
+atp_mod_basic3 <- lmer(Speed_MPH ~ importance2 + (1 | servingplayer), data = atp_train_df)
+```
+
+
+```{r}
 # data from for predictions
 predictions <- 
   data.frame(predict(atp_mod_basic, atp_test_df)) %>%
   mutate(pred = predict.atp_mod_basic..atp_test_df.) %>%
   within(., rm(predict.atp_mod_basic..atp_test_df.))
 
+predictions2 <- data.frame(predict(atp_mod_basic2, atp_test_df)) %>%
+  mutate(pred2 = predict.atp_mod_basic2..atp_test_df.) %>%
+  within(., rm(predict.atp_mod_basic2..atp_test_df.))
+
+predictions3 <- data.frame(predict(atp_mod_basic3, atp_test_df)) %>%
+  mutate(pred3 = predict.atp_mod_basic3..atp_test_df.) %>%
+  within(., rm(predict.atp_mod_basic3..atp_test_df.))
+
 # add predictions to testing data frame
 atp_test_df <-
-  bind_cols(atp_test_df, predictions) %>%
-  mutate(diff = Speed_MPH - pred) %>%
-  select(Speed_MPH, pred, diff, importance2, everything())
+  bind_cols(atp_test_df, predictions, predictions2, predictions3) %>%
+  mutate(diff = Speed_MPH - pred, diff2 = Speed_MPH - pred2, diff3 = Speed_MPH - pred3) %>%
+  select(Speed_MPH, pred, diff, diff2, diff3, importance2, everything())
 
 
 ggplot(data = atp_test_df, aes(x = diff)) + geom_histogram()
+ggplot(data = atp_test_df, aes(x = diff2)) + geom_histogram()
+```
 
-ranef(atp_mod_basic)
-coef(atp_mod_basic)
 
-atp_mod_basic <- lmer(Speed_MPH ~  (1 | servingplayer), data = atp_train_df)
+```{r}
+mod_stats <-
+  atp_test_df %>%
+  ungroup() %>%
+  summarise(avg_res1 = mean(diff),
+            avg_res2 = mean(diff2),
+            avg_res3 = mean(diff3),
+            sd_res1 = sd(diff),
+            sd_res2 = sd(diff2),
+            sd_res3 = sd(diff3),
+            mae1 = (sum(abs(diff)))/n(),
+            mae2 = (sum(abs(diff2)))/n(),
+            mae3 = (sum(abs(diff3)))/n(),
+            mse1 = (sum(diff^2))/n(),
+            mse2 = (sum(diff2^2))/n(),
+            mse3 = (sum(diff3^2))/n())
 ```
 
 Evaluating Models
