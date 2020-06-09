@@ -18,7 +18,7 @@ atp_practice_df<- tmp_importance %>% group_by(match_id) %>%
   pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
   group_by(name) %>%
   summarise(nmatches = n()) %>%
-  filter(nmatches >= 14 & is.na(name) == FALSE)
+  filter(nmatches >= 1 & is.na(name) == FALSE)
 
 atp_practice2 <- tmp_importance %>% filter(player1 %in% atp_practice_df$name &
     player2 %in% atp_practice_df$name)

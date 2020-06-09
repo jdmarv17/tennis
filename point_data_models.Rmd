@@ -1,0 +1,107 @@
+---
+title: "importance_mixed_effects"
+author: "Josh Marvald"
+date: "6/9/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(lme4)
+source("data_cleaning.R")
+```
+
+```{r}
+# keep matches where both players having enough matches
+
+# atp
+players_keep_atp <- 
+  final_atp_df1 %>% 
+  group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 15 & is.na(name) == FALSE)
+
+atp_mod_df <- 
+  final_atp_df1 %>% 
+  filter(player1 %in% players_keep_atp$name & player2 %in% players_keep_atp$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE)
+
+# wta
+players_keep_wta <- 
+  final_wta_df1 %>% 
+  group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 13 & is.na(name) == FALSE)
+
+wta_mod_df <- 
+  final_wta_df1 %>% 
+  filter(player1 %in% players_keep_wta$name & player2 %in% players_keep_wta$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE)
+```
+
+
+```{r}
+# split data
+set.seed(7) 
+
+# make variable for row number
+atp_mod_df$rowID <- 1:nrow(atp_mod_df)
+wta_mod_df$rowID <- 1:nrow(wta_mod_df)
+
+
+# sample for training data
+atp_train_df <- 
+  atp_mod_df[sample(1:nrow(atp_mod_df), 9000, replace = FALSE), ]
+
+# take the rows in whole data set not in training data set
+atp_test_df <-
+  anti_join(atp_mod_df, atp_train_df, by = "rowID")
+
+
+# sample for training data
+wta_train_df <-
+  wta_mod_df[sample(1:nrow(wta_mod_df), 3500, replace = FALSE),]
+
+# take the rows in whole data set not in training data set
+wta_test_df <-
+  anti_join(wta_mod_df, wta_train_df, by = "rowID")
+
+```
+
+
+```{r}
+# fit model
+atp_mod_basic <- lmer(Speed_MPH ~ importance2 + (1 + importance2 | servingplayer), data = atp_train_df)
+summary(atp_mod_basic)
+plot(atp_mod_basic)
+
+# data from for predictions
+predictions <- 
+  data.frame(predict(atp_mod_basic, atp_test_df)) %>%
+  mutate(pred = predict.atp_mod_basic..atp_test_df.) %>%
+  within(., rm(predict.atp_mod_basic..atp_test_df.))
+
+# add predictions to testing data frame
+atp_test_df <-
+  bind_cols(atp_test_df, predictions) %>%
+  mutate(diff = Speed_MPH - pred) %>%
+  select(Speed_MPH, pred, diff, importance2, everything())
+
+
+
+ranef(atp_mod_basic)
+coef(atp_mod_basic)
+```
+

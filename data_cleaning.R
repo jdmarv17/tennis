@@ -232,12 +232,17 @@ new_atp_df2 <-
     set_score == "2-2" & game_score == "6-6" & point_score == "0-0" &
       slam != "usopen", 0.108, importance))
 
+# data for first serves
+final_atp_df1 <-
+  new_atp_df2 %>%
+  filter(Speed_MPH != 0 & ServeIndicator != 2)
+
+# data for second serve
+final_atp_df2 <-
+  new_atp_df2 %>%
+  filter(Speed_MPH != 0 & ServeIndicator != 1)
 # end of merging atp point data
 
-
-new_atp_df2 %>%
-  filter(set_score == "2-2", game_score == "6-6", point_score == "30-0") %>%
-  select(importance2)
 
 
 
@@ -304,7 +309,15 @@ new_wta_df2 %>%
   filter(slam == "frenchopen" & set_score == "1-1" & game_score == "6-6" & point_score == "0-15") %>%
   select(importance2, everything())
 
+# data for first serves
+final_wta_df1 <-
+  new_wta_df2 %>%
+  filter(Speed_MPH != 0 & ServeIndicator != 2)
 
+# data for second serve
+final_wta_df2 <-
+  new_wta_df2 %>%
+  filter(Speed_MPH != 0 & ServeIndicator != 1)
 
 
 
