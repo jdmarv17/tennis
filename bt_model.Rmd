@@ -20,7 +20,7 @@ matches_keep <-
   gs_matches_final2 %>%
   group_by(player) %>%
   summarise(matches = n()) %>%
-  filter(matches >= 100) 
+  filter(matches >= 80) 
 
 # leave out 2015 to check
 gs_decade_small <- 
@@ -150,15 +150,13 @@ winners_2015 <-
   bind_cols(winners_2015, pred_prob) %>%
   mutate(win = win1) %>%
   within(., rm(id, winner_name, w_serveperc, w_secondserve, win1))
-winners_2015 <- 
-  winners_2015 %>% within(., rm(ability1, ability2))
+
 
 losers_2015 <-
   bind_cols(losers_2015, pred_prob) %>%
   mutate(win = win2) %>%
   within(., rm(id, loser_name, l_serveperc, l_secondserve, win2)) 
-losers_2015 <-
-  losers_2015 %>% within(., rm(ability1))
+
 
 # add categorical variable for probability ranges
 winners_2015 <-
