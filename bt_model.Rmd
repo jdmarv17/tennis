@@ -169,18 +169,18 @@ winners_2015 <-
     ability >= 0.6 & ability < 0.7 ~ "sixties",
     ability >= 0.7 & ability < 0.8 ~ "seventies",
     ability >= 0.8 & ability < 0.9 ~ "eighties",
-    ability >= 0.9 ~ "nineties",
+    ability >= 0.9 ~ "nineties"
   ))
 
 losers_2015 <-
   losers_2015 %>%
   mutate(ranges = case_when(
-    ability < 0.5 ~ "tmp",
-    ability >= 0.5 & ability < 0.6 ~ "fifties",
-    ability >= 0.6 & ability < 0.7 ~ "sixties",
-    ability >= 0.7 & ability < 0.8 ~ "seventies",
-    ability >= 0.8 & ability < 0.9 ~ "eighties",
-    ability >= 0.9 ~ "nineties",
+    1 - ability < 0.5 ~ "tmp",
+    1 - ability >= 0.5 & 1 - ability < 0.6 ~ "fifties",
+    1 - ability >= 0.6 & 1 - ability < 0.7 ~ "sixties",
+    1 - ability >= 0.7 & 1 - ability < 0.8 ~ "seventies",
+    1 - ability >= 0.8 & 1 - ability < 0.9 ~ "eighties",
+    1 - ability >= 0.9 ~ "nineties"
   ))
 
 winners_losers_2015 <-
@@ -194,6 +194,7 @@ winners_losers_2015 <-
 pred_stats <-
   winners_losers_2015 %>%
   group_by(ranges) %>%
-  summarise(sum = sum(win), count = n())
+  summarise(sum = sum(win), count = n(),
+    prop = mean(win))
 ```
 
