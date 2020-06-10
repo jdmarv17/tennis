@@ -85,9 +85,6 @@ summary(mod2)
 
 
 ```{r}
-mod1$coefficients
-
-
 test <- mod1$coefficients  ## extract model coefficients
 test2 <- names(mod1$coefficients) %>%
   str_replace("id", "") ## extract names of model coefficients
@@ -118,11 +115,24 @@ test_df <- bind_rows(reference_group, nonref) %>% ## bind reference and non-refe
 newdata1 <- data.frame(player = c("Rafael Nadal", "Rafael Nadal"), first_serve_perc = c(0.7, 0.5)) 
 newdata2 <- data.frame(player = c("Fernando Verdasco", "Roger Federer"), first_serve_perc = c(0.6, 0.8))
 
+
+# add player column to join with test_df
+winners_2015 <-
+  winners_2015 %>%
+  mutate(player = winner_name) 
+
+losers_2015 <-
+  losers_2015 %>%
+  mutate(player = loser_name)
+
 ## obtain predicted "abilities"
-ab1 <- newdata1 %>% left_join(test_df, by = "player") %>%
-  mutate(ability = intercept + first_serve * first_serve_perc)
-ab2 <- newdata2 %>% left_join(test_df, by = "player") %>%
-  mutate(ability = intercept + first_serve * first_serve_perc)
+ab1 <- winners_2015 %>% left_join(test_df, by = "player") 
+ab1 <- ab1 %>%
+  mutate(ability = intercept + first_serve.y * w_serveperc)
+
+ab2 <- losers_2015 %>% left_join(test_df, by = "player")
+ab2 <- ab2 %>%
+  mutate(ability = intercept + first_serve.y * l_serveperc)
 
 ## subtract player abilities to obtain the logodds that the player in ab1
 ## beats the player in ab2
@@ -130,9 +140,60 @@ logodds <- ab1 %>% select(ability) -
   ab2 %>% select(ability)
 
 ## backtransform to get match predictions
-exp(logodds) / (1 + exp(logodds))
+pred_prob <- exp(logodds) / (1 + exp(logodds))
+```
 
-## seems reasonable: 90% Nadal beats Verdasco, 52% Nadal beats Federer.
 
+```{r}
+# join pred_prob to both winners and losers 
+winners_2015 <-
+  bind_cols(winners_2015, pred_prob) %>%
+  mutate(win = win1) %>%
+  within(., rm(id, winner_name, w_serveperc, w_secondserve, win1))
+winners_2015 <- 
+  winners_2015 %>% within(., rm(ability1, ability2))
+
+losers_2015 <-
+  bind_cols(losers_2015, pred_prob) %>%
+  mutate(win = win2) %>%
+  within(., rm(id, loser_name, l_serveperc, l_secondserve, win2)) 
+losers_2015 <-
+  losers_2015 %>% within(., rm(ability1))
+
+# add categorical variable for probability ranges
+winners_2015 <-
+  winners_2015 %>%
+  mutate(ranges = case_when(
+    ability < 0.5 ~ "tmp",
+    ability >= 0.5 & ability < 0.6 ~ "fifties",
+    ability >= 0.6 & ability < 0.7 ~ "sixties",
+    ability >= 0.7 & ability < 0.8 ~ "seventies",
+    ability >= 0.8 & ability < 0.9 ~ "eighties",
+    ability >= 0.9 ~ "nineties",
+  ))
+
+losers_2015 <-
+  losers_2015 %>%
+  mutate(ranges = case_when(
+    ability < 0.5 ~ "tmp",
+    ability >= 0.5 & ability < 0.6 ~ "fifties",
+    ability >= 0.6 & ability < 0.7 ~ "sixties",
+    ability >= 0.7 & ability < 0.8 ~ "seventies",
+    ability >= 0.8 & ability < 0.9 ~ "eighties",
+    ability >= 0.9 ~ "nineties",
+  ))
+
+winners_losers_2015 <-
+  bind_rows(winners_2015, losers_2015) %>%
+  filter(ranges == "fifties" | ranges == "sixties" | ranges == "seventies" | ranges == "eighties" | ranges == "nineties")
+```
+
+
+```{r}
+# check percents
+pred_stats <-
+  winners_losers_2015 %>%
+  group_by(ranges) %>%
+  summarise(sum = sum(win), count = n())
 ```
 
