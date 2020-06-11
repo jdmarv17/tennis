@@ -85,16 +85,32 @@ wta_test_df <-
 ```{r}
 # fit model
 
+# atp
 atp_mod_basic <- lmer(Speed_MPH ~ importance2 + (1 + importance2 | servingplayer), data = atp_train_df)
+summary(atp_mod_basic)
 
 atp_mod_basic2 <- lmer(Speed_MPH ~  (1 | servingplayer), data = atp_train_df)
 
 atp_mod_basic3 <- lmer(Speed_MPH ~ importance2 + (1 | servingplayer), data = atp_train_df)
+
+# atp_mod_new <- lmer(Speed_MPH ~ importance2 + (1 + importance2 | servingplayer) + (1 + importance2 | returningplayer),
+#                    data = atp_train_df)
+
+# wta
+wta_mod_basic <- lmer(Speed_MPH ~ importance2 + (1 + importance2 | servingplayer), data = wta_train_df)
+summary(wta_mod_basic)
+
+wta_mod_basic2 <- lmer(Speed_MPH ~  (1 | servingplayer), data = wta_train_df)
+
+wta_mod_basic3 <- lmer(Speed_MPH ~ importance2 + (1 | servingplayer), data = wta_train_df)
+summary(wta_mod_basic3)
 ```
 
 
 ```{r}
 # data from for predictions
+
+# atp
 predictions <- 
   data.frame(predict(atp_mod_basic, atp_test_df)) %>%
   mutate(pred = predict.atp_mod_basic..atp_test_df.) %>%
@@ -108,21 +124,61 @@ predictions3 <- data.frame(predict(atp_mod_basic3, atp_test_df)) %>%
   mutate(pred3 = predict.atp_mod_basic3..atp_test_df.) %>%
   within(., rm(predict.atp_mod_basic3..atp_test_df.))
 
+predictions4 <- data.frame(predict(atp_mod_new, atp_test_df)) %>%
+  mutate(pred4 = predict.atp_mod_new..atp_test_df.) %>%
+  within(., rm(predict.atp_mod_new..atp_test_df.))
+
+# wta 
+wta_predictions <- 
+  data.frame(predict(wta_mod_basic, wta_test_df)) %>%
+  mutate(pred = predict.wta_mod_basic..wta_test_df.) %>%
+  within(., rm(predict.wta_mod_basic..wta_test_df.))
+
+wta_predictions2 <- data.frame(predict(wta_mod_basic2, wta_test_df)) %>%
+  mutate(pred2 = predict.wta_mod_basic2..wta_test_df.) %>%
+  within(., rm(predict.wta_mod_basic2..wta_test_df.))
+
+wta_predictions3 <- data.frame(predict(wta_mod_basic3, wta_test_df)) %>%
+  mutate(pred3 = predict.wta_mod_basic3..wta_test_df.) %>%
+  within(., rm(predict.wta_mod_basic3..wta_test_df.))
+
 # add predictions to testing data frame
 atp_test_df <-
-  bind_cols(atp_test_df, predictions, predictions2, predictions3) %>%
+  bind_cols(atp_test_df, predictions, predictions2, predictions3, predictions4) %>%
+  mutate(diff = Speed_MPH - pred, diff2 = Speed_MPH - pred2, diff3 = Speed_MPH - pred3, diff4 = Speed_MPH - pred4) %>%
+  select(Speed_MPH, pred, diff, diff2, diff3, importance2, everything())
+
+wta_test_df <-
+  bind_cols(wta_test_df, wta_predictions, wta_predictions2, wta_predictions3) %>%
   mutate(diff = Speed_MPH - pred, diff2 = Speed_MPH - pred2, diff3 = Speed_MPH - pred3) %>%
   select(Speed_MPH, pred, diff, diff2, diff3, importance2, everything())
 
-
-ggplot(data = atp_test_df, aes(x = diff)) + geom_histogram()
-ggplot(data = atp_test_df, aes(x = diff2)) + geom_histogram()
 ```
 
 
 ```{r}
 mod_stats <-
   atp_test_df %>%
+  ungroup() %>%
+  summarise(avg_res1 = mean(diff),
+            avg_res2 = mean(diff2),
+            avg_res3 = mean(diff3),
+            avg_res4 = mean(diff4),
+            sd_res1 = sd(diff),
+            sd_res2 = sd(diff2),
+            sd_res3 = sd(diff3),
+            sd_res4 = sd(diff4),
+            mae1 = (sum(abs(diff)))/n(),
+            mae2 = (sum(abs(diff2)))/n(),
+            mae3 = (sum(abs(diff3)))/n(),
+            mae4 = (sum(abs(diff4)))/n(),
+            mse1 = (sum(diff^2))/n(),
+            mse2 = (sum(diff2^2))/n(),
+            mse3 = (sum(diff3^2))/n(),
+            mse4 = (sum(diff4^2))/n())
+
+wta_mod_stats <-
+  wta_test_df %>%
   ungroup() %>%
   summarise(avg_res1 = mean(diff),
             avg_res2 = mean(diff2),
@@ -136,13 +192,8 @@ mod_stats <-
             mse1 = (sum(diff^2))/n(),
             mse2 = (sum(diff2^2))/n(),
             mse3 = (sum(diff3^2))/n())
+
 ```
 
-Evaluating Models
 
-One thing you can think about is: if you were to predict speed without using importance (using a random effects model with only player, taking out the importance2 terms), would the predictions from this model be just as good? If yes, then importance isn't super important. If not, then importance is important. 
-
-In order to evaluate what models "better", you can just start with the metrics from STAT 213. Use your `diff` column to see which model has the smaller standard deviation of the residuals. And make a couple of new variables for mean square prediction error and mean absolute error....I think Jessica and I did very similar things with prediction in STAT 213 but let me know if these aren't familiar.
-
-You can then do the same thing with a model with a random effect for player and a fixed effect for importance. This model assumes that players have differing mean serve speeds (which they obviously do) but that the importance of the point affects each player in the same way (so that everyone has the same slope). If this modle performs the best, then that's evidence that importance is "important" (haha) in predicting serve speed but that each player responds in a similar way to point importance regarding his / her serve.
 
