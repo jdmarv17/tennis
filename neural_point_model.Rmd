@@ -1,0 +1,142 @@
+---
+title: "neural_point_model"
+author: "Josh Marvald"
+date: "6/11/2020"
+output: html_document
+---
+
+```{r}
+#install.packages("neuralnet")
+library(neuralnet)
+library(tidyverse)
+source("data_cleaning.R")
+```
+
+
+```{r}
+# keep players with enough matches
+
+# atp
+players_keep_atp <- 
+  final_atp_df1 %>% 
+  group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 30 & is.na(name) == FALSE)
+
+atp_mod_df <- 
+  final_atp_df1 %>% 
+  filter(player1 %in% players_keep_atp$name & player2 %in% players_keep_atp$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE) %>%
+  mutate(Nishikori = ifelse(servingplayer == "Kei Nishikori", 1, 0),
+         Murray = ifelse(servingplayer == "Andy Murray", 1, 0),
+         Thiem = ifelse(servingplayer == "Dominic Thiem", 1, 0),
+         Fed = ifelse(servingplayer == "Roger Federer", 1, 0),
+         Stan = ifelse(servingplayer == "Stan Wawrinka", 1, 0),
+         Nadal = ifelse(servingplayer == "Rafael Nadal", 1, 0),
+         Novak = ifelse(servingplayer == "Novak Djokovic", 1, 0),
+         Milos = ifelse(servingplayer == "Milos Raonic", 1, 0))
+  
+
+# wta
+players_keep_wta <- 
+  final_wta_df1 %>% 
+  group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 13 & is.na(name) == FALSE)
+
+wta_mod_df <- 
+  final_wta_df1 %>% 
+  filter(player1 %in% players_keep_wta$name & player2 %in% players_keep_wta$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE)
+```
+
+
+```{r}
+# split data
+set.seed(7) 
+
+# make variable for row number
+atp_mod_df$rowID <- 1:nrow(atp_mod_df)
+wta_mod_df$rowID <- 1:nrow(wta_mod_df)
+
+as.data.frame(atp_mod_df$importance2)
+
+# sample for training data
+atp_train_df <- 
+  atp_mod_df[sample(1:nrow(atp_mod_df), 9000, replace = FALSE), ]
+
+# take the rows in whole data set not in training data set
+atp_test_df <-
+  anti_join(atp_mod_df, atp_train_df, by = "rowID")
+
+# sample for training data
+wta_train_df <-
+  wta_mod_df[sample(1:nrow(wta_mod_df), 3500, replace = FALSE),]
+
+# take the rows in whole data set not in training data set
+wta_test_df <-
+  anti_join(wta_mod_df, wta_train_df, by = "rowID")
+```
+
+
+```{r}
+
+vars <-
+  atp_mod_df %>%
+  ungroup() %>%
+  select(RallyCount, Speed_MPH, importance2, unforcedind, P1DistanceRun, P2DistanceRun) %>%
+  filter(is.na(RallyCount) == FALSE)
+
+
+index <- sample(1:nrow(vars), round(0.75*nrow(vars)))
+train <- vars[index,]
+test <- vars[-index,]
+
+f <- RallyCount ~ importance2 + P1DistanceRun + P2DistanceRun + Speed_MPH + unforcedind
+
+reg_mod <- lm(f, data = train)
+pr.lm <- predict(reg_mod, test)
+MSE.lm <- sum((pr.lm - test$Speed_MPH)^2)/nrow(test)
+
+max1 <- apply(vars, 2, max)
+min1 <- apply(vars, 2, min)
+
+new_scaled <- as.data.frame(scale(vars, center = min1, scale = max1 - min1))
+train_ <- new_scaled[index,]
+test_ <- new_scaled[-index,]
+
+
+nn <- neuralnet(f, data = train_, hidden = c(4, 2), linear.output = T)
+plot(nn)
+```
+
+
+```{r}
+## find predictions 
+pr.nn <- compute(nn, test_)
+
+## these are neural net predictions
+pr.nn2 <- pr.nn$net.result * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
+
+## actual Speed
+test.r <- (test$RallyCount) * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
+
+## MSE for neural network
+MSE.nn <- sum((test.r - pr.nn2) ^ 2)/ nrow(test)
+MSE.nn
+
+print(paste(MSE.lm, MSE.nn))
+```
+
