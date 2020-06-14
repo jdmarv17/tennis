@@ -108,7 +108,16 @@ f <- RallyCount ~ importance2 + P1DistanceRun + P2DistanceRun + Speed_MPH + unfo
 
 reg_mod <- lm(f, data = train)
 pr.lm <- predict(reg_mod, test)
-MSE.lm <- sum((pr.lm - test$Speed_MPH)^2)/nrow(test)
+
+## this isn't quite right: probably best to look at test "residuals" before
+## computing MSE. 
+
+resids <- pr.lm - test$Speed_MPH
+qplot(resids) ## all negative: wrong variable being used in the MSE formula
+
+
+resids <- pr.lm - test$RallyCount
+MSE.lm <- sum((resids)^2)/nrow(test)
 
 max1 <- apply(vars, 2, max)
 min1 <- apply(vars, 2, min)
@@ -118,7 +127,7 @@ train_ <- new_scaled[index,]
 test_ <- new_scaled[-index,]
 
 
-nn <- neuralnet(f, data = train_, hidden = c(4, 2), linear.output = T)
+nn <- neuralnet(f, data = train_, hidden = c(2), linear.output = T)
 plot(nn)
 ```
 
@@ -130,13 +139,24 @@ pr.nn <- compute(nn, test_)
 ## these are neural net predictions
 pr.nn2 <- pr.nn$net.result * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
 
-## actual Speed
-test.r <- (test$RallyCount) * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
 
+test.r <- (test$RallyCount) * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
+## actual Speed
+## this isn't quite right either: you need to backtransform the neural net
+## predictions, but, once those are backtransformed, they can
+## be directly compared with rally count. 
+## 
+## a plot can help:
+
+resids.nn <- test.r - pr.nn2
+qplot(resids.nn) ## shouldn't be overpredicting rally count by 200+ shots
+
+resids.nn <- test$RallyCount - pr.nn2
 ## MSE for neural network
-MSE.nn <- sum((test.r - pr.nn2) ^ 2)/ nrow(test)
+MSE.nn <- sum((resids.nn) ^ 2)/ nrow(test)
 MSE.nn
 
-print(paste(MSE.lm, MSE.nn))
+print(c(MSE.lm, MSE.nn))
 ```
 
+The neural network model now does better, but I'm not sure how particularly useful it is to be able to predict rally count from things like distance run. We can talk more about this when we meet.
