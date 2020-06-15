@@ -30,6 +30,13 @@ yearvec <- c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
 
 # atp
 for (i in 1:length(yearvec)) {
+  
+  
+  ## deubgging a for loop: set i = 1 by typing `i <- 1` 
+  ## in the console. Then run this line by line starting with line
+  ## 37 until you get an error
+  ## if you don't get an error, then set i <- 2 and run line by line
+  ## until you get an error, etc.
   gs_decade_small <- 
     gs_decade %>%
     filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
@@ -102,6 +109,13 @@ for (i in 1:length(yearvec)) {
   # define levels
   levels(winners_df$id)
   levels(losers_df$id)
+  ## when i = 1, number of levels aren't equal. Need to fix this....one way
+  ## would be to use an if else statement: if levels(winners_df$id) are
+  ## greater than levels(losers_df$id) then levels(losers_df$id) <- levels(winners_df$id) 
+  ## else if the losers df levels are greater than the winners df levels
+  ## then levels(winners_df$id) <- levels(losers_df$id)
+  ## else do nothing
+  
   
   levels(winners_2015$id)
   levels(losers_2015$id)
