@@ -21,22 +21,17 @@ matches_keep_wta <-
   summarise(matches = n()) %>%
   filter(matches >= 80)
 
-# leave out 2015 to check
 
-pred_stats[i] <- NULL
-pred_stats_wta[i] <- NULL
 
 yearvec <- c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
+
+pred_stats[[i]] <- NULL
+pred_stats_wta[[i]] <- NULL
+
 
 # atp
 for (i in 1:length(yearvec)) {
   
-  
-  ## deubgging a for loop: set i = 1 by typing `i <- 1` 
-  ## in the console. Then run this line by line starting with line
-  ## 37 until you get an error
-  ## if you don't get an error, then set i <- 2 and run line by line
-  ## until you get an error, etc.
   gs_decade_small <- 
     gs_decade %>%
     filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
@@ -107,35 +102,27 @@ for (i in 1:length(yearvec)) {
     mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc)
   
   # define levels
-  
-
-  ## when i = 1, number of levels aren't equal. Need to fix this....one way
-  ## would be to use an if else statement: if levels(winners_df$id) are
-  ## greater than levels(losers_df$id) then levels(losers_df$id) <- levels(winners_df$id) 
-  ## else if the losers df levels are greater than the winners df levels
-  ## then levels(winners_df$id) <- levels(losers_df$id)
-  ## else do nothing
-  ifelse(levels(winners_df$id) > levels(losers_df$id), 
+  ifelse(length(levels(winners_df$id)) > length(levels(losers_df$id)), 
          levels(losers_df$id) <- levels(winners_df$id), 
-         ifelse(levels(losers_df$id) > levels(winners_df$id),
+         ifelse(length(levels(losers_df$id)) > length(levels(winners_df$id)),
                 levels(winners_df$id) <- levels(losers_df$id),
                 levels(losers_df$id) <- levels(losers_df$id)))
   
-  ifelse(levels(winners_2015$id) > levels(losers_2015$id), 
+  ifelse(length(levels(winners_2015$id)) > length(levels(losers_2015$id)), 
          levels(losers_2015$id) <- levels(winners_2015$id), 
-         ifelse(levels(losers_2015$id) > levels(winners_2015$id),
+         ifelse(length(levels(losers_2015$id)) > length(levels(winners_2015$id)),
                 levels(winners_2015$id) <- levels(losers_2015$id),
                 levels(losers_2015$id) <- levels(losers_2015$id)))
   
-  ifelse(levels(winners_wta_df$id) > levels(losers_wta_df$id), 
+  ifelse(length(levels(winners_wta_df$id)) > length(levels(losers_wta_df$id)), 
          levels(losers_wta_df$id) <- levels(winners_wta_df$id), 
-         ifelse(levels(losers_wta_df$id) > levels(winners_wta_df$id),
+         ifelse(length(levels(losers_wta_df$id)) > length(levels(winners_wta_df$id)),
                 levels(winners_wta_df$id) <- levels(losers_wta_df$id),
                 levels(losers_wta_df$id) <- levels(losers_wta_df$id)))
   
-  ifelse(levels(winners_wta_2015$id) > levels(losers_wta_2015$id), 
+  ifelse(length(levels(winners_wta_2015$id)) > length(levels(losers_wta_2015$id)), 
          levels(losers_wta_2015$id) <- levels(winners_wta_2015$id), 
-         ifelse(levels(losers_wta_2015$id) > levels(winners_wta_2015$id),
+         ifelse(length(levels(losers_wta_2015$id)) > length(levels(winners_wta_2015$id)),
                 levels(winners_wta_2015$id) <- levels(losers_wta_2015$id),
                 levels(losers_wta_2015$id) <- levels(losers_wta_2015$id)))
   
@@ -344,23 +331,22 @@ for (i in 1:length(yearvec)) {
   
   # check percents
   # atp
-  pred_stats[i] <-
+  pred_stats[[i]] <- 
     winners_losers_2015 %>%
     group_by(ranges) %>%
-    summarise(sum = sum(win), count = n(),
-              prop = mean(win))
+    summarise(sum = sum(win), count = n(), prop = mean(win))
   
+ 
   # wta
-  pred_stats_wta[i] <-
+  pred_stats_wta[[i]] <-
     winners_losers_wta_2015 %>%
     group_by(ranges) %>%
     summarise(sum = sum(win), count = n(),
               prop = mean(win))
 }
-  
-  
-  
-  
+
+pred_stats
+pred_stats_wta 
   
   
   
