@@ -107,24 +107,37 @@ for (i in 1:length(yearvec)) {
     mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc)
   
   # define levels
-  levels(winners_df$id)
-  levels(losers_df$id)
+  
+
   ## when i = 1, number of levels aren't equal. Need to fix this....one way
   ## would be to use an if else statement: if levels(winners_df$id) are
   ## greater than levels(losers_df$id) then levels(losers_df$id) <- levels(winners_df$id) 
   ## else if the losers df levels are greater than the winners df levels
   ## then levels(winners_df$id) <- levels(losers_df$id)
   ## else do nothing
+  ifelse(levels(winners_df$id) > levels(losers_df$id), 
+         levels(losers_df$id) <- levels(winners_df$id), 
+         ifelse(levels(losers_df$id) > levels(winners_df$id),
+                levels(winners_df$id) <- levels(losers_df$id),
+                levels(losers_df$id) <- levels(losers_df$id)))
   
+  ifelse(levels(winners_2015$id) > levels(losers_2015$id), 
+         levels(losers_2015$id) <- levels(winners_2015$id), 
+         ifelse(levels(losers_2015$id) > levels(winners_2015$id),
+                levels(winners_2015$id) <- levels(losers_2015$id),
+                levels(losers_2015$id) <- levels(losers_2015$id)))
   
-  levels(winners_2015$id)
-  levels(losers_2015$id)
+  ifelse(levels(winners_wta_df$id) > levels(losers_wta_df$id), 
+         levels(losers_wta_df$id) <- levels(winners_wta_df$id), 
+         ifelse(levels(losers_wta_df$id) > levels(winners_wta_df$id),
+                levels(winners_wta_df$id) <- levels(losers_wta_df$id),
+                levels(losers_wta_df$id) <- levels(losers_wta_df$id)))
   
-  levels(winners_wta_df$id)
-  levels(losers_wta_df$id)
-  
-  levels(winners_wta_2015$id)
-  levels(losers_wta_2015$id)
+  ifelse(levels(winners_wta_2015$id) > levels(losers_wta_2015$id), 
+         levels(losers_wta_2015$id) <- levels(winners_wta_2015$id), 
+         ifelse(levels(losers_wta_2015$id) > levels(winners_wta_2015$id),
+                levels(winners_wta_2015$id) <- levels(losers_wta_2015$id),
+                levels(losers_wta_2015$id) <- levels(losers_wta_2015$id)))
   
   
   # fit models
