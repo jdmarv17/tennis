@@ -107,6 +107,7 @@ losers_wta_2015 <-
 
 
 ```{r}
+# define levels
 levels(winners_df$id)
 levels(losers_df$id)
 
@@ -301,7 +302,6 @@ winners_losers_2015 <-
 
 ```{r}
 #join pred_prob to both winners and losers 
-
 # wta
 winners_wta_2015 <-
   bind_cols(winners_wta_2015, pred_prob_wta) %>%
@@ -346,7 +346,6 @@ winners_losers_wta_2015 <-
 
 ```{r}
 # check percents
-
 # atp
 pred_stats <-
   winners_losers_2015 %>%
@@ -360,5 +359,11 @@ pred_stats_wta <-
   group_by(ranges) %>%
   summarise(sum = sum(win), count = n(),
     prop = mean(win))
+```
+
+
+
+```{r}
+# attempt at for loop for model
 ```
 
