@@ -75,7 +75,7 @@ as.data.frame(atp_mod_df$importance2)
 
 # sample for training data
 atp_train_df <- 
-  atp_mod_df[sample(1:nrow(atp_mod_df), 9000, replace = FALSE), ]
+  atp_mod_df[sample(1:nrow(atp_mod_df), 2000, replace = FALSE), ]
 
 # take the rows in whole data set not in training data set
 atp_test_df <-
@@ -159,4 +159,49 @@ MSE.nn
 print(c(MSE.lm, MSE.nn))
 ```
 
-The neural network model now does better, but I'm not sure how particularly useful it is to be able to predict rally count from things like distance run. We can talk more about this when we meet.
+
+```{r}
+nn_mod_df <- 
+  new_atp_df2 %>% 
+  filter(player1 %in% players_keep_atp$name & player2 %in% players_keep_atp$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE)
+
+# split data
+set.seed(7) 
+
+# make variable for row number
+nn_mod_df$rowID <- 1:nrow(nn_mod_df)
+
+as.factor(nn_mod_df$ServeIndicator)
+as.data.frame(nn_mod_df$importance2)
+
+
+
+# sample for training data
+nn_train_df <- 
+  nn_mod_df[sample(1:nrow(nn_mod_df), 4000, replace = FALSE), ]
+
+# take the rows in whole data set not in training data set
+nn_test_df <-
+  anti_join(nn_mod_df, nn_train_df, by = "rowID")
+
+# sample for training data
+wta_train_df <-
+  wta_mod_df[sample(1:nrow(wta_mod_df), 3500, replace = FALSE),]
+
+# take the rows in whole data set not in training data set
+wta_test_df <-
+  anti_join(wta_mod_df, wta_train_df, by = "rowID")
+```
+
+```{r}
+serve_nn <- neuralnet(ServeWidth ~ ServeIndicator + point_score + ServeDepth,
+                      data = nn_train_df,
+                      linear.output = FALSE,
+                      err.fct = 'ce',
+                      likelihood = TRUE,
+                      hidden = c(2,1))
+```
+

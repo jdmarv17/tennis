@@ -325,39 +325,6 @@ both_df <- rbind(new_atp_df2, new_wta_df2)
 
 
 
-# plots
-ggplot(data = wta_df, aes(x = importance, y = netpoint)) +
-  geom_point() +
-  stat_smooth(method = "glm", method.args = c("binomial")) +
-  stat_smooth()
-ggplot(data = atp_df, aes(x = importance, y = netpoint)) +
-  geom_point() +
-  stat_smooth(method = "glm", method.args = c("binomial")) +
-  stat_smooth()
-
-## this is kind of interesting....why would the server
-## get less likely to win the more important points??
-ggplot(data = wta_df, aes(x = importance, y = serverwin)) +
-  geom_jitter(height = 0.12, alpha = 0.1) +
-  stat_smooth(method = "glm", method.args = c("binomial")) +
-  stat_smooth()
-
-##Kovalchik & Ingram Hot heads, cool heads, and tacticians: Measuring the mental game in tennis found this pattern as well....is it fewer aces?
-##slower serves? more double faults? longer rallies? worse placement?
-##more returns in?
-
-
-
-## plot empirical probabilities for the higher importance levels:
-new_atp_df2 %>% filter(importance2 > 0.25) %>%
-  group_by(factor(importance2)) %>%
-  summarise(serverwinemp = mean(serverwin),
-    n = n())
-ggplot(data = new_atp_df2, aes(x = importance2, y = serverwin)) +
-  geom_jitter(height = 0.12, alpha = 0.1) +
-  stat_smooth(method = "glm", method.args = c("binomial")) +
-  stat_smooth()
-
 
 
 
