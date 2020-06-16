@@ -10,6 +10,7 @@ output: html_document
 library(neuralnet)
 library(tidyverse)
 source("data_cleaning.R")
+source("merging_matches.R")
 ```
 
 
@@ -41,7 +42,34 @@ atp_mod_df <-
          Nadal = ifelse(servingplayer == "Rafael Nadal", 1, 0),
          Novak = ifelse(servingplayer == "Novak Djokovic", 1, 0),
          Milos = ifelse(servingplayer == "Milos Raonic", 1, 0))
-  
+
+
+tmp <- 
+  gs_decade %>%
+  filter(winner_name %in% players_keep_atp$name & loser_name %in% players_keep_atp$name) %>%
+  select(winner_name, winner_hand, loser_name, loser_hand) %>%
+  gather(key = win_loss, value = name, winner_name, loser_name) %>%
+  mutate(hand = case_when(
+    win_loss == "winner_name" ~ winner_hand,
+    win_loss == "loser_name" ~ loser_hand
+  )) %>%
+  within(., rm(win_loss, winner_hand, loser_hand))
+tmp <- 
+  inner_join(x = tmp, y = players_keep_atp, by = "name")
+
+nn_mod_df <- 
+  new_atp_df2 %>% 
+  ungroup() %>%
+  filter(player1 %in% players_keep_atp$name & player2 %in% players_keep_atp$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE) %>%
+  mutate(ServeSide = ifelse((serve_point + return_point) %% 2 == 0, "Deuce", "Ad")) %>%
+  mutate(ServerHand = case_when(
+    servingplayer %in% tmp$winner_name ~ tmp$winner_hand,
+    servingplayer %in% tmp$loser_name ~ tmp$loser_hand
+  ))
+
 
 # wta
 players_keep_wta <- 
@@ -134,7 +162,7 @@ plot(nn)
 
 ```{r}
 ## find predictions 
-pr.nn <- compute(nn, test_)
+pr.nn <- neuralnet::compute(nn, test_)
 
 ## these are neural net predictions
 pr.nn2 <- pr.nn$net.result * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
@@ -197,7 +225,7 @@ wta_test_df <-
 ```
 
 ```{r}
-serve_nn <- neuralnet(ServeWidth ~ ServeIndicator + point_score + ServeDepth,
+serve_nn <- neuralnet(ServeWidth ~ ServeIndicator + point_score + ServeDepth + ServeSide,
                       data = nn_train_df,
                       linear.output = FALSE,
                       err.fct = 'ce',
