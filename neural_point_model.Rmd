@@ -93,6 +93,10 @@ nn_mod_df <-
       (serve_point - return_point) <= 0 ~ 0
     )) %>%
   filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
+
+nn_mod_df <-
+  nn_mod_df %>%
+  unite("ServePlacement", c(ServeWidth, ServeDepth))
 ```
 
 
@@ -162,6 +166,10 @@ nn_wta_df <-
       (serve_point - return_point) <= 0 ~ 0
     )) %>%
   filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
+
+nn_wta_df <-
+  nn_wta_df %>%
+  unite("ServePlacement", c(ServeWidth, ServeDepth))
 ```
 
 
@@ -276,20 +284,36 @@ nn_wta_test_df <-
 
 ```{r}
 # fit model
-serve_nn <- neuralnet(ServeWidth ~ serve_number + server_up + serve_depth + serve_side + Handedness,
+serve_nn <- neuralnet(ServePlacement ~ serve_number + server_up + serve_side + Handedness,
                       data = nn_train_df,
                       linear.output = FALSE,
-                      hidden = c(2,1))
+                      hidden = c(3,2))
 plot(serve_nn)
 ```
 
 
 ```{r}
 # predictions
-width_pr <- neuralnet::compute(serve_nn, nn_test_df)
+serve_pr <- neuralnet::compute(serve_nn, nn_test_df)
+
+```
+
+
+```{r}
+# similar pattern between righties and lefties
+# only lefty is nadal though
+ggplot(nn_mod_df, aes(x = ServePlacement)) +
+  geom_bar() +
+  facet_wrap(~ hand + ServeSide)
+
+# pretty similar pattern between sides too
+ggplot(nn_mod_df, aes(x =ServePlacement)) +
+  geom_bar() +
+  facet_wrap("ServeSide")
 
 
 ```
+
 
 
 
