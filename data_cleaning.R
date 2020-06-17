@@ -305,10 +305,6 @@ new_wta_df2 <-
     set_score == "1-1" & game_score == "6-6" & point_score == "0-0" &
       slam != "usopen", 0.144, importance))
 
-new_wta_df2 %>%
-  filter(slam == "frenchopen" & set_score == "1-1" & game_score == "6-6" & point_score == "0-15") %>%
-  select(importance2, everything())
-
 # data for first serves
 final_wta_df1 <-
   new_wta_df2 %>%
