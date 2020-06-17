@@ -72,6 +72,27 @@ tmp <-
 nn_mod_df <-
   left_join(nn_mod_df, tmp, by = c("servingplayer" = "name"))
 
+
+# 0, 1 for categorical
+nn_mod_df <-
+  nn_mod_df %>%
+  mutate(serve_side = case_when(
+    ServeSide == "Deuce" ~ 1,
+    ServeSide == "Ad" ~ 0), 
+    serve_number = case_when(
+      ServeIndicator == 1 ~ 0,
+      ServeIndicator == 2 ~ 1),
+    serve_depth = case_when(
+      ServeDepth == "CTL" ~ 1,
+      ServeDepth == "NCTL" ~ 0),
+    Handedness = case_when(
+      hand == "R" ~ 0,
+      hand == "L" ~ 1),
+    server_up = case_when(
+      (serve_point - return_point) > 0 ~ 1,
+      (serve_point - return_point) <= 0 ~ 0
+    )) %>%
+  filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
 ```
 
 
@@ -120,87 +141,90 @@ tmp2 <-
 # assign hand variable to servingplayer 
 nn_wta_df <-
   left_join(nn_wta_df, tmp2, by = c("servingplayer" = "name"))
+
+# add variables for 0, 1 for categorical variables
+nn_wta_df <-
+  nn_wta_df %>%
+  mutate(serve_side = case_when(
+    ServeSide == "Deuce" ~ 1,
+    ServeSide == "Ad" ~ 0), 
+    serve_number = case_when(
+      ServeIndicator == 1 ~ 0,
+      ServeIndicator == 2 ~ 1),
+    serve_depth = case_when(
+      ServeDepth == "CTL" ~ 1,
+      ServeDepth == "NCTL" ~ 0),
+    Handedness = case_when(
+      hand == "R" ~ 0,
+      hand == "L" ~ 1),
+    server_up = case_when(
+      (serve_point - return_point) > 0 ~ 1,
+      (serve_point - return_point) <= 0 ~ 0
+    )) %>%
+  filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
 ```
 
 
 ```{r}
 # split data
-set.seed(7) 
+#set.seed(7) 
 
 # make variable for row number
-atp_mod_df$rowID <- 1:nrow(atp_mod_df)
-wta_mod_df$rowID <- 1:nrow(wta_mod_df)
+#atp_mod_df$rowID <- 1:nrow(atp_mod_df)
+#wta_mod_df$rowID <- 1:nrow(wta_mod_df)
 
-as.data.frame(atp_mod_df$importance2)
-
-# sample for training data
-atp_train_df <- 
-  atp_mod_df[sample(1:nrow(atp_mod_df), 2000, replace = FALSE), ]
-
-# take the rows in whole data set not in training data set
-atp_test_df <-
-  anti_join(atp_mod_df, atp_train_df, by = "rowID")
+#as.data.frame(atp_mod_df$importance2)
 
 # sample for training data
-wta_train_df <-
-  wta_mod_df[sample(1:nrow(wta_mod_df), 3500, replace = FALSE),]
+#atp_train_df <- 
+#  atp_mod_df[sample(1:nrow(atp_mod_df), 2000, replace = FALSE), ]
 
 # take the rows in whole data set not in training data set
-wta_test_df <-
-  anti_join(wta_mod_df, wta_train_df, by = "rowID")
+#atp_test_df <-
+#  anti_join(atp_mod_df, atp_train_df, by = "rowID")
+
+# sample for training data
+#wta_train_df <-
+#  wta_mod_df[sample(1:nrow(wta_mod_df), 3500, replace = FALSE),]
+
+# take the rows in whole data set not in training data set
+#wta_test_df <-
+#  anti_join(wta_mod_df, wta_train_df, by = "rowID")
 ```
 
 
 ```{r}
+ 
 
-vars <-
-  atp_mod_df %>%
-  ungroup() %>%
-  select(RallyCount, Speed_MPH, importance2, unforcedind, P1DistanceRun, P2DistanceRun) %>%
-  filter(is.na(RallyCount) == FALSE)
+# resids <- pr.lm - test$Speed_MPH
+# qplot(resids) ## all negative: wrong variable being used in the MSE formula
 
 
-index <- sample(1:nrow(vars), round(0.75*nrow(vars)))
-train <- vars[index,]
-test <- vars[-index,]
+# resids <- pr.lm - test$RallyCount
+# MSE.lm <- sum((resids)^2)/nrow(test)
 
-f <- RallyCount ~ importance2 + P1DistanceRun + P2DistanceRun + Speed_MPH + unforcedind
+# max1 <- apply(vars, 2, max)
+# min1 <- apply(vars, 2, min)
 
-reg_mod <- lm(f, data = train)
-pr.lm <- predict(reg_mod, test)
-
-## this isn't quite right: probably best to look at test "residuals" before
-## computing MSE. 
-
-resids <- pr.lm - test$Speed_MPH
-qplot(resids) ## all negative: wrong variable being used in the MSE formula
+# new_scaled <- as.data.frame(scale(vars, center = min1, scale = max1 - min1))
+# train_ <- new_scaled[index,]
+# test_ <- new_scaled[-index,]
 
 
-resids <- pr.lm - test$RallyCount
-MSE.lm <- sum((resids)^2)/nrow(test)
-
-max1 <- apply(vars, 2, max)
-min1 <- apply(vars, 2, min)
-
-new_scaled <- as.data.frame(scale(vars, center = min1, scale = max1 - min1))
-train_ <- new_scaled[index,]
-test_ <- new_scaled[-index,]
-
-
-nn <- neuralnet(f, data = train_, hidden = c(2), linear.output = T)
-plot(nn)
+# nn <- neuralnet(f, data = train_, hidden = c(2), linear.output = T)
+# plot(nn)
 ```
 
 
 ```{r}
 ## find predictions 
-pr.nn <- neuralnet::compute(nn, test_)
+# pr.nn <- neuralnet::compute(nn, test_)
 
 ## these are neural net predictions
-pr.nn2 <- pr.nn$net.result * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
+# pr.nn2 <- pr.nn$net.result * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
 
 
-test.r <- (test$RallyCount) * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
+# test.r <- (test$RallyCount) * (max(vars$RallyCount) - min(vars$RallyCount)) + min(vars$RallyCount)
 ## actual Speed
 ## this isn't quite right either: you need to backtransform the neural net
 ## predictions, but, once those are backtransformed, they can
@@ -208,15 +232,15 @@ test.r <- (test$RallyCount) * (max(vars$RallyCount) - min(vars$RallyCount)) + mi
 ## 
 ## a plot can help:
 
-resids.nn <- test.r - pr.nn2
-qplot(resids.nn) ## shouldn't be overpredicting rally count by 200+ shots
+# resids.nn <- test.r - pr.nn2
+# qplot(resids.nn) ## shouldn't be overpredicting rally count by 200+ shots
 
-resids.nn <- test$RallyCount - pr.nn2
+# resids.nn <- test$RallyCount - pr.nn2
 ## MSE for neural network
-MSE.nn <- sum((resids.nn) ^ 2)/ nrow(test)
-MSE.nn
+# MSE.nn <- sum((resids.nn) ^ 2)/ nrow(test)
+# MSE.nn
 
-print(c(MSE.lm, MSE.nn))
+# print(c(MSE.lm, MSE.nn))
 ```
 
 
@@ -226,33 +250,46 @@ set.seed(7)
 
 # make variable for row number
 nn_mod_df$rowID <- 1:nrow(nn_mod_df)
+nn_wta_df$rowID <- 1:nrow(nn_wta_df)
 
 as.factor(nn_mod_df$ServeIndicator)
 as.data.frame(nn_mod_df$importance2)
 
 
-
 # sample for training data
 nn_train_df <- 
-  nn_mod_df[sample(1:nrow(nn_mod_df), 4000, replace = FALSE), ]
+  nn_mod_df[sample(1:nrow(nn_mod_df), 3000, replace = FALSE), ]
 
 # take the rows in whole data set not in training data set
 nn_test_df <-
-  anti_join(nn_mod_df, nn_train_df, by = "rowID")
+  anti_join(nn_mod_df, nn_train_df, by = "rowID" )
 
 # sample for training data
-wta_train_df <-
-  wta_mod_df[sample(1:nrow(wta_mod_df), 3500, replace = FALSE),]
+nn_wta_train_df <-
+  nn_wta_df[sample(1:nrow(nn_wta_df), 7000, replace = FALSE),] 
 
 # take the rows in whole data set not in training data set
-wta_test_df <-
-  anti_join(wta_mod_df, wta_train_df, by = "rowID")
+nn_wta_test_df <-
+  anti_join(nn_wta_df, nn_wta_train_df, by = "rowID")
 ```
 
+
 ```{r}
-serve_nn <- neuralnet(ServeWidth ~ ServeIndicator + point_score + ServeDepth + ServeSide + hand,
+# fit model
+serve_nn <- neuralnet(ServeWidth ~ serve_number + server_up + serve_depth + serve_side + Handedness,
                       data = nn_train_df,
                       linear.output = FALSE,
                       hidden = c(2,1))
+plot(serve_nn)
 ```
+
+
+```{r}
+# predictions
+width_pr <- neuralnet::compute(serve_nn, nn_test_df)
+
+
+```
+
+
 
