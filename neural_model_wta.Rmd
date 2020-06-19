@@ -1,0 +1,172 @@
+---
+title: "wta_nn_model"
+author: "Josh Marvald"
+date: "6/18/2020"
+output: html_document
+---
+
+
+```{r}
+#install.packages("neuralnet")
+library(neuralnet)
+library(tidyverse)
+source("data_cleaning.R")
+source("merging_matches.R")
+```
+
+
+```{r}
+# keep players with enough matches
+players_keep_wta <- 
+  final_wta_df1 %>% 
+  group_by(match_id) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+  group_by(name) %>%
+  summarise(nmatches = n()) %>%
+  filter(nmatches >= 13 & is.na(name) == FALSE)
+
+wta_mod_df <- 
+  final_wta_df1 %>% 
+  filter(player1 %in% players_keep_wta$name & player2 %in% players_keep_wta$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE)
+
+nn_wta_df <- 
+  new_wta_df2 %>% 
+  ungroup() %>%
+  filter(player1 %in% players_keep_wta$name & player2 %in% players_keep_wta$name) %>% 
+  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  filter(is.na(importance2) == FALSE) %>%
+  mutate(ServeSide = ifelse((serve_point + return_point) %% 2 == 0, "Deuce", "Ad"))
+
+# get df with name and handedness
+tmp <- 
+  wta_gs_decade %>%
+  filter(winner_name %in% players_keep_wta$name & loser_name %in% players_keep_wta$name) %>%
+  select(winner_name, winner_hand, loser_name, loser_hand) %>%
+  gather(key = win_loss, value = name, winner_name, loser_name) %>%
+  mutate(hand = case_when(
+    win_loss == "winner_name" ~ winner_hand,
+    win_loss == "loser_name" ~ loser_hand
+  )) %>%
+  within(., rm(win_loss, winner_hand, loser_hand))
+tmp <- 
+  tmp[!duplicated(tmp2$name),]
+
+# get df with name and height
+tmp2 <- 
+  wta_gs_decade %>%
+  filter(winner_name %in% players_keep_atp$name & loser_name %in% players_keep_atp$name) %>%
+  select(winner_name, winner_ht, loser_name, loser_ht) %>%
+  gather(key = win_loss, value = name, winner_name, loser_name) %>%
+  mutate(height = case_when(
+    win_loss == "winner_name" ~ winner_ht,
+    win_loss == "loser_name" ~ loser_ht
+  )) %>%
+  within(., rm(win_loss, winner_ht, loser_ht))
+tmp2 <- 
+  tmp2[!duplicated(tmp2$name),]
+
+# assign hand and height variable to servingplayer 
+nn_wta_df <-
+  left_join(nn_wta_df, tmp, by = c("servingplayer" = "name"))
+
+# assign height variable to returningplayer 
+nn_wta_df <-
+  left_join(nn_wta_df, tmp2, by = c("returningplayer" = "name"))
+
+# add variables for 0, 1 for categorical variables
+nn_wta_df <-
+  nn_wta_df %>%
+  mutate(serve_side = case_when(
+    ServeSide == "Deuce" ~ 1,
+    ServeSide == "Ad" ~ 0), 
+    serve_number = case_when(
+      ServeIndicator == 1 ~ 0,
+      ServeIndicator == 2 ~ 1),
+    serve_depth = case_when(
+      ServeDepth == "CTL" ~ 1,
+      ServeDepth == "NCTL" ~ 0),
+    Handedness = case_when(
+      hand == "R" ~ 0,
+      hand == "L" ~ 1),
+    server_up = case_when(
+      (serve_point - return_point) > 0 ~ 1,
+      (serve_point - return_point) <= 0 ~ 0
+    )) %>%
+  filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
+
+nn_wta_df <-
+  nn_wta_df %>%
+  unite("ServePlacement", c(ServeWidth, ServeDepth), remove = F) %>%
+  mutate(serve_width = case_when(
+    ServeWidth == "BC" | ServeWidth == "C" ~ "C",
+    ServeWidth == "BW" | ServeWidth == "W" ~ "W",
+    ServeWidth == "B" ~ "B"
+  ))
+
+# separate to get slam and add binary variable
+nn_wta_df <-
+  nn_wta_df %>%
+  separate(match_id, into = c("year", "tmp"), sep = "-", extra = "merge") 
+
+nn_wta_df <-
+ nn_wta_df %>%
+  separate(tmp, into = c("slam", "tourn_id"), sep = "-", extra = "merge") %>%
+  mutate(hard_court = case_when(
+    slam == "usopen" | slam == "ausopen" ~ 1,
+    slam == "wimbledon" | slam == "frenchopen" ~ 0
+  ))
+
+
+# get rid of players without height
+nn_wta_df <-
+  nn_wta_df %>%
+  filter(is.na(height) == F)
+```
+
+
+```{r}
+# split data
+set.seed(7) 
+
+# make variable for row number
+nn_wta_df$rowID <- 1:nrow(nn_wta_df)
+
+as.factor(nn_mod_df$ServeIndicator)
+as.data.frame(nn_mod_df$importance2)
+
+# scale retuner height
+max1 <- 
+  nn_wta_df %>% 
+  summarise(max = max(height))
+min1 <- 
+  nn_wta_df %>% 
+  summarise(min = min(height))
+nn_wta_df$returnheight <- as.data.frame(scale(nn_wta_df$height, center = min1$min, scale = max1$max - min1$min))
+
+# sample for training data
+nn_wta_train_df <-
+  nn_wta_df[sample(1:nrow(nn_wta_df), 7000, replace = FALSE),] 
+
+# take the rows in whole data set not in training data set
+nn_wta_test_df <-
+  anti_join(nn_wta_df, nn_wta_train_df, by = "rowID")
+```
+
+
+```{r}
+ggplot(nn_wta_df, aes(x = serve_width)) +
+  geom_bar() +
+  facet_wrap(~ hand + ServeSide)
+
+
+ggplot(nn_wta_df, aes(x = serve_width)) +
+  geom_bar() +
+  facet_wrap("ServeSide")
+
+```

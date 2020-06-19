@@ -26,7 +26,7 @@ players_keep_atp <-
   pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
   group_by(name) %>%
   summarise(nmatches = n()) %>%
-  filter(nmatches >= 30 & is.na(name) == FALSE)
+  filter(nmatches >= 15 & is.na(name) == FALSE)
 
 # df for numerical response nn
 #atp_mod_df <- 
@@ -68,9 +68,27 @@ tmp <-
 tmp <- 
   tmp[!duplicated(tmp$name),]
 
-# assign hand variable to servingplayer 
+# get df with name and height
+tmp2 <- 
+  gs_decade %>%
+  filter(winner_name %in% players_keep_atp$name & loser_name %in% players_keep_atp$name) %>%
+  select(winner_name, winner_ht, loser_name, loser_ht) %>%
+  gather(key = win_loss, value = name, winner_name, loser_name) %>%
+  mutate(height = case_when(
+    win_loss == "winner_name" ~ winner_ht,
+    win_loss == "loser_name" ~ loser_ht
+  )) %>%
+  within(., rm(win_loss, winner_ht, loser_ht))
+tmp2 <- 
+  tmp2[!duplicated(tmp2$name),]
+
+# assign hand and height variable to servingplayer 
 nn_mod_df <-
   left_join(nn_mod_df, tmp, by = c("servingplayer" = "name"))
+
+# assign height variable to returningplayer 
+nn_mod_df <-
+  left_join(nn_mod_df, tmp2, by = c("returningplayer" = "name"))
 
 
 # 0, 1 for categorical
@@ -112,87 +130,46 @@ nn_mod_df <-
          Stan = ifelse(servingplayer == "Stan Wawrinka", 1, 0),
          Nadal = ifelse(servingplayer == "Rafael Nadal", 1, 0),
          Novak = ifelse(servingplayer == "Novak Djokovic", 1, 0),
-         Milos = ifelse(servingplayer == "Milos Raonic", 1, 0))
-```
+         Milos = ifelse(servingplayer == "Milos Raonic", 1, 0),
+         Isner = ifelse(servingplayer == "John Isner", 1, 0),
+         Tsonga = ifelse(servingplayer == "Jo Wilfried Tsonga", 1, 0),
+         Zverev = ifelse(servingplayer == "Alexander Zverev", 1, 0),
+         Tomic = ifelse(servingplayer == "Bernard Tomic", 1, 0),
+         Ferrer = ifelse(servingplayer == "David Ferrer", 1, 0),
+         Goffin = ifelse(servingplayer == "David Goffin", 1, 0),
+         Monfils = ifelse(servingplayer == "Gael Monfils", 1, 0),
+         Dimitrov = ifelse(servingplayer == "Grigor Dimitrov", 1, 0),
+         Anderson = ifelse(servingplayer == "Kevin Anderson", 1, 0),
+         Edmund = ifelse(servingplayer == "Kyle Edmund", 1, 0),
+         Pouille = ifelse(servingplayer == "Lucas Pouille", 1, 0),
+         Cilic = ifelse(servingplayer == "Marin Cilic", 1, 0),
+         Kyrgios = ifelse(servingplayer == "Nick Kyrgios", 1, 0),
+         Gasquet = ifelse(servingplayer == "Richard Gasquet", 1, 0),
+         Agut = ifelse(servingplayer == "Roberto Bautista Agut", 1, 0),
+         Querrey = ifelse(servingplayer == "Sam Querrey", 1, 0),
+         Johnson = ifelse(servingplayer == "Steve Johnson", 1, 0),
+         Berdych = ifelse(servingplayer == "Tomas Berdych", 1, 0),
+         )
 
+# separate to get slam and add binary variable
+nn_mod_df <-
+  nn_mod_df %>%
+  separate(match_id, into = c("year", "tmp"), sep = "-", extra = "merge") 
 
-```{r}
-# wta
-players_keep_wta <- 
-  final_wta_df1 %>% 
-  group_by(match_id) %>%
-  slice(1) %>%
-  ungroup() %>%
-  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
-  group_by(name) %>%
-  summarise(nmatches = n()) %>%
-  filter(nmatches >= 13 & is.na(name) == FALSE)
-
-wta_mod_df <- 
-  final_wta_df1 %>% 
-  filter(player1 %in% players_keep_wta$name & player2 %in% players_keep_wta$name) %>% 
-  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
-  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
-  filter(is.na(importance2) == FALSE)
-
-nn_wta_df <- 
-  new_wta_df2 %>% 
-  ungroup() %>%
-  filter(player1 %in% players_keep_wta$name & player2 %in% players_keep_wta$name) %>% 
-  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
-  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
-  filter(is.na(importance2) == FALSE) %>%
-  mutate(ServeSide = ifelse((serve_point + return_point) %% 2 == 0, "Deuce", "Ad"))
-
-# get df with name and handedness
-tmp2 <- 
-  wta_gs_decade %>%
-  filter(winner_name %in% players_keep_wta$name & loser_name %in% players_keep_wta$name) %>%
-  select(winner_name, winner_hand, loser_name, loser_hand) %>%
-  gather(key = win_loss, value = name, winner_name, loser_name) %>%
-  mutate(hand = case_when(
-    win_loss == "winner_name" ~ winner_hand,
-    win_loss == "loser_name" ~ loser_hand
-  )) %>%
-  within(., rm(win_loss, winner_hand, loser_hand))
-tmp2 <- 
-  tmp2[!duplicated(tmp2$name),]
-
-# assign hand variable to servingplayer 
-nn_wta_df <-
-  left_join(nn_wta_df, tmp2, by = c("servingplayer" = "name"))
-
-# add variables for 0, 1 for categorical variables
-nn_wta_df <-
-  nn_wta_df %>%
-  mutate(serve_side = case_when(
-    ServeSide == "Deuce" ~ 1,
-    ServeSide == "Ad" ~ 0), 
-    serve_number = case_when(
-      ServeIndicator == 1 ~ 0,
-      ServeIndicator == 2 ~ 1),
-    serve_depth = case_when(
-      ServeDepth == "CTL" ~ 1,
-      ServeDepth == "NCTL" ~ 0),
-    Handedness = case_when(
-      hand == "R" ~ 0,
-      hand == "L" ~ 1),
-    server_up = case_when(
-      (serve_point - return_point) > 0 ~ 1,
-      (serve_point - return_point) <= 0 ~ 0
-    )) %>%
-  filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
-
-nn_wta_df <-
-  nn_wta_df %>%
-  unite("ServePlacement", c(ServeWidth, ServeDepth), remove = F) %>%
-  mutate(serve_width = case_when(
-    ServeWidth == "BC" | ServeWidth == "C" ~ "C",
-    ServeWidth == "BW" | ServeWidth == "W" ~ "W",
-    ServeWidth == "B" ~ "B"
+nn_mod_df <-
+ nn_mod_df %>%
+  separate(tmp, into = c("slam", "tourn_id"), sep = "-", extra = "merge") %>%
+  mutate(hard_court = case_when(
+    slam == "usopen" | slam == "ausopen" ~ 1,
+    slam == "wimbledon" | slam == "frenchopen" ~ 0
   ))
-```
 
+
+# get rid of players without height
+nn_mod_df <-
+  nn_mod_df %>%
+  filter(is.na(height) == F)
+```
 
 ```{r}
 # split data
@@ -279,60 +256,97 @@ set.seed(7)
 
 # make variable for row number
 nn_mod_df$rowID <- 1:nrow(nn_mod_df)
-nn_wta_df$rowID <- 1:nrow(nn_wta_df)
 
 as.factor(nn_mod_df$ServeIndicator)
 as.data.frame(nn_mod_df$importance2)
 
+# scale returner height
+max1 <- 
+  nn_mod_df %>% 
+  summarise(max = max(height))
+min1 <- 
+  nn_mod_df %>% 
+  summarise(min = min(height))
+nn_mod_df$returnheight <- as.data.frame(scale(nn_mod_df$height, center = min1$min, scale = max1$max - min1$min))
 
 # sample for training data
 nn_train_df <- 
-  nn_mod_df[sample(1:nrow(nn_mod_df), 3000, replace = FALSE), ]
+  nn_mod_df[sample(1:nrow(nn_mod_df), 12000, replace = FALSE), ]
 
 # take the rows in whole data set not in training data set
 nn_test_df <-
   anti_join(nn_mod_df, nn_train_df, by = "rowID" )
-
-# sample for training data
-nn_wta_train_df <-
-  nn_wta_df[sample(1:nrow(nn_wta_df), 7000, replace = FALSE),] 
-
-# take the rows in whole data set not in training data set
-nn_wta_test_df <-
-  anti_join(nn_wta_df, nn_wta_train_df, by = "rowID")
 ```
 
 
 ```{r}
 # fit model
-serve_nn <- neuralnet(serve_width ~ serve_number + server_up + serve_side + Handedness + Fed + 
-                        Nadal + Novak + Milos + Nishikori + Stan + Thiem + Murray,
+serve_nn <- neuralnet(serve_width ~ serve_number + server_up + serve_side + Handedness + returnheight + Fed + 
+                      Nadal + Novak + Milos + Nishikori + Stan + Thiem + Murray + Isner + Querrey + Edmund +
+                        Johnson + Anderson + Monfils + Dimitrov + Agut + Gasquet + Tomic + Ferrer + Goffin + 
+                        Berdych + Cilic + Kyrgios + Zverev + Pouille,
                       data = nn_train_df,
                       linear.output = FALSE,
-                      hidden = c(6,3))
+                      hidden = c(20))
 plot(serve_nn)
 ```
 
 
 ```{r}
 # predictions
-serve_pr <- predict(serve_nn, nn_test_df)
+new_pred <- predict(serve_nn, nn_test_df)
+
 
 ```
 
 
 ```{r}
-# similar pattern between righties and lefties
-# only lefty is nadal though
+# if a model just used proportions to guess serve
+nn_train_df %>%
+  group_by(serve_width) %>%
+  summarise(count = n())
+# always predict "C" for serve
+
+# see how many this model would've predicted correctly
+nn_test_df %>%
+  group_by(serve_width) %>%
+  summarise(count = n())
+# model predicts 2087 / 4526 = 0.46
+
+# see how many nn predicts correct
+table(nn_test_df$serve_width, apply(new_pred, 1, which.max))
+# nn predicts (1075 + 1258) / 4526 = 0.515
+```
+
+
+```{r}
+# compare predictions with observed (first version of nn)
+table(nn_test_df$serve_width, apply(serve_pr, 1, which.max))
+# sensitivity (W) = (( + ) / ( +  +  + )) = 
+# specificity (W) = (( + ) / ( +  +  + )) = 
+# sensitivity (C) = (( + ) / ( +  +  + )) = 
+# specificity (C) = (( + ) / ( +  +  + )) = 
+# sensitivity (B) = (( + ) / ( +  +  + )) = 
+# specificity (B) = (( + ) / ( +  +  + )) = 
+```
+
+
+
+
+
+
+
+
+```{r}
 ggplot(nn_mod_df, aes(x = serve_width)) +
   geom_bar() +
   facet_wrap(~ hand + ServeSide)
+# strange that nadal serves same way as righties
 
-# pretty similar pattern between sides too
 ggplot(nn_mod_df, aes(x = serve_width)) +
   geom_bar() +
   facet_wrap("ServeSide")
-
+# it is strange that they go to the forehand more often
 
 ```
 
