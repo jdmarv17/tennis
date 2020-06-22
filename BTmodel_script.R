@@ -65,6 +65,11 @@ for (i in 1:length(yearvec)) {
     select(winner_name, w_serveperc, w_secondserve) %>%
     mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
   
+  losers_df <-
+    gs_decade_small %>%
+    select(loser_name, l_serveperc, l_secondserve) %>%
+    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
+  
   losers_2015 <-
     gs_decade_small_2015 %>%
     select(loser_name, l_serveperc, l_secondserve) %>%
@@ -75,10 +80,6 @@ for (i in 1:length(yearvec)) {
     select(winner_name, w_serveperc, w_secondserve) %>%
     mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
   
-  losers_df <-
-    gs_decade_small %>%
-    select(loser_name, l_serveperc, l_secondserve) %>%
-    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
   
   # wta
   winners_wta_df <-

@@ -1,0 +1,146 @@
+---
+title: "plotting"
+author: "Josh Marvald"
+date: "6/22/2020"
+output: html_document
+---
+
+
+
+```{r}
+library(tidyverse)
+library(BradleyTerry2)
+source("BTmodel_script.R")
+```
+
+
+
+```{r}
+# atp
+gs_decade_small <- 
+    gs_decade %>%
+    filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
+    separate(tourney_id, into = c("year", "tourn_id"), sep = "-" )
+
+# separate winners and losers
+winners_df <-
+    gs_decade_small %>%
+    select(winner_name, w_serveperc, w_secondserve) %>%
+    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
+  
+losers_df <-
+    gs_decade_small %>%
+    select(loser_name, l_serveperc, l_secondserve) %>%
+    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
+
+# define levels
+ifelse(length(levels(winners_df$id)) > length(levels(losers_df$id)), 
+         levels(losers_df$id) <- levels(winners_df$id), 
+         ifelse(length(levels(losers_df$id)) > length(levels(winners_df$id)),
+                levels(winners_df$id) <- levels(losers_df$id),
+                levels(losers_df$id) <- levels(losers_df$id)))
+
+mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df, 
+              formula = ~ id + first_serve:id + first_serve, id = "id", data = gs_decade_small)
+```
+
+
+```{r}
+# atp
+  test <- mod1$coefficients  ## extract model coefficients
+  test2 <- names(mod1$coefficients) %>%
+    str_replace("id", "") ## extract names of model coefficients
+  ref <- levels(mod1$player1$id)[1] ## see who is the reference group
+  
+  nonref <- data.frame(name = test2, coefficient = test) ## coefficients
+  ## for the non-reference group
+  
+  serve_coef <- mod1$coefficients[names(mod1$coefficients) == "first_serve"]
+  ## extract base serve coefficient
+  
+  ## create a data frame for the reference group
+  reference_group <- data.frame(name = c(ref, str_c(ref, ":first_serve")),
+                                coefficient = c(0, 0))
+  
+  test_df <- bind_rows(reference_group, nonref) %>% ## bind reference and non-reference coefficients
+    separate(name, into = c("player", "term"), sep = ":") %>% ## separate names from the interaction with serve percentage
+    mutate(term = case_when(is.na(term) == TRUE ~ "intercept",
+                            TRUE ~ "first_serve")) %>% ## label terms intercept for intercepts and first_serve for slopes
+    mutate(new_coefficient = case_when(term == "intercept" ~ coefficient,
+                                       term == "first_serve" ~ coefficient + serve_coef)) %>% ## define the slope by adding the serve coefficient to the value of first_serve for a particular player (similar to what you would do in STAT 213 when you had an interaction between a categorical and quantitative variable and you wanted to make predictions)
+    filter(player != "first_serve") %>% ## get rid of the slope that we just added: it's useless now
+    select(player, term, new_coefficient) %>% ## only keep relevant variables
+    pivot_wider(names_from = c(term), values_from = new_coefficient) ## tidy up by having each player occupy his own row
+```
+
+```{r}
+# add player column to join with test_df
+winners_df <-
+    winners_df %>%
+    mutate(player = winner_name) 
+  
+losers_df <-
+    losers_df %>%
+    mutate(player = loser_name)
+  
+# obtain predicted "abilities"
+ab1 <- winners_df %>% left_join(test_df, by = "player") 
+ab1 <- ab1 %>%
+  mutate(ability = intercept + first_serve.y * w_serveperc)
+  
+ab2 <- losers_df %>% left_join(test_df, by = "player")
+ab2 <- ab2 %>%
+  mutate(ability = intercept + first_serve.y * l_serveperc)
+
+abilities <- bind_cols(ab1, ab2) %>%
+  select(winner_name, w_serveperc, w_secondserve, win1, ability, loser_name, l_serveperc, l_secondserve, win2, ability1)
+  
+# subtract player abilities to obtain the logodds that the player in ab1
+# beats the player in ab2
+abilities <-
+  abilities %>%
+  mutate(logodds = (ability - ability1))
+  
+## backtransform to get match predictions
+abilities <-
+  abilities %>%
+  mutate(pred_prob = exp(logodds) / (1 + exp(logodds)))
+```
+
+
+
+```{r}
+fed_prob <-
+  abilities %>%
+  filter(winner_name == "Roger Federer" | loser_name == "Roger Federer")
+
+fed_prob <-
+  fed_prob %>%
+  mutate(opponent = case_when(
+    winner_name == "Roger Federer" ~ loser_name,
+    loser_name == "Roger Federer" ~ winner_name
+  ), 
+  first_serve = case_when(
+    winner_name == "Roger Federer" ~ w_serveperc,
+    loser_name == "Roger Federer" ~ l_serveperc
+  ),
+  second_serve = case_when(
+    winner_name == "Roger Federer" ~ w_secondserve,
+    loser_name == "Roger Federer" ~ l_secondserve
+  ),
+  prob_win = case_when(
+    winner_name == "Roger Federer" ~ pred_prob,
+    loser_name == "Roger Federer" ~ (1 - pred_prob)
+  ))
+
+fed_prob <-
+  fed_prob %>%
+  select(opponent, first_serve, second_serve, prob_win)
+```
+
+
+
+
+
+
+

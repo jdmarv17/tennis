@@ -271,7 +271,7 @@ nn_mod_df$returnheight <- as.data.frame(scale(nn_mod_df$height, center = min1$mi
 
 # sample for training data
 nn_train_df <- 
-  nn_mod_df[sample(1:nrow(nn_mod_df), 12000, replace = FALSE), ]
+  nn_mod_df[sample(1:nrow(nn_mod_df), 8000, replace = FALSE), ]
 
 # take the rows in whole data set not in training data set
 nn_test_df <-
@@ -281,13 +281,13 @@ nn_test_df <-
 
 ```{r}
 # fit model
-serve_nn <- neuralnet(serve_width ~ serve_number + server_up + serve_side + Handedness + returnheight + Fed + 
-                      Nadal + Novak + Milos + Nishikori + Stan + Thiem + Murray + Isner + Querrey + Edmund +
+serve_nn <- neuralnet(serve_width ~ serve_number + server_up + serve_side + Handedness + returnheight + hard_court + 
+                        Fed + Nadal + Novak + Milos + Nishikori + Stan + Thiem + Murray + Isner + Querrey + Edmund +
                         Johnson + Anderson + Monfils + Dimitrov + Agut + Gasquet + Tomic + Ferrer + Goffin + 
                         Berdych + Cilic + Kyrgios + Zverev + Pouille,
                       data = nn_train_df,
                       linear.output = FALSE,
-                      hidden = c(20))
+                      hidden = c(10))
 plot(serve_nn)
 ```
 
@@ -295,7 +295,6 @@ plot(serve_nn)
 ```{r}
 # predictions
 new_pred <- predict(serve_nn, nn_test_df)
-
 
 ```
 
@@ -311,25 +310,44 @@ nn_train_df %>%
 nn_test_df %>%
   group_by(serve_width) %>%
   summarise(count = n())
-# model predicts 2087 / 4526 = 0.46
+# model predicts 3971 / 8526 = 0.466
 
 # see how many nn predicts correct
 table(nn_test_df$serve_width, apply(new_pred, 1, which.max))
-# nn predicts (1075 + 1258) / 4526 = 0.515
+# nn predicts (7 + 2218 + 2186) / 8526 = 0.517
 ```
 
 
 ```{r}
-# compare predictions with observed (first version of nn)
-table(nn_test_df$serve_width, apply(serve_pr, 1, which.max))
-# sensitivity (W) = (( + ) / ( +  +  + )) = 
-# specificity (W) = (( + ) / ( +  +  + )) = 
-# sensitivity (C) = (( + ) / ( +  +  + )) = 
-# specificity (C) = (( + ) / ( +  +  + )) = 
-# sensitivity (B) = (( + ) / ( +  +  + )) = 
-# specificity (B) = (( + ) / ( +  +  + )) = 
+# compare predictions with observed 
+table(nn_test_df$serve_width, apply(new_pred, 1, which.max))
+nn_test_df %>%
+  group_by(serve_width) %>%
+  summarise(count = n())
+# sensitivity (W) = 3800 / (3800 + 1614) = 0.702
+# specificity (W) = 4726 / (4726 + 391 + 1746) = 0.689
+
+# sensitivity (W) = 3800 / (3800 + 3800) = 0.5   ????
+# specificity (W) = 4726 / 4726 = 1                ?????
+
+# sensitivity (C) = 3971 / (3971 + 7 + 1746) = 0.69
+# specificity (C) = 4555 / (4555 + 357 + 1609) = 0.699
+
+# sensitivity (C) = 3971 / 3971 = 1    ????
+# specificity (C) = 4555 / 4555 = 1     ????
+
+# sensitivity (B) = 755 / (755 + 357 + 391) = 0.502
+# specificity (B) = 7771 / (7771 + 12) = 0.998
+
+# sensitivity (B) = 755 / (755 + 755) = 0.5  ????
+# specificity (B) = 7771 / 7771 = 1          ????
 ```
 
+```{r}
+df <- data.frame(x = c(1, 2, 10, 3, 7))
+df %>% mutate(x2 = lag(x))
+df %>% mutate(x2 = lag(x, n = 2))
+```
 
 
 
