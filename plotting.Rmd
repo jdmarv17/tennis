@@ -88,15 +88,47 @@ losers_df <-
 ## no longer want actual matches in test_df. 
 ## can start by grabbing Federer's coefficients from the model outout
 ## data set test_df. Then, create a vector of first serve percentages
-## with the seq function. Finally, create a "range of Federer's abilities"
-## by doing intercept + slope * first_serve, where first_serve is the range
-## of first serve percentages
-## 
+## with the seq function. 
+
+fed_intercept <- 
+  test_df %>%
+  filter(player == "Roger Federer") %>%
+  select(intercept)
+fed_slopes <-
+  test_df %>%
+  filter(player == "Roger Federer") %>%
+  select(first_serve)
+fed_int <- fed_intercept$intercept
+fed_slope <- fed_slopes$first_serve
+
+# find max and min
+fed_decade <-
+  gs_decade_small %>%
+  filter(winner_name == "Roger Federer" | loser_name == "Roger Federer") %>%
+  mutate(f_serve = case_when(
+    winner_name == "Roger Federer" ~ w_serveperc,
+    loser_name == "Roger Federer" ~ l_serveperc
+  )) 
+fed_decade %>%
+  summarise(min = min(f_serve), max = max(f_serve))
+# min f_serve = 0.525, max f_serve = 0.773
+
+# vector with serve range
+fed_serves <-
+  c(seq(from = 0.53, to = 0.77, by = 0.01))
+# df with fed abilities
+fed_ability <-
+  data.frame(ability = fed_int + (fed_slope*fed_serves))
+  
 ## Then, you can find the mean first serve percentage for each other player
 ## in the data set, and add these to test_df. Can then compute
 ## "average abilities" for each other player by doing 
 ## intercept + slope * meanfirstservepercentage
-## 
+
+others_abilites <-
+  gs_decade_small %>%
+  group_by()
+ 
 ## the final step is combining the previous two data sets. You want to 
 ## replicate the "average opponent ability" for each line of the Federer 
 ## data set. You could probably use the expand() function to accomplish
