@@ -83,13 +83,8 @@ losers_df <-
     losers_df %>%
     mutate(player = loser_name)
   
-# obtain predicted "abilities"
 
-## no longer want actual matches in test_df. 
-## can start by grabbing Federer's coefficients from the model outout
-## data set test_df. Then, create a vector of first serve percentages
-## with the seq function. 
-
+# get intercept and slope
 fed_intercept <- 
   test_df %>%
   filter(player == "Roger Federer") %>%
@@ -118,16 +113,32 @@ fed_serves <-
   c(seq(from = 0.53, to = 0.77, by = 0.01))
 # df with fed abilities
 fed_ability <-
-  data.frame(ability = fed_int + (fed_slope*fed_serves))
+  data.frame(ability = fed_int + (fed_slope*fed_serves)) %>%
+  mutate(first_serve = fed_serves)
   
-## Then, you can find the mean first serve percentage for each other player
-## in the data set, and add these to test_df. Can then compute
-## "average abilities" for each other player by doing 
-## intercept + slope * meanfirstservepercentage
-
-others_abilites <-
-  gs_decade_small %>%
-  group_by()
+# get df with opponents 
+losers_df <-
+  losers_df %>%
+  select(first_serve, player)
+winners_df <-
+  winners_df %>%
+  select(first_serve, player)
+fed_opponents_df <-
+  bind_rows(winners_df, losers_df)
+fed_opponents_df <-
+  fed_opponents_df[complete.cases(fed_opponents_df),]
+  
+# get opponent abilities with mean serve
+mean_serve <-
+  fed_opponents_df %>%
+  group_by(player) %>%
+  mutate(avg_serve = mean(first_serve)) %>%
+  select(player, avg_serve)
+mean_serve <-
+  mean_serve[!duplicated(mean_serve),]
+opponent_ability <-
+  left_join(mean_serve, test_df, by = "player") %>%
+  mutate(ability = intercept + (first_serve*avg_serve))
  
 ## the final step is combining the previous two data sets. You want to 
 ## replicate the "average opponent ability" for each line of the Federer 
