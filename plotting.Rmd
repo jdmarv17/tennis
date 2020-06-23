@@ -84,6 +84,30 @@ losers_df <-
     mutate(player = loser_name)
   
 # obtain predicted "abilities"
+
+## no longer want actual matches in test_df. 
+## can start by grabbing Federer's coefficients from the model outout
+## data set test_df. Then, create a vector of first serve percentages
+## with the seq function. Finally, create a "range of Federer's abilities"
+## by doing intercept + slope * first_serve, where first_serve is the range
+## of first serve percentages
+## 
+## Then, you can find the mean first serve percentage for each other player
+## in the data set, and add these to test_df. Can then compute
+## "average abilities" for each other player by doing 
+## intercept + slope * meanfirstservepercentage
+## 
+## the final step is combining the previous two data sets. You want to 
+## replicate the "average opponent ability" for each line of the Federer 
+## data set. You could probably use the expand() function to accomplish
+## this. 
+## 
+## Either way, there are probably many ways to get to the final goal:
+## a data frame with opponent, win probability, and Federer's firs tserve 
+## percentage range. But you definitely don't want to be using actual matches
+## for this.
+
+
 ab1 <- winners_df %>% left_join(test_df, by = "player") 
 ab1 <- ab1 %>%
   mutate(ability = intercept + first_serve.y * w_serveperc)
