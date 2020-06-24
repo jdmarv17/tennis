@@ -26,12 +26,14 @@ gs_decade_small <-
 winners_df <-
     gs_decade_small %>%
     select(winner_name, w_serveperc, w_secondserve) %>%
-    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
+    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc) %>%
+    mutate(player = winner_name)
   
 losers_df <-
     gs_decade_small %>%
     select(loser_name, l_serveperc, l_secondserve) %>%
-    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
+    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) %>%
+    mutate(player = loser_name)
 
 # define levels
 ifelse(length(levels(winners_df$id)) > length(levels(losers_df$id)), 
@@ -74,16 +76,6 @@ mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df,
 ```
 
 ```{r}
-# add player column to join with test_df
-winners_df <-
-    winners_df %>%
-    mutate(player = winner_name) 
-  
-losers_df <-
-    losers_df %>%
-    mutate(player = loser_name)
-  
-
 # get intercept and slope
 fed_intercept <- 
   test_df %>%
@@ -167,7 +159,8 @@ combined_abilities <-
 ```{r}
 # plot geom_lines
 ggplot(combined_abilities, aes(x = first_serve, y = pred_prob, color = player)) +
-  geom_line()
+  geom_line() +
+  labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", color = "Opponent")
 ```
 
 
