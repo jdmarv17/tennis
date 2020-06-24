@@ -154,6 +154,84 @@ combined_abilities <-
   mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds)))
 ```
 
+```{r}
+# get intercept and slope
+rafa_intercept <- 
+  test_df %>%
+  filter(player == "Rafael Nadal") %>%
+  select(intercept)
+rafa_slopes <-
+  test_df %>%
+  filter(player == "Rafael Nadal") %>%
+  select(first_serve)
+rafa_int <- rafa_intercept$intercept
+rafa_slope <- rafa_slopes$first_serve
+
+# find max and min
+rafa_decade <-
+  gs_decade_small %>%
+  filter(winner_name == "Rafael Nadal" | loser_name == "Rafael Nadal") %>%
+  mutate(f_serve = case_when(
+    winner_name == "Rafael Nadal" ~ w_serveperc,
+    loser_name == "Rafael Nadal" ~ l_serveperc
+  )) 
+rafa_decade %>%
+  summarise(min = min(f_serve), max = max(f_serve))
+# min f_serve = 0.56, max f_serve = 0.82
+
+# vector with serve range
+rafa_serves <-
+  c(seq(from = 0.56, to = 0.82, by = 0.01))
+# df with fed abilities
+rafa_ability <-
+  data.frame(ability = rafa_int + (rafa_slope*rafa_serves)) %>%
+  mutate(first_serve = rafa_serves)
+  
+# get df with opponents 
+losers_df <-
+  losers_df %>%
+  select(first_serve, player)
+winners_df <-
+  winners_df %>%
+  select(first_serve, player)
+rafa_opponents_df <-
+  bind_rows(winners_df, losers_df)
+rafa_opponents_df <-
+  rafa_opponents_df[complete.cases(rafa_opponents_df),]
+  
+# get opponent abilities with mean serve
+mean_serve <-
+  rafa_opponents_df %>%
+  group_by(player) %>%
+  mutate(avg_serve = mean(first_serve)) %>%
+  select(player, avg_serve)
+mean_serve <-
+  mean_serve[!duplicated(mean_serve),]
+opponent_ability <-
+  left_join(mean_serve, test_df, by = "player") %>%
+  mutate(ability = intercept + (first_serve*avg_serve)) %>%
+  select(player, ability) %>%
+  filter(player != "Rafael Nadal")
+
+opponent_ability <-
+  opponent_ability[rep(seq_len(nrow(opponent_ability)), each = 27),]
+rafa_ability <-
+  bind_rows(rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability, rafa_ability)
+
+combined_abilities <-
+  bind_cols(rafa_ability, opponent_ability)
+
+# subtract player abilities to obtain the logodds that the player in ab1
+# beats the player in ab2
+combined_abilities <-
+  combined_abilities %>%
+  mutate(rafa_logodds = (ability - ability1))
+  
+## backtransform to get match predictions
+combined_abilities <-
+  combined_abilities %>%
+  mutate(pred_prob = exp(rafa_logodds) / (1 + exp(rafa_logodds)))
+```
 
 
 ```{r}
