@@ -138,71 +138,36 @@ mean_serve <-
   mean_serve[!duplicated(mean_serve),]
 opponent_ability <-
   left_join(mean_serve, test_df, by = "player") %>%
-  mutate(ability = intercept + (first_serve*avg_serve))
- 
-## the final step is combining the previous two data sets. You want to 
-## replicate the "average opponent ability" for each line of the Federer 
-## data set. You could probably use the expand() function to accomplish
-## this. 
-## 
-## Either way, there are probably many ways to get to the final goal:
-## a data frame with opponent, win probability, and Federer's firs tserve 
-## percentage range. But you definitely don't want to be using actual matches
-## for this.
+  mutate(ability = intercept + (first_serve*avg_serve)) %>%
+  select(player, ability) %>%
+  filter(player != "Roger Federer")
 
+opponent_ability <-
+  opponent_ability[rep(seq_len(nrow(opponent_ability)), each = 25),]
+fed_ability <-
+  bind_rows(fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability)
 
-ab1 <- winners_df %>% left_join(test_df, by = "player") 
-ab1 <- ab1 %>%
-  mutate(ability = intercept + first_serve.y * w_serveperc)
-  
-ab2 <- losers_df %>% left_join(test_df, by = "player")
-ab2 <- ab2 %>%
-  mutate(ability = intercept + first_serve.y * l_serveperc)
+combined_abilities <-
+  bind_cols(fed_ability, opponent_ability)
 
-abilities <- bind_cols(ab1, ab2) %>%
-  select(winner_name, w_serveperc, w_secondserve, win1, ability, loser_name, l_serveperc, l_secondserve, win2, ability1)
-  
 # subtract player abilities to obtain the logodds that the player in ab1
 # beats the player in ab2
-abilities <-
-  abilities %>%
-  mutate(logodds = (ability - ability1))
+combined_abilities <-
+  combined_abilities %>%
+  mutate(fed_logodds = (ability - ability1))
   
 ## backtransform to get match predictions
-abilities <-
-  abilities %>%
-  mutate(pred_prob = exp(logodds) / (1 + exp(logodds)))
+combined_abilities <-
+  combined_abilities %>%
+  mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds)))
 ```
 
 
 
 ```{r}
-fed_prob <-
-  abilities %>%
-  filter(winner_name == "Roger Federer" | loser_name == "Roger Federer")
-
-fed_prob <-
-  fed_prob %>%
-  mutate(opponent = case_when(
-    winner_name == "Roger Federer" ~ loser_name,
-    loser_name == "Roger Federer" ~ winner_name
-  ), 
-  first_serve = case_when(
-    winner_name == "Roger Federer" ~ w_serveperc,
-    loser_name == "Roger Federer" ~ l_serveperc
-  ),
-  second_serve = case_when(
-    winner_name == "Roger Federer" ~ w_secondserve,
-    loser_name == "Roger Federer" ~ l_secondserve
-  ),
-  prob_win = case_when(
-    winner_name == "Roger Federer" ~ pred_prob,
-    loser_name == "Roger Federer" ~ (1 - pred_prob)
-  ))
-
-fed_prob <-
-  fed_prob %>%
-  select(opponent, first_serve, second_serve, prob_win)
+# plot geom_lines
+ggplot(combined_abilities, aes(x = first_serve, y = pred_prob, color = player)) +
+  geom_line()
 ```
 
 
