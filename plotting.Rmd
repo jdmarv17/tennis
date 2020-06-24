@@ -35,6 +35,8 @@ losers_df <-
     mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) %>%
     mutate(player = loser_name)
 
+winners_losers_df <-
+  bind_cols(winners_df, losers_df)
 # define levels
 ifelse(length(levels(winners_df$id)) > length(levels(losers_df$id)), 
          levels(losers_df$id) <- levels(winners_df$id), 
@@ -238,7 +240,8 @@ combined_abilities <-
 # plot geom_lines
 ggplot(combined_abilities, aes(x = first_serve, y = pred_prob, color = player)) +
   geom_line() +
-  labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", color = "Opponent")
+  labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", color = "Opponent") +
+  theme_bw()
 ```
 
 
