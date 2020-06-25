@@ -68,15 +68,15 @@ test_df <- bind_rows(reference_group, nonref) %>% ## bind reference and non-refe
   pivot_wider(names_from = c(term), values_from = new_coefficient) ## tidy up by having each player occupy his own row
 
 
-
+player_of_interest <- "Roger Federer"
 # get intercept and slope
 fed_intercept <- 
   test_df %>%
-  filter(player == "Roger Federer") %>%
+  filter(player == player_of_interest) %>%
   select(intercept)
 fed_slopes <-
   test_df %>%
-  filter(player == "Roger Federer") %>%
+  filter(player == player_of_interest) %>%
   select(first_serve)
 fed_int <- fed_intercept$intercept
 fed_slope <- fed_slopes$first_serve
@@ -84,18 +84,19 @@ fed_slope <- fed_slopes$first_serve
 # find max and min
 fed_decade <-
   gs_decade_small %>%
-  filter(winner_name == "Roger Federer" | loser_name == "Roger Federer") %>%
+  filter(winner_name == player_of_interest | loser_name == player_of_interest) %>%
   mutate(f_serve = case_when(
-    winner_name == "Roger Federer" ~ w_serveperc,
-    loser_name == "Roger Federer" ~ l_serveperc
+    winner_name == player_of_interest ~ w_serveperc,
+    loser_name == player_of_interest ~ l_serveperc
   )) 
-fed_decade %>%
-  summarise(min = min(f_serve), max = max(f_serve))
+min_max_df <-
+  fed_decade %>%
+  summarise(min = round(min(f_serve),2), max = round(max(f_serve),2))
 # min f_serve = 0.525, max f_serve = 0.773
 
 # vector with serve range
 fed_serves <-
-  c(seq(from = 0.53, to = 0.77, by = 0.01))
+  c(seq(from = min_max_df$min, to = min_max_df$max, by = 0.01))
 # df with fed abilities
 fed_ability <-
   data.frame(ability = fed_int + (fed_slope*fed_serves)) %>%
@@ -125,13 +126,14 @@ opponent_ability <-
   left_join(mean_serve, test_df, by = "player") %>%
   mutate(ability = intercept + (first_serve*avg_serve)) %>%
   select(player, ability) %>%
-  filter(player != "Roger Federer")
+  filter(player != player_of_interest)
 
 opponent_ability <-
-  opponent_ability[rep(seq_len(nrow(opponent_ability)), each = 25),]
+  opponent_ability[rep(seq_len(nrow(opponent_ability)), each = ((min_max_df$max -  min_max_df$min + .01)*100)),]
 fed_ability <-
-  bind_rows(fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability, fed_ability)
+  do.call(rbind, replicate(28, fed_ability, simplify=FALSE)) 
 
+  #data.frame(rep(fed_ability, times = length(matches_keep) - 1))
 combined_abilities <-
   bind_cols(fed_ability, opponent_ability)
 
