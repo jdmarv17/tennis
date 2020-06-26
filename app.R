@@ -1,7 +1,7 @@
 library(shiny)
 library(shinythemes)
 library(tidyverse)
-#source("plotting_script.R")
+source("plotting_script.R")
 
 
 ui <- fluidPage(
@@ -27,43 +27,56 @@ server <- function(input, output, session) {
       filter(winner_name == input$player | loser_name == input$player) %>%
       mutate(f_serve = case_when(
         winner_name == input$player ~ w_serveperc,
-        loser_name == input$player ~ l_serveperc)) %>%
-        summarise(min = round(min(f_serve),2), max = round(max(f_serve),2)))
+        loser_name == input$player ~ l_serveperc)))
+    
+    fed_decade2 <- reactive(
+      fed_decade() %>%
+        summarise(min = round(min(f_serve), 2),
+                  max = round(max(f_serve), 2))
+    )
+    
+    #min <- reactive(
+    #  fed_decade() %>%
+     #   summarise(min = round(min(f_serve), 2)))
+    
+    #max <- reactive(
+     # fed_decade() %>%
+     #   summarise(max = round(max(f_serve), 2)))
+    #min_max_df <- reactive(
+    #  fed_decade() %>%
+    #  summarise(min = round(min(f_serve),2), max = round(max(f_serve),2)))
     
     # vector with serve range
     fed_serves <- reactive(
-      c(seq(from = fed_decade()$min, to = fed_decade()$max, by = 0.01)))
+      c(seq(from = fed_decade2()$min, to = fed_decade2()$max, by = 0.01)))
     # df with fed abilities
     small_fed_abilities <- reactive (
-      data.frame(ability = fed_intercept()$intercept + (fed_slopes()$first_serve*fed_serves()) 
-    ))
-    
-    fed_ability <- reactive(
-      do.call(rbind, replicate(28, small_fed_abilities()))) 
+      data.frame(ability = fed_intercept()$intercept + (fed_slopes()$first_serve*fed_serves()))
+      )
       
-   # final_ability <- reactive(
-    #    do.call(rbind, replicate(28, fed_ability(), simplify=FALSE)))
+    final_ability <- reactive(
+      do.call(rbind, replicate(28, small_fed_abilities(), simplify=FALSE)))
     
     #fed_ability <- reactive(
     #  do.call(rbind, replicate(28, (data.frame(ability = fed_intercept()$intercept + (fed_slopes()$first_serve*fed_serves())) %>%
     #                             mutate(first_serve = fed_serves())), simplify=FALSE)))
     
 
-    #opponent_ability <- reactive(
-     # left_join(mean_serve, test_df, by = "player") %>%
-     # mutate(ability = intercept + (first_serve*avg_serve)) %>%
-     # select(player, ability) %>%
-     # filter(player != input$player))
+  #opponent_ability <- reactive(
+    # left_join(mean_serve, test_df, by = "player") %>%
+    # mutate(ability = intercept + (first_serve*avg_serve)) %>%
+    # select(player, ability) %>%
+    # filter(player != input$player))
     
-    opponent_ability <- reactive(
-      rep(data.frame(seq_len(nrow(left_join(mean_serve, test_df, by = "player") %>%
-                         mutate(ability = intercept + (first_serve*avg_serve)) %>%
-                         select(player, ability) %>%
-                         filter(player != input$player))), each = ((fed_decade()$max -  fed_decade()$min + .01)*100)),))
+  opponent_ability <- reactive(
+    rep(data.frame(seq_len(nrow(left_join(mean_serve, test_df, by = "player") %>%
+      mutate(ability = intercept + (first_serve*avg_serve)) %>%
+      select(player, ability) %>%
+      filter(player != input$player))), each = ((fed_decade2()$max - fed_decade2()$min + .01)*100)),))
     
-    #data.frame(rep(fed_ability, times = length(matches_keep) - 1))
-    combined_abilities <- reactive(
-      bind_cols(opponent_ability(), fed_ability()) %>%
+  #data.frame(rep(fed_ability, times = length(matches_keep) - 1))
+  combined_abilities <- reactive(
+      bind_cols(opponent_ability(), final_ability()) %>%
       mutate(fed_logodds = (ability - ability1)) %>%
       mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds))))
   
