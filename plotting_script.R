@@ -22,333 +22,6 @@ matches_keep_wta <-
   filter(matches >= 80)
 
 
-
-yearvec <- c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
-
-pred_stats[[i]] <- NULL
-pred_stats_wta[[i]] <- NULL
-
-
-# atp
-for (i in 1:length(yearvec)) {
-  
-  gs_decade_small <- 
-    gs_decade %>%
-    filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
-    separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
-    filter(year != yearvec[i]) 
-  
-  gs_decade_small_2015 <-
-    gs_decade %>%
-    filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
-    separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
-    filter(year == yearvec[i])
-  
-  # wta
-  wta_decade_small <-
-    wta_gs_decade %>%
-    filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
-    separate(tourney_id, into = c("year", "tourn_id"), sep = "-") %>%
-    filter(year != yearvec[i])
-  
-  wta_decade_small_2015 <-
-    wta_gs_decade %>%
-    filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
-    separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
-    filter(year == yearvec[i])
-  
-  # split data into winners and losers
-  
-  # atp
-  winners_df <-
-    gs_decade_small %>%
-    select(winner_name, w_serveperc, w_secondserve) %>%
-    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
-  
-  losers_df <-
-    gs_decade_small %>%
-    select(loser_name, l_serveperc, l_secondserve) %>%
-    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
-  
-  losers_2015 <-
-    gs_decade_small_2015 %>%
-    select(loser_name, l_serveperc, l_secondserve) %>%
-    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc)
-  
-  winners_2015 <-
-    gs_decade_small_2015 %>%
-    select(winner_name, w_serveperc, w_secondserve) %>%
-    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
-  
-  
-  # wta
-  winners_wta_df <-
-    wta_decade_small %>%
-    select(winner_name, w_serveperc, w_secondserve) %>%
-    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
-  
-  losers_wta_df <-
-    wta_decade_small %>%
-    select(loser_name, l_serveperc, l_secondserve) %>%
-    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc) 
-  
-  winners_wta_2015 <-
-    wta_decade_small_2015 %>%
-    select(winner_name, w_serveperc, w_secondserve) %>%
-    mutate(win1 = 1, id = as.factor(winner_name), first_serve = w_serveperc)
-  
-  losers_wta_2015 <-
-    wta_decade_small_2015 %>%
-    select(loser_name, l_serveperc, l_secondserve) %>%
-    mutate(win2 = 0, id = as.factor(loser_name), first_serve = l_serveperc)
-  
-  # define levels
-  ifelse(length(levels(winners_df$id)) > length(levels(losers_df$id)), 
-         levels(losers_df$id) <- levels(winners_df$id), 
-         ifelse(length(levels(losers_df$id)) > length(levels(winners_df$id)),
-                levels(winners_df$id) <- levels(losers_df$id),
-                levels(losers_df$id) <- levels(losers_df$id)))
-  
-  ifelse(length(levels(winners_2015$id)) > length(levels(losers_2015$id)), 
-         levels(losers_2015$id) <- levels(winners_2015$id), 
-         ifelse(length(levels(losers_2015$id)) > length(levels(winners_2015$id)),
-                levels(winners_2015$id) <- levels(losers_2015$id),
-                levels(losers_2015$id) <- levels(losers_2015$id)))
-  
-  ifelse(length(levels(winners_wta_df$id)) > length(levels(losers_wta_df$id)), 
-         levels(losers_wta_df$id) <- levels(winners_wta_df$id), 
-         ifelse(length(levels(losers_wta_df$id)) > length(levels(winners_wta_df$id)),
-                levels(winners_wta_df$id) <- levels(losers_wta_df$id),
-                levels(losers_wta_df$id) <- levels(losers_wta_df$id)))
-  
-  ifelse(length(levels(winners_wta_2015$id)) > length(levels(losers_wta_2015$id)), 
-         levels(losers_wta_2015$id) <- levels(winners_wta_2015$id), 
-         ifelse(length(levels(losers_wta_2015$id)) > length(levels(winners_wta_2015$id)),
-                levels(winners_wta_2015$id) <- levels(losers_wta_2015$id),
-                levels(losers_wta_2015$id) <- levels(losers_wta_2015$id)))
-  
-  
-  # fit models
-  # atp mod with just player 
-  mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df, 
-              formula = ~ id + first_serve:id + first_serve, id = "id", data = gs_decade_small)
-  
-  # wta mod with just player
-  wta_mod1 <- BTm(cbind(win1, win2), player1 = winners_wta_df, player2 = losers_wta_df, 
-                  formula = ~ id + first_serve:id + first_serve, id = "id", data = wta_decade_small)
-  
-  
-  # atp
-  test <- mod1$coefficients  ## extract model coefficients
-  test2 <- names(mod1$coefficients) %>%
-    str_replace("id", "") ## extract names of model coefficients
-  ref <- levels(mod1$player1$id)[1] ## see who is the reference group
-  
-  nonref <- data.frame(name = test2, coefficient = test) ## coefficients
-  ## for the non-reference group
-  
-  serve_coef <- mod1$coefficients[names(mod1$coefficients) == "first_serve"]
-  ## extract base serve coefficient
-  
-  ## create a data frame for the reference group
-  reference_group <- data.frame(name = c(ref, str_c(ref, ":first_serve")),
-                                coefficient = c(0, 0))
-  
-  test_df <- bind_rows(reference_group, nonref) %>% ## bind reference and non-reference coefficients
-    separate(name, into = c("player", "term"), sep = ":") %>% ## separate names from the interaction with serve percentage
-    mutate(term = case_when(is.na(term) == TRUE ~ "intercept",
-                            TRUE ~ "first_serve")) %>% ## label terms intercept for intercepts and first_serve for slopes
-    mutate(new_coefficient = case_when(term == "intercept" ~ coefficient,
-                                       term == "first_serve" ~ coefficient + serve_coef)) %>% ## define the slope by adding the serve coefficient to the value of first_serve for a particular player (similar to what you would do in STAT 213 when you had an interaction between a categorical and quantitative variable and you wanted to make predictions)
-    filter(player != "first_serve") %>% ## get rid of the slope that we just added: it's useless now
-    select(player, term, new_coefficient) %>% ## only keep relevant variables
-    pivot_wider(names_from = c(term), values_from = new_coefficient) ## tidy up by having each player occupy his own row
-  
-  
-  # add player column to join with test_df
-  winners_2015 <-
-    winners_2015 %>%
-    mutate(player = winner_name) 
-  
-  losers_2015 <-
-    losers_2015 %>%
-    mutate(player = loser_name)
-  
-  ## obtain predicted "abilities"
-  ab1 <- winners_2015 %>% left_join(test_df, by = "player") 
-  ab1 <- ab1 %>%
-    mutate(ability = intercept + first_serve.y * w_serveperc)
-  
-  ab2 <- losers_2015 %>% left_join(test_df, by = "player")
-  ab2 <- ab2 %>%
-    mutate(ability = intercept + first_serve.y * l_serveperc)
-  
-  ## subtract player abilities to obtain the logodds that the player in ab1
-  ## beats the player in ab2
-  logodds <- ab1 %>% select(ability) - 
-    ab2 %>% select(ability)
-  
-  ## backtransform to get match predictions
-  pred_prob <- exp(logodds) / (1 + exp(logodds))
-  
-  
-  #wta
-  test_wta <- wta_mod1$coefficients  ## extract model coefficients
-  test2_wta <- names(wta_mod1$coefficients) %>%
-    str_replace("id", "") ## extract names of model coefficients
-  ref_wta <- levels(wta_mod1$player1$id)[1] ## see who is the reference group
-  
-  nonref_wta <- data.frame(name = test2_wta, coefficient = test_wta) ## coefficients
-  ## for the non-reference group
-  
-  serve_coef_wta <- wta_mod1$coefficients[names(wta_mod1$coefficients) == "first_serve"]
-  ## extract base serve coefficient
-  
-  ## create a data frame for the reference group
-  reference_group_wta <- data.frame(name = c(ref_wta, str_c(ref_wta, ":first_serve")),
-                                    coefficient = c(0, 0))
-  
-  test_df_wta <- bind_rows(reference_group_wta, nonref_wta) %>% ## bind reference and non-reference coefficients
-    separate(name, into = c("player", "term"), sep = ":") %>% ## separate names from the interaction with serve percentage
-    mutate(term = case_when(is.na(term) == TRUE ~ "intercept",
-                            TRUE ~ "first_serve")) %>% ## label terms intercept for intercepts and first_serve for slopes
-    mutate(new_coefficient = case_when(term == "intercept" ~ coefficient,
-                                       term == "first_serve" ~ coefficient + serve_coef_wta)) %>% ## define the slope by adding the serve coefficient to the value of first_serve for a particular player (similar to what you would do in STAT 213 when you had an interaction between a categorical and quantitative variable and you wanted to make predictions)
-    filter(player != "first_serve") %>% ## get rid of the slope that we just added: it's useless now
-    select(player, term, new_coefficient) %>% ## only keep relevant variables
-    pivot_wider(names_from = c(term), values_from = new_coefficient) ## tidy up by having each player occupy his own row
-  
-  
-  
-  # add player column to join with test_df
-  winners_wta_2015 <-
-    winners_wta_2015 %>%
-    mutate(player = winner_name) 
-  
-  losers_wta_2015 <-
-    losers_wta_2015 %>%
-    mutate(player = loser_name)
-  
-  ## obtain predicted "abilities"
-  ab1_wta <- winners_wta_2015 %>% left_join(test_df_wta, by = "player") 
-  ab1_wta <- ab1_wta %>%
-    mutate(ability = intercept + first_serve.y * w_serveperc)
-  
-  ab2_wta <- losers_wta_2015 %>% left_join(test_df_wta, by = "player")
-  ab2_wta <- ab2_wta %>%
-    mutate(ability = intercept + first_serve.y * l_serveperc)
-  
-  ## subtract player abilities to obtain the logodds that the player in ab1
-  ## beats the player in ab2
-  logodds_wta <- ab1_wta %>% select(ability) - 
-    ab2_wta %>% select(ability)
-  
-  ## backtransform to get match predictions
-  pred_prob_wta <- exp(logodds_wta) / (1 + exp(logodds_wta))
-  
-  
-  # join pred_prob to both winners and losers 
-  
-  # atp
-  winners_2015 <-
-    bind_cols(winners_2015, pred_prob) %>%
-    mutate(win = win1) %>%
-    within(., rm(id, winner_name, w_serveperc, w_secondserve, win1))
-  
-  
-  losers_2015 <-
-    bind_cols(losers_2015, pred_prob) %>%
-    mutate(win = win2) %>%
-    within(., rm(id, loser_name, l_serveperc, l_secondserve, win2)) 
-  
-  
-  # add categorical variable for probability ranges
-  winners_2015 <-
-    winners_2015 %>%
-    mutate(ranges = case_when(
-      ability < 0.5 ~ "tmp",
-      ability >= 0.5 & ability < 0.6 ~ "fifties",
-      ability >= 0.6 & ability < 0.7 ~ "sixties",
-      ability >= 0.7 & ability < 0.8 ~ "seventies",
-      ability >= 0.8 & ability < 0.9 ~ "eighties",
-      ability >= 0.9 ~ "nineties"
-    ))
-  
-  losers_2015 <-
-    losers_2015 %>%
-    mutate(ranges = case_when(
-      1 - ability < 0.5 ~ "tmp",
-      1 - ability >= 0.5 & 1 - ability < 0.6 ~ "fifties",
-      1 - ability >= 0.6 & 1 - ability < 0.7 ~ "sixties",
-      1 - ability >= 0.7 & 1 - ability < 0.8 ~ "seventies",
-      1 - ability >= 0.8 & 1 - ability < 0.9 ~ "eighties",
-      1 - ability >= 0.9 ~ "nineties"
-    ))
-  
-  winners_losers_2015 <-
-    bind_rows(winners_2015, losers_2015) %>%
-    filter(ranges == "fifties" | ranges == "sixties" | ranges == "seventies" | ranges == "eighties" | ranges == "nineties")
-  
-  
-  # wta
-  winners_wta_2015 <-
-    bind_cols(winners_wta_2015, pred_prob_wta) %>%
-    mutate(win = win1) %>%
-    within(., rm(id, winner_name, w_serveperc, w_secondserve, win1))
-  
-  
-  losers_wta_2015 <-
-    bind_cols(losers_wta_2015, pred_prob_wta) %>%
-    mutate(win = win2) %>%
-    within(., rm(id, loser_name, l_serveperc, l_secondserve, win2)) 
-  
-  
-  # add categorical variable for probability ranges
-  winners_wta_2015 <-
-    winners_wta_2015 %>%
-    mutate(ranges = case_when(
-      ability < 0.5 ~ "tmp",
-      ability >= 0.5 & ability < 0.6 ~ "fifties",
-      ability >= 0.6 & ability < 0.7 ~ "sixties",
-      ability >= 0.7 & ability < 0.8 ~ "seventies",
-      ability >= 0.8 & ability < 0.9 ~ "eighties",
-      ability >= 0.9 ~ "nineties"
-    ))
-  
-  losers_wta_2015 <-
-    losers_wta_2015 %>%
-    mutate(ranges = case_when(
-      1 - ability < 0.5 ~ "tmp",
-      1 - ability >= 0.5 & 1 - ability < 0.6 ~ "fifties",
-      1 - ability >= 0.6 & 1 - ability < 0.7 ~ "sixties",
-      1 - ability >= 0.7 & 1 - ability < 0.8 ~ "seventies",
-      1 - ability >= 0.8 & 1 - ability < 0.9 ~ "eighties",
-      1 - ability >= 0.9 ~ "nineties"
-    ))
-  
-  winners_losers_wta_2015 <-
-    bind_rows(winners_wta_2015, losers_wta_2015) %>%
-    filter(ranges == "fifties" | ranges == "sixties" | ranges == "seventies" | ranges == "eighties" | ranges == "nineties")
-  
-  # check percents
-  # atp
-  pred_stats[[i]] <- 
-    winners_losers_2015 %>%
-    group_by(ranges) %>%
-    summarise(sum = sum(win), count = n(), prop = mean(win))
-  
-  
-  # wta
-  pred_stats_wta[[i]] <-
-    winners_losers_wta_2015 %>%
-    group_by(ranges) %>%
-    summarise(sum = sum(win), count = n(),
-              prop = mean(win))
-}
-
-
-
-
 # atp
 gs_decade_small <- 
   gs_decade %>%
@@ -411,46 +84,6 @@ test_df <- bind_rows(reference_group, nonref) %>% ## bind reference and non-refe
 
 
 player_of_interest <- "Roger Federer"
-# get intercept and slope
-fed_intercept <- 
-  test_df %>%
-  filter(player == player_of_interest) %>%
-  select(intercept)
-fed_slopes <-
-  test_df %>%
-  filter(player == player_of_interest) %>%
-  select(first_serve)
-fed_int <- fed_intercept$intercept
-fed_slope <- fed_slopes$first_serve
-
-# find max and min
-fed_decade <-
-  gs_decade_small %>%
-  filter(winner_name == player_of_interest | loser_name == player_of_interest) %>%
-  mutate(f_serve = case_when(
-    winner_name == player_of_interest ~ w_serveperc,
-    loser_name == player_of_interest ~ l_serveperc)) 
-
-fed_decade <-
-  fed_decade%>%
-  summarise(min = min(f_serve))
-
-min <-
-  fed_decade %>%
-  summarise(min = round(min(f_serve), 2))
-
-min_max_df <-
-  fed_decade %>%
-  summarise(min = round(min(f_serve),2), max = round(max(f_serve),2))
-# min f_serve = 0.525, max f_serve = 0.773
-
-# vector with serve range
-fed_serves <-
-  c(seq(from = min_max_df$min, to = min_max_df$max, by = 0.01))
-# df with fed abilities
-fed_ability <-
-  data.frame(ability = fed_int + (fed_slope*fed_serves)) %>%
-  mutate(first_serve = fed_serves)
 
 # get df with opponents 
 losers_df <-
@@ -459,10 +92,43 @@ losers_df <-
 winners_df <-
   winners_df %>%
   select(first_serve, player)
-fed_opponents_df <-
-  bind_rows(winners_df, losers_df)
-fed_opponents_df <-
-  fed_opponents_df[complete.cases(fed_opponents_df),]
+#fed_opponents_df <-
+#  bind_rows(winners_df, losers_df)
+#fed_opponents_df <-
+#  fed_opponents_df[complete.cases(fed_opponents_df),]
+
+# get intercept and slope
+#fed_intercept <- 
+#  test_df %>%
+#  filter(player == player_of_interest) %>%
+#  select(intercept)
+#fed_slopes <-
+#  test_df %>%
+#  filter(player == player_of_interest) %>%
+#  select(first_serve)
+#fed_int <- fed_intercept$intercept
+#fed_slope <- fed_slopes$first_serve
+
+# find max and min
+#fed_decade <-
+#  gs_decade_small %>%
+#  filter(winner_name == player_of_interest | loser_name == player_of_interest) %>%
+#  mutate(f_serve = case_when(
+#    winner_name == player_of_interest ~ w_serveperc,
+#    loser_name == player_of_interest ~ l_serveperc)) 
+
+#min_max_df <-
+#  fed_decade %>%
+#  summarise(min = round(min(f_serve),2), max = round(max(f_serve),2))
+# min f_serve = 0.525, max f_serve = 0.773
+
+# vector with serve range
+#fed_serves <-
+#  c(seq(from = min_max_df$min, to = min_max_df$max, by = 0.01))
+# df with fed abilities
+#fed_ability <-
+#  data.frame(ability = fed_int + (fed_slope*fed_serves)) %>%
+#  mutate(first_serve = fed_serves)
 
 # get opponent abilities with mean serve
 mean_serve <-
@@ -472,28 +138,28 @@ mean_serve <-
   select(player, avg_serve)
 mean_serve <-
   mean_serve[!duplicated(mean_serve),]
-opponent_ability <-
-  left_join(mean_serve, test_df, by = "player") %>%
-  mutate(ability = intercept + (first_serve*avg_serve)) %>%
-  select(player, ability) %>%
-  filter(player != player_of_interest)
+#opponent_ability <-
+#  left_join(mean_serve, test_df, by = "player") %>%
+#  mutate(ability = intercept + (first_serve*avg_serve)) %>%
+#  select(player, ability) %>%
+#  filter(player != player_of_interest)
 
-opponent_ability <-
-  opponent_ability[rep(seq_len(nrow(opponent_ability)), each = ((min_max_df$max -  min_max_df$min + .01)*100)),]
-fed_ability <-
-  do.call(rbind, replicate(28, fed_ability, simplify=FALSE)) 
+#opponent_ability <-
+#  opponent_ability[rep(seq_len(nrow(opponent_ability)), each = ((min_max_df$max -  min_max_df$min + .01)*100)),]
+#fed_ability <-
+#  do.call(rbind, replicate(28, fed_ability, simplify=FALSE)) 
 
   #data.frame(rep(fed_ability, times = length(matches_keep) - 1))
-combined_abilities <-
-  bind_cols(fed_ability, opponent_ability)
+#combined_abilities <-
+#  bind_cols(fed_ability, opponent_ability)
 
 # subtract player abilities to obtain the logodds that the player in ab1
 # beats the player in ab2
-combined_abilities <-
-  combined_abilities %>%
-  mutate(fed_logodds = (ability - ability1))
+#combined_abilities <-
+#  combined_abilities %>%
+#  mutate(fed_logodds = (ability - ability1))
 
 ## backtransform to get match predictions
-combined_abilities <-
-  combined_abilities %>%
-  mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds)))
+#combined_abilities <-
+#  combined_abilities %>%
+#  mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds)))
