@@ -271,7 +271,7 @@ nn_mod_df$returnheight <- as.data.frame(scale(nn_mod_df$height, center = min1$mi
 
 # sample for training data
 nn_train_df <- 
-  nn_mod_df[sample(1:nrow(nn_mod_df), 8000, replace = FALSE), ]
+  nn_mod_df[sample(1:nrow(nn_mod_df), 7000, replace = FALSE), ]
 
 # take the rows in whole data set not in training data set
 nn_test_df <-
@@ -281,8 +281,7 @@ nn_test_df <-
 
 ```{r}
 # fit model
-serve_nn <- neuralnet(serve_width ~ serve_number + server_up + serve_side + Handedness + returnheight + hard_court + 
-                        Fed + Nadal + Novak + Milos + Nishikori + Stan + Thiem + Murray + Isner + Querrey + Edmund +
+serve_nn <- neuralnet(serve_width ~ serve_number + server_up + serve_side + Handedness + returnheight + hard_court + importance2 + Fed + Nadal + Novak + Milos + Nishikori + Stan + Thiem + Murray + Isner + Querrey + Edmund +
                         Johnson + Anderson + Monfils + Dimitrov + Agut + Gasquet + Tomic + Ferrer + Goffin + 
                         Berdych + Cilic + Kyrgios + Zverev + Pouille,
                       data = nn_train_df,
@@ -311,10 +310,13 @@ nn_test_df %>%
   group_by(serve_width) %>%
   summarise(count = n())
 # model predicts 3971 / 8526 = 0.466
+# 4408 / 9526 = 0.462 
 
 # see how many nn predicts correct
 table(nn_test_df$serve_width, apply(new_pred, 1, which.max))
 # nn predicts (7 + 2218 + 2186) / 8526 = 0.517
+# (2423 + 2376) / 9526 = 0.503 (with importance2)
+
 ```
 
 
