@@ -2,6 +2,7 @@ library(shiny)
 library(shinythemes)
 library(tidyverse)
 library(BradleyTerry2)
+library(ggthemes)
 
 atp2010 <- read_csv("data/atp_matches_2010.csv")
 atp2011 <- read_csv("data/atp_matches_2011.csv")
@@ -463,7 +464,7 @@ server <- function(input, output, session) {
     ))
       
   final_ability <- reactive(
-      do.call(rbind, replicate(ifelse(input$tour == "ATP", 28, 25), small_fed_abilities(), simplify=FALSE)))
+      do.call(rbind, replicate(ifelse(input$tour == "ATP", 28, 26), small_fed_abilities(), simplify=FALSE)))
 
   tmp <- reactive(
     if (input$tour == "ATP") {
@@ -495,7 +496,7 @@ server <- function(input, output, session) {
       geom_line(size = 2) +
       labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
       coord_cartesian(ylim = c(0, 1)) +
-      theme_bw(base_size = 16) 
+      theme_economist(base_size = 16) #how can we make it so adding players doesnt change the color of opponents already selected
     #+fct_reorder2(player)
     })
   

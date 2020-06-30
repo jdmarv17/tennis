@@ -413,16 +413,19 @@ ui <- fluidPage(
   theme = shinytheme("superhero"),
   sidebarPanel(
     radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
-    
-  conditionalPanel(
-    condition = "input.tour == 'ATP'",
-    selectInput(inputId = "player", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
-    selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
   
-  conditionalPanel(
-    condition = "input.tour == 'WTA'",
-    selectInput(inputId = "player", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
-    selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),
+  uiOutput("gender")  
+    
+  #conditionalPanel(
+   # condition = "input.tour == 'WTA'",
+    #selectInput(inputId = "player", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
+    #selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
+    
+  #conditionalPanel(
+   # condition = "input.tour == 'ATP'",
+    #selectInput(inputId = "player", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
+    #selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
+  
   ),
   
  #   plotOutput("fedBT"),
@@ -431,6 +434,13 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  output$gender <- renderUI({
+    if(input$tour == "ATP") myChoices <- c(matches_keep$player)
+    else myChoices <- c(matches_keep_wta$player)
+  
+  selectInput(inputId = "player", label = "Choose player of interest", choices = myChoices)
+  selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = myChoices)
+  })  
   # get intercept and slope
   fed_intercept <- reactive(
     test_df %>%
