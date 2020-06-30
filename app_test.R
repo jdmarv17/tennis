@@ -2,6 +2,7 @@ library(shiny)
 library(shinythemes)
 library(tidyverse)
 library(BradleyTerry2)
+library(ggthemes)
 
 atp2010 <- read_csv("data/atp_matches_2010.csv")
 atp2011 <- read_csv("data/atp_matches_2011.csv")
@@ -244,7 +245,8 @@ wta_decade_small <-
   wta_gs_decade %>%
   filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
   separate(tourney_id, into = c("year", "tourn_id"), sep = "-") %>%
-  mutate(tour = "WTA")
+  mutate(tour = "WTA") %>%
+  filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
 
 combined_decade <-
   bind_rows(gs_decade_small, wta_decade_small)
@@ -414,7 +416,6 @@ ui <- fluidPage(
   sidebarPanel(
     radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
 
-    
   conditionalPanel(
     condition = "input.tour == 'WTA'",
     selectInput(inputId = "playerfemale", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
@@ -426,9 +427,7 @@ ui <- fluidPage(
     selectInput(inputId = "opponentmale", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
   
   ),
-  
     plotOutput("fedBT")
-  #textOutput("test")
 )
 
 server <- function(input, output, session) {
@@ -524,21 +523,13 @@ server <- function(input, output, session) {
   
   
   output$fedBT <- renderPlot({
-##    ggplot(plot_df(), aes(x = fir_serve)) +
-##      geom_histogram()
-       ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
+    ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
        geom_line(size = 2) +
        labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
        coord_cartesian(ylim = c(0, 1)) +
-       theme_bw(base_size = 16) 
+       theme_economist(base_size = 20) 
     #+fct_reorder2(player)
-#    })
- #output$test <- renderPrint({
-   #if (input$tour == "ATP") {
-   # cat(input$playermale) }
-  # else {
-   # cat(input$playerfemale)
-   #}
+
   
   })
 }
