@@ -413,51 +413,66 @@ ui <- fluidPage(
   theme = shinytheme("superhero"),
   sidebarPanel(
     radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
-  
-  uiOutput("gender")  
+
     
-  #conditionalPanel(
-   # condition = "input.tour == 'WTA'",
-    #selectInput(inputId = "player", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
-    #selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
+  conditionalPanel(
+    condition = "input.tour == 'WTA'",
+    selectInput(inputId = "playerfemale", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
+    selectInput(inputId = "opponentfemale", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
     
-  #conditionalPanel(
-   # condition = "input.tour == 'ATP'",
-    #selectInput(inputId = "player", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
-    #selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
+  conditionalPanel(
+    condition = "input.tour == 'ATP'",
+    selectInput(inputId = "playermale", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
+    selectInput(inputId = "opponentmale", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
   
   ),
   
- #   plotOutput("fedBT"),
-  textOutput("test")
+    plotOutput("fedBT")
+  #textOutput("test")
 )
 
 server <- function(input, output, session) {
   
-  output$gender <- renderUI({
-    if(input$tour == "ATP") myChoices <- c(matches_keep$player)
-    else myChoices <- c(matches_keep_wta$player)
-  
-  selectInput(inputId = "player", label = "Choose player of interest", choices = myChoices)
-  selectInput(inputId = "opponent", label = "Choose opponent(s)", choices = myChoices)
-  })  
   # get intercept and slope
   fed_intercept <- reactive(
-    test_df %>%
-    filter(player == input$player) %>%
-    select(intercept))
+    if (input$tour == "ATP") {
+      test_df %>%
+        filter(player == input$playermale) %>%
+        select(intercept) }
+    else {
+      test_df %>%
+        filter(player == input$playerfemale) %>%
+        select(intercept) 
+      })
+  
+  
   fed_slopes <- reactive(
-    test_df %>%
-    filter(player == input$player) %>%
-    select(first_serve))
+    if (input$tour == "ATP") {
+      test_df %>%
+        filter(player == input$playermale) %>%
+        select(first_serve) }
+    else {
+      test_df %>%
+        filter(player == input$playerfemale) %>%
+        select(first_serve) 
+      })
+    
     
   # find max and min
   fed_decade <- reactive(
-    combined_decade %>%
-    filter(winner_name == input$player | loser_name == input$player) %>%
-    mutate(f_serve = case_when(
-      winner_name == input$player ~ w_serveperc,
-      loser_name == input$player ~ l_serveperc)))
+    if (input$tour == "ATP") {
+      combined_decade %>%
+        filter(winner_name == input$playermale | loser_name == input$playermale) %>%
+        mutate(f_serve = case_when(
+          winner_name == input$playermale ~ w_serveperc,
+          loser_name == input$playermale ~ l_serveperc)) }
+    else {
+      combined_decade %>%
+        filter(winner_name == input$playerfemale | loser_name == input$playerfemale) %>%
+        mutate(f_serve = case_when(
+          winner_name == input$playerfemale ~ w_serveperc,
+          loser_name == input$playerfemale ~ l_serveperc))
+    })
     
   fed_decade2 <- reactive(
     fed_decade() %>%
@@ -481,12 +496,12 @@ server <- function(input, output, session) {
            left_join(mean_serve, test_df, by = "player") %>%
              mutate(ability = intercept + (first_serve*avg_serve)) %>%
              select(player, ability, first_serve) %>%
-             filter(player != input$player) }
+             filter(player != input$playermale) }
     else {
           left_join(mean_serve_wta, test_df, by = "player") %>%
             mutate(ability = intercept + (first_serve*avg_serve)) %>%
             select(player, ability, first_serve) %>%
-            filter(player != input$player) }
+            filter(player != input$playerfemale) }
   )
            
 
@@ -500,20 +515,31 @@ server <- function(input, output, session) {
       mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds))))
   
   
-  plot_df <- reactive(combined_abilities() %>% filter(player %in% input$opponent))
-##  output$fedBT <- renderPlot({
+  plot_df <- reactive(
+    if (input$tour == "ATP") {
+      combined_abilities() %>% filter(player %in% input$opponentmale) }
+    else {
+      combined_abilities() %>% filter(player %in% input$opponentfemale)
+    })
+  
+  
+  output$fedBT <- renderPlot({
 ##    ggplot(plot_df(), aes(x = fir_serve)) +
 ##      geom_histogram()
-      # ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
-      # geom_line(size = 2) +
-      # labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
-      # coord_cartesian(ylim = c(0, 1)) +
-      # theme_bw(base_size = 16) 
+       ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
+       geom_line(size = 2) +
+       labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
+       coord_cartesian(ylim = c(0, 1)) +
+       theme_bw(base_size = 16) 
     #+fct_reorder2(player)
 #    })
- output$test <- renderPrint({
-   cat(input$player)    
-    
+ #output$test <- renderPrint({
+   #if (input$tour == "ATP") {
+   # cat(input$playermale) }
+  # else {
+   # cat(input$playerfemale)
+   #}
+  
   })
 }
 
