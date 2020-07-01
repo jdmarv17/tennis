@@ -248,6 +248,15 @@ wta_decade_small <-
   mutate(tour = "WTA") %>%
   filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
 
+# filtered data set to look at NAs
+wta_filtered <-
+  wta_gs_decade %>%
+  filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
+  separate(tourney_id, into = c("year", "tourn_id"), sep = "-") %>%
+  mutate(tour = "WTA") %>%
+  filter(is.na(w_serveperc) == T | is.na(l_serveperc) == T)
+  
+
 combined_decade <-
   bind_rows(gs_decade_small, wta_decade_small)
 
