@@ -422,6 +422,7 @@ test_df <-
 
 ui <- fluidPage(
   theme = shinytheme("superhero"),
+  
   sidebarPanel(
     radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
     
@@ -539,6 +540,7 @@ server <- function(input, output, session) {
       theme_economist(base_size = 20) 
     #+fct_reorder2(player)
     
+    # 21 wta matches dropped from NAs
     
   })
 }

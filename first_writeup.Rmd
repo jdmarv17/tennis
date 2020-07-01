@@ -59,4 +59,6 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_ranking
   Once our new neural network was trained we needed to decide how to evaluate its predictive abilities. Since the categorical response had three options we obviously needed the network to be able to predict serve location correctly more than one third of the time. We also wanted the network to predict serve location correctly more often than a basic proportion model. The proportion model we compared to looked at the training data set to see which serve location appeared most often and predicted this serve location every time for the test data set. Using this method we found that a basic proportion model would predict correctly between 45-47% of the time depending on the sampling for the training and test data sets. In comparison our neural network was able to predict serve location correctly between 50-52% of the time. 
   
   Considering that the test data set included 8000 points a difference of 5% in predictive abilities is significiant. Unfortunately, we came to the conclusion that this difference was not enough to include the neural network model in our app. While the netowrk is clearly better than random chance and a basic proportion model we felt that its predictive abilities were not strong enough to incorporate it into the app.
+  
+*21 wta matches dropped due to NAs*
 

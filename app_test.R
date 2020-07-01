@@ -238,7 +238,8 @@ gs_decade_small <-
   gs_decade %>%
   filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
   separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
-  mutate(tour = "ATP")
+  mutate(tour = "ATP") %>%
+  filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
 
 # wta
 wta_decade_small <-
@@ -249,6 +250,13 @@ wta_decade_small <-
   filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
 
 # filtered data set to look at NAs
+atp_filtered <-
+  gs_decade %>%
+  filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
+  separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
+  mutate(tour = "ATP") %>%
+  filter(is.na(w_serveperc) == T | is.na(l_serveperc) == T)
+
 wta_filtered <-
   wta_gs_decade %>%
   filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
@@ -422,21 +430,35 @@ test_df <-
 
 ui <- fluidPage(
   theme = shinytheme("superhero"),
-  sidebarPanel(
-    radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
-
-  conditionalPanel(
-    condition = "input.tour == 'WTA'",
-    selectInput(inputId = "playerfemale", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
-    selectInput(inputId = "opponentfemale", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
-    
-  conditionalPanel(
-    condition = "input.tour == 'ATP'",
-    selectInput(inputId = "playermale", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
-    selectInput(inputId = "opponentmale", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
   
-  ),
-    plotOutput("fedBT")
+  titlePanel("Match Win Probability as a Function of First Serve Percentage"),
+  
+    sidebarLayout(
+      
+      sidebarPanel(
+        radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
+
+      conditionalPanel(
+        condition = "input.tour == 'WTA'",
+        selectInput(inputId = "playerfemale", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
+        selectInput(inputId = "opponentfemale", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
+    
+      conditionalPanel(
+        condition = "input.tour == 'ATP'",
+        selectInput(inputId = "playermale", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
+        selectInput(inputId = "opponentmale", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
+  
+      
+    ),
+    
+    mainPanel(
+      
+      tabsetPanel(type = "tabs",
+        tabPanel("Plot", plotOutput("fedBT")),
+        tabPanel("Explanation", verbatimTextOutput("summary"))
+      )
+    )
+  )
 )
 
 server <- function(input, output, session) {
@@ -530,6 +552,15 @@ server <- function(input, output, session) {
       combined_abilities() %>% filter(player %in% input$opponentfemale)
     })
   
+  output$summary <- renderText({
+  "This application allows the user to plot lines that show predicted 
+  match win probabilities for a selected player against the
+  selected opponents as a function of the selected player's first 
+  serve percentage. To obtain these lines a Bradley-Terry model 
+  was used which predicts the outcome of paired competitions. In
+  this case the Bradley-Terry model predicts the probability of
+  one player winning as a function of their first serve percentage"}) 
+  # how can we get rid of the indent on the lines after the first?
   
   output$fedBT <- renderPlot({
     ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
@@ -539,7 +570,8 @@ server <- function(input, output, session) {
        theme_economist(base_size = 20) 
     #+fct_reorder2(player)
 
-  
+    # how can we get rid of the selected players name from the opponents list?
+    
   })
 }
 
