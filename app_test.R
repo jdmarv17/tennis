@@ -3,6 +3,7 @@ library(shinythemes)
 library(tidyverse)
 library(BradleyTerry2)
 library(ggthemes)
+library(ggrepel)
 
 atp2010 <- read_csv("data/atp_matches_2010.csv")
 atp2011 <- read_csv("data/atp_matches_2011.csv")
@@ -554,8 +555,8 @@ server <- function(input, output, session) {
   
   output$summary <- renderText({
   "This application allows the user to plot lines that show predicted 
-  match win probabilities for a selected player against the
-  selected opponents as a function of the selected player's first 
+  match win probabilities for a selected player of interest against the
+  selected opponents as a function of the player of interest's first 
   serve percentage. To obtain these lines a Bradley-Terry model 
   was used which predicts the outcome of paired competitions. In
   this case the Bradley-Terry model predicts the probability of
@@ -565,6 +566,7 @@ server <- function(input, output, session) {
   output$fedBT <- renderPlot({
     ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
        geom_line(size = 2) +
+       geom_label_repel(aes(label = player)) +
        labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
        coord_cartesian(ylim = c(0, 1)) +
        theme_economist(base_size = 20) 
