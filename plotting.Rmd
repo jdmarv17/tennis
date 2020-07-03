@@ -244,6 +244,10 @@ ggplot(combined_abilities, aes(x = first_serve, y = pred_prob, color = player)) 
   theme_bw()
 ```
 
+```{r}
+gs_decade_small %>%
+  summarise(max = max(first_serve))
+```
 
 
 

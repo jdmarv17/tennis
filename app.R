@@ -3,6 +3,7 @@ library(shinythemes)
 library(tidyverse)
 library(BradleyTerry2)
 library(ggthemes)
+library(ggrepel)
 
 atp2010 <- read_csv("data/atp_matches_2010.csv")
 atp2011 <- read_csv("data/atp_matches_2011.csv")
@@ -232,34 +233,12 @@ matches_keep_wta <-
   summarise(matches = n()) %>%
   filter(matches >= 80)
 
+# read in new files
+gs_decade_small <-
+  read_csv("data/final_atp.csv")
 
-# atp
-gs_decade_small <- 
-  gs_decade %>%
-  filter(winner_name %in% matches_keep$player & loser_name %in% matches_keep$player) %>%
-  separate(tourney_id, into = c("year", "tourn_id"), sep = "-" ) %>%
-  mutate(tour = "ATP")
-
-# wta
 wta_decade_small <-
-  wta_gs_decade %>%
-  filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
-  separate(tourney_id, into = c("year", "tourn_id"), sep = "-") %>%
-  mutate(tour = "WTA") %>%
-  filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
-
-# filtered data set to look at NAs
-wta_filtered <-
-  wta_gs_decade %>%
-  filter(winner_name %in% matches_keep_wta$player & loser_name %in% matches_keep_wta$player) %>%
-  separate(tourney_id, into = c("year", "tourn_id"), sep = "-") %>%
-  mutate(tour = "WTA") %>%
-  filter(is.na(w_serveperc) == T | is.na(l_serveperc) == T)
-
-
-combined_decade <-
-  bind_rows(gs_decade_small, wta_decade_small)
-
+  read_csv("data/final_wta.csv")
 # separate winners and losers
 winners_df <-
   gs_decade_small %>%
@@ -423,21 +402,34 @@ test_df <-
 ui <- fluidPage(
   theme = shinytheme("superhero"),
   
-  sidebarPanel(
-    radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
+  titlePanel("Match Win Probability as a Function of First Serve Percentage"),
+  
+  sidebarLayout(
     
-    conditionalPanel(
-      condition = "input.tour == 'WTA'",
-      selectInput(inputId = "playerfemale", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
-      selectInput(inputId = "opponentfemale", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
+    sidebarPanel(
+      radioButtons(inputId = "tour", label = "Select a tour:", choices = c("ATP", "WTA")),
+      
+      conditionalPanel(
+        condition = "input.tour == 'WTA'",
+        selectInput(inputId = "playerfemale", label = "Choose player of interest", choices = c(matches_keep_wta$player), selected = "Serena Williams"),
+        selectInput(inputId = "opponentfemale", label = "Choose opponent(s)", choices = c(matches_keep_wta$player), multiple = T)),  
+      
+      conditionalPanel(
+        condition = "input.tour == 'ATP'",
+        selectInput(inputId = "playermale", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
+        selectInput(inputId = "opponentmale", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
+      
+      
+    ),
     
-    conditionalPanel(
-      condition = "input.tour == 'ATP'",
-      selectInput(inputId = "playermale", label = "Choose player of interest", choices = c(matches_keep$player), selected = "Roger Federer"),
-      selectInput(inputId = "opponentmale", label = "Choose opponent(s)", choices = c(matches_keep$player), multiple = T)),
-    
-  ),
-  plotOutput("fedBT")
+    mainPanel(
+      
+      tabsetPanel(type = "tabs",
+                  tabPanel("Plot", plotOutput("fedBT"), br(), plotOutput("fedBT2")),
+                  tabPanel("Explanation", textOutput("summary"))
+      )
+    )
+  )
 )
 
 server <- function(input, output, session) {
@@ -531,18 +523,48 @@ server <- function(input, output, session) {
       combined_abilities() %>% filter(player %in% input$opponentfemale)
     })
   
+  plot_df2 <- reactive(
+    if (input$tour == "ATP") {
+      combined_abilities() %>% filter(player %in% matches_keep$player) }
+    else {
+      combined_abilities() %>% filter(player %in% matches_keep_wta$player)
+    })
+  
+  output$summary <- renderText({
+    "This application allows the user to plot lines that show predicted 
+  match win probabilities for a selected player of interest against the
+  selected opponents as a function of the player of interest's first 
+  serve percentage. To obtain these lines a Bradley-Terry model 
+  was used which predicts the outcome of paired competitions. In
+  this case the Bradley-Terry model predicts the probability of
+  one player winning as a function of their first serve percentage"}) 
+  
   
   output$fedBT <- renderPlot({
     ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
       geom_line(size = 2) +
+      geom_text_repel(aes(label = player), 
+                      data = plot_df() %>% filter(fir_serve == max(fir_serve)),
+                      xlim = c(0.8,0.9),
+                      force = 25,
+                      box.padding = ifelse(length(input$opponent) < 5, 2, 5),
+                      segment.alpha = 0.5) +
       labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
-      coord_cartesian(ylim = c(0, 1)) +
-      theme_economist(base_size = 20) 
-    #+fct_reorder2(player)
-    
-    # 21 wta matches dropped from NAs
-    
+      coord_cartesian(ylim = c(0, 1), xlim = c(0.5, 1)) +
+      theme_economist(base_size = 20) +
+      theme(legend.position = "none") 
   })
+  
+  output$fedBT2 <-
+    renderPlot({
+      ggplot(plot_df2(), aes(x = fir_serve, y = pred_prob, group = player)) +
+        geom_line(size = 2, alpha = 0.5) +
+        labs(x = "First Serve Percentage", y = "Predicted Match Win Probability") +
+        coord_cartesian(ylim = c(0, 1), xlim = c(0.5, 1)) +
+        theme_economist(base_size = 20) +
+        theme(legend.position = "none") 
+      
+    })
 }
 
 shinyApp(ui, server)
