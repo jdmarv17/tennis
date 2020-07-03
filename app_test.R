@@ -566,9 +566,16 @@ server <- function(input, output, session) {
   output$fedBT <- renderPlot({
     ggplot(plot_df(), aes(x = fir_serve, y = pred_prob, colour = player, group = player)) +
        geom_line(size = 2) +
-       geom_label_repel(aes(label = player)) +
+       theme(legend.position = "none") +
+       geom_text_repel(aes(label = player), 
+                       data = plot_df() %>% filter(fir_serve == max(fir_serve)),
+                       nudge_x = 50,
+                       force = 5,
+                       box.padding = 0.5,
+                       segment.alpha = 0.5) +
        labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
        coord_cartesian(ylim = c(0, 1)) +
+       
        theme_economist(base_size = 20) 
     #+fct_reorder2(player)
 
