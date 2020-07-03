@@ -564,9 +564,6 @@ server <- function(input, output, session) {
         theme_economist(base_size = 20) +
         theme(legend.position = "none") 
     
-
-    # how can we get rid of the selected players name from the opponents list?
-    
   })
 }
 
