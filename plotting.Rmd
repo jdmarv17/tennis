@@ -48,6 +48,12 @@ mod1 <- BTm(cbind(win1, win2), player1 = winners_df, player2 = losers_df,
               formula = ~ id + first_serve:id + first_serve, id = "id", data = gs_decade_small)
 ```
 
+```{r}
+winners_losers_df %>%
+  filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F) %>%
+  summarise(max = max(w_serveperc), max2 = max(l_serveperc), min = min(w_serveperc), min1 = min(l_serveperc))
+```
+
 
 ```{r}
 # atp

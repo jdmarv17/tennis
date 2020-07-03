@@ -239,6 +239,15 @@ gs_decade_small <-
 
 wta_decade_small <-
   read_csv("data/final_wta.csv")
+
+gs_decade_small <-
+  gs_decade_small %>%
+  filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
+
+wta_decade_small <-
+  wta_decade_small %>%
+  filter(is.na(w_serveperc) == F & is.na(l_serveperc) == F)
+
 # separate winners and losers
 winners_df <-
   gs_decade_small %>%
@@ -462,13 +471,13 @@ server <- function(input, output, session) {
   # find max and min
   fed_decade <- reactive(
     if (input$tour == "ATP") {
-      combined_decade %>%
+      gs_decade_small %>%
         filter(winner_name == input$playermale | loser_name == input$playermale) %>%
         mutate(f_serve = case_when(
           winner_name == input$playermale ~ w_serveperc,
           loser_name == input$playermale ~ l_serveperc)) }
     else {
-      combined_decade %>%
+      wta_decade_small %>%
         filter(winner_name == input$playerfemale | loser_name == input$playerfemale) %>%
         mutate(f_serve = case_when(
           winner_name == input$playerfemale ~ w_serveperc,
@@ -537,7 +546,8 @@ server <- function(input, output, session) {
   serve percentage. To obtain these lines a Bradley-Terry model 
   was used which predicts the outcome of paired competitions. In
   this case the Bradley-Terry model predicts the probability of
-  one player winning as a function of their first serve percentage"}) 
+  one player winning as a function of their first serve percentage
+  (data from https://github.com/JeffSackmann/tennis_atp)."}) 
   
   
   output$fedBT <- renderPlot({
@@ -545,12 +555,12 @@ server <- function(input, output, session) {
        geom_line(size = 2) +
        geom_text_repel(aes(label = player), 
                        data = plot_df() %>% filter(fir_serve == max(fir_serve)),
-                       xlim = c(0.8,0.9),
+                       xlim = c(0.85,0.9),
                        force = 25,
                        box.padding = ifelse(length(input$opponent) < 5, 2, 5),
                        segment.alpha = 0.5) +
        labs(x = "First Serve Percentage", y = "Predicted Match Win Probability", colour = "Opponents") +
-       coord_cartesian(ylim = c(0, 1), xlim = c(0.5, 1)) +
+       coord_cartesian(ylim = c(0, 1), xlim = c(0.35, 1)) +
        theme_economist(base_size = 20) +
        theme(legend.position = "none") 
   })
@@ -560,7 +570,7 @@ server <- function(input, output, session) {
       ggplot(plot_df2(), aes(x = fir_serve, y = pred_prob, group = player)) +
         geom_line(size = 2, alpha = 0.5) +
         labs(x = "First Serve Percentage", y = "Predicted Match Win Probability") +
-        coord_cartesian(ylim = c(0, 1), xlim = c(0.5, 1)) +
+        coord_cartesian(ylim = c(0, 1), xlim = c(0.35, 1)) +
         theme_economist(base_size = 20) +
         theme(legend.position = "none") 
     
