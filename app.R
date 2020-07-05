@@ -546,7 +546,8 @@ server <- function(input, output, session) {
   serve percentage. To obtain these lines a Bradley-Terry model 
   was used which predicts the outcome of paired competitions. In
   this case the Bradley-Terry model predicts the probability of
-  one player winning as a function of their first serve percentage"}) 
+  one player winning as a function of their first serve percentage
+  (data from https://github.com/JeffSackmann/tennis_atp)."}) 
   
   
   output$fedBT <- renderPlot({

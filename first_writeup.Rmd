@@ -5,13 +5,23 @@ date: "6/5/2020"
 output: html_document
 ---
 
-```{r}
+```{r, echo = FALSE}
 library(tidyverse)
 source("data_cleaning.R")
 source("merging_matches.R")
+
+matches_to_facet <-
+  gs_matches_final2 %>%
+  group_by(player) %>%
+  summarise(matches = n()) %>%
+  filter(matches >= 100) 
 ```
 
 <!-- In order to knit this file, need to include all R code relevant to the graphics you included. This includes loading libraries and sourcing any data prep code. An option to avoid re-running all of the data prep steps is to write the final output data set to a .csv file (write.csv()). Then, instead of source("data_cleaning.R"), you'd read in that csv file with read_csv(). This could make things quicker if it's taking too long to source data_cleaning.  -->
+  
+  Before describing the work done in this project it is important to first understand the motivation. As tennis players and people who watch tennis matches whenever they are televised, myself and Dr. Higham noted that oftentimes commentators provide statistics and comments that are not very meaningful. They will mention that one player needs to make sure to maintain a high first and second serve percentage if they want to win the match. Comments like these are not insightful. They apply to all players and should be obvious to any person familiar with tennis. We believed that is was possible to generate more penetrating statistics that would give viewers a better understanding of what a particular player should focus on regarding their serve. In particular, we believed that player-opponent specific statistics would be much more valuable than broad, obvious statements commentators often make. We also hoped that these statistics would possibly shed light on the importance of the serve for different professional tennis players.
+  
+  Our secondary goal of the project was to investigate point importance (described later) and its influence on the serve. This, in combination with player specific statistics would make for more in-depth, insightful observations that would give tennis fans a look into professional tennis players' strategies. Since tennis has a unique scoring system with different scoring units (points, games, sets) different points will influence the match outcome more than others. Dr. Higham and I suspected that because of this, point importance could play a role in influencing players' serves.
 
   To begin my project, I started by exploring both match and point data. Before going into the exploration process it is important to understand the data involved. The first of the three data sets involved is match data from the past decade of Grand Slam matches for the ATP and WTA. The match data includes summary statistics from every Grand Slam match. The statistics most useful for this project are first and second serve percentages and the ranking of each player in the match. The second data set utilized in this project is point-by-point data from 2016 and 2017 Grand Slam matches. This data has information on each point played in every Grand Slam from 2016 and 2017. Some of the variables include serve speed, serve placement, rally count, and the current score of the point. The last data set used is a data set of point importance for each possible score in tennis. Importance values for a point give the average change in the probability of the winner of the point winning the match. Point importance will play an important role by being used as a predictor of different serve measurements in one of the models I will build for the project. During the data manipulation/cleaning period the importance data set was merged by score with the Grand Slam point-by-point data to assign importance values to each point played in Grand Slams.
   
@@ -35,13 +45,16 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_ranking
   facet_wrap("player")
 ```
   
-  As we can see from the plots above, this did not help simplify the matter. Different players have different trends and most players don't have the same trend for each category of opponent ranking. Seeing that looking at opponent ranking wasn't enough we realized that a more opponent specific model would be needed. This is what led us to decide on a Bradley-Terry model. This type of model takes a given player and looks at the matches they played against all opponents and returns different lines for different player match ups. Bradley-Terry models do this by returning an intercept and slope for each player for a given predictor. With these parameters and a given value for the predictor a player's "ability" can be calculated for each player involved in a match. The two players' abilities are then backtransformed using a logit formula to return a predicted probability that one player will win the match given that value of the predictor.
+  As we can see from the plots above, this did not help simplify the matter. Different players have different trends and most players don't have the same trend for each category of opponent ranking. Seeing that looking at opponent ranking wasn't enough we realized that a more opponent specific model would be needed. This is what led us to decide on a Bradley-Terry model. This type of model takes a given player and looks at the matches they played against all opponents and returns different lines for different player match ups. Bradley-Terry models do this by returning an intercept and slope for each player for a given predictor. With these parameters and a given value for the predictor a player's "ability" can be calculated for each player involved in a match. The two players' abilities are then backtransformed using a logit formula to return a predicted probability that one player will win the match given that value of the predictor. The formula for this is provided below:
+
+   $P(i > j) = \frac{e^{\beta_i}}{e^{\beta_i} + e^{\beta_j}}$
+   
   
   This type of model allows for possibilities that less specific models would not reveal. Specifically, it is possible for a given player to have an overall negative relationship between their chance of winning a match and first serve percentage for all opponents while still having a positive relationship between chance of winning and first serve percent against individual opponents. While this may not be the case for all players, it is a possibility that may not be accounted for with other types of models.
   
   Moving on to the point data, the exploration process was not as involved. The only relationship we were looking was point importance vs serve speed and serve placement. The more time consuming process turned out to be manipulating the importance data and the point-by-point data to merge correctly. The importance data set was calculated using the assumption that a tiebreaker would be played at 6-6 in a fifth set; however, in some grandslam tournaments no tiebreaker is played for the fifth set. Instead of a tiebreaker, play continues until one player leads the other by two games. Since this was the case, upon merging the point-by-point with the importance data there were points in some matches that were not assigned importance values due to the fact that no fifth set tiebreaker was played. To account for this we created a grouping variable that accounted for the difference in players' game scores in the fifth set once the score of 6-6 was reached. Once this was done we grouped the merged data by point score and the grouping variable and filled in the missing importance values based on the groupings.
   
-  At this point it is important to understand how point importance is calculated. ___________ started by looking at a large data set of points from ATP and WTA matches. They then took each occurence of a particular point and calculated the average difference between the probability that the winner of the point wins the match and the probability that that same player wins the match if they lose the point. For example, if a point has an importance value of 0.05, then on average, the point winner's probability of winning the match is 5% higher than if they lost the point. Obviously this isn't an exact difference in match win probability for matches that reach that particular point but the original data set was large enough that the change in match win probabilty is approximately 5%.
+  At this point it is important to understand how point importance is calculated. Peter O'donoghue, who created the point importance measurement, started by looking at a large data set of points from ATP and WTA matches. They then took each occurence of a particular point and calculated the average difference between the probability that the winner of the point wins the match and the probability that that same player wins the match if they lose the point. For example, if a point has an importance value of 0.05, then on average, the point winner's probability of winning the match is 5% higher than if they lost the point. Obviously this isn't an exact difference in match win probability for matches that reach that particular point but the original data set was large enough that the change in match win probabilty is approximately 5% (O'donoghue). For our project we used point importance data that was entered by Stephanie Kovalchik as part of the "deuce" R package (Stephanie Kovalchik).
   
   Following the data exploration and manipulation process, we moved on to building models. First we started by building a Bradley-Terry model for the match data. Before building the model we needeed to decide how to split the data into training and testing data sets. Since the match data covers 11 years of grand slam matches, there are some players that only appear in the beginning years and some players that appear in the later years. This introduced a possible complication. If a player wasn't in the training data set at all then it would be difficult for the model to predict accurate match win probabilites. To account for this complication we decided on doing a k-fold cross validation process. This process involves setting aside a single year of matches for our testing data set and uses the other 10 years for our training data set. We then build the model with the training data set and test its predictive ability by comparing its predictions against the actual outcomes from the testing data set. This process is then repeated 10 more times using each year as a testing data set with the other years as the training data set. This results in 11 different iterations of a Bradley-Terry model with 11 different sets of predictions.
   
@@ -65,9 +78,50 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_ranking
   
   At this point we had completed our model building and testing and were ready to move onto constructing plots for our Bradley-Terry models and building the shiny app that would display these plots. First, we decided to construct a plot for a single player of interest. In order to do this we needed to use our model to calculate individual match win probabilites for a range of predictor values. We started by looking at Roger Federer with first serve percentage as our predictor. Federer had a first serve percentage range of 0.52 to 0.77. We decided to split this range 30 times to give us 30 first serve percentage values that we wouls use to calculate match win probabilities. Since Federer was the player of interest we averaged each  opponent's first serve percentages to give us values to calculate their abilities. 
   
-  We already had an intercept and slope for each player so we used the 30 first serve percentage values to calculate Federer's ability at each first serve percentage value. To find his opponents' abilities we used their average first serve percentage to calculate an average ability for each oppoenent. Finally, looking at Federer's ability at each first serve percentage value and his opponents' average ability and backtransforming the difference in abilities we obtained predicted match win probabilites for Federer at each first serve percentage value. This gave us paired value points with a first serve percentage and a predicted match win probability for each of Federer's opponents.Using these points we could then create predicted match win probability lines for Federer against each opponent by connecting the points on a plot.
+  We already had an intercept and slope for each player so we used the 30 first serve percentage values to calculate Federer's ability at each first serve percentage value. To find his opponents' abilities we used their average first serve percentage to calculate an average ability for each oppoenent. Finally, looking at Federer's ability at each first serve percentage value and his opponents' average ability and backtransforming the difference in abilities, we obtained predicted match win probabilites for Federer at each first serve percentage value. The formula for this is showed below:
   
-  Once we had completed one plot for Federer there was no need to create plots for all other players since we would use the code we had written in the app and replace Federer with a player of interest selected by the app user.
+  $$log(\frac{P_{ij}}{1 - P_{ij}}) = (\alpha_{i} + \beta_{i}*firstserve_{i}) - (\alpha_{j} + \beta_{j}*firstserve_{j})$$
   
-*21 wta matches dropped due to NAs*
+  Where $$log(\frac{P_{ij}}{1 - P_{ij}})$$ is the log of the probability that player i wins divided by the probability that player j wins and $$(\alpha_{i} + \beta_{i}*firstserve_{i}) - (\alpha_{j} + \beta_{j}*firstserve_{j})$$ is the difference in abilities between players i and j.
+  
+  
+  This gave us paired value points with a first serve percentage and a predicted match win probability for each of Federer's opponents.Using these points we could then create predicted match win probability lines for Federer against each opponent by connecting the points on a plot.
+  
+  Once we had completed one plot for Federer there was no need to create plots for all other players since we would use the code we had written in the app and replace Federer with a player of interest selected by the app user. At this point we had a fitted Bradley-Terry model and had established how we would use the model to make plots for each player of interest so we were ready to build the app. To do this we used the language Shiny. Shiny is an R package that can be used to build applications that can be viewed in a web browser. Shiny does this by using common R language and then converting the code to HTML behind the scenes. This makes it very easy to build smooth, fast applications that anyone with a browser can view. It is also much simpler than coding in HTML.
+  
+  Shiny code is split between a User Interface (UI) function and a Server function. Basically, the UI function defines what the app looks like and how the user can interact with it. The Server function can take the info provided by the user and feed it into any code within the server. The Server function also defines any plots, tables, or text that is first specified in the UI. In our case, the UI would need to allow the user to select either the ATP (men's tennis) or WTA (women's tennis), a player of interest, and any number of opponents. The UI also specifies that the output will be a plot. The server side of our app takes the info provided by the user and feeds it into the code to build plots for our Bradley-Terry model. Since we had already written code that built a plot for Federer, we were able to generalize that code to work for the player of interest provided by the user.
+  
+  While much of the code for Federer was able to be reused, most of the work to build the app involved generalizing it to work for the user provided player of interest. This proved to be the biggest challenge of making the app. The code needed to be responsive any changes the user makes with selecting players or switching between ATP and WTA. We also found that labeling the lines plotted for individual opponents was difficult. A legend was helpful but was overwhelming if the user selected more than 5 or 6 opponents. In the end we decided to include 2 plots in our app. The first plot used individual lines for each opponent with a label pointing directly to the line. This was a helpful plot when looking at a small number of opponents. The second plot displayed lines for all of the player of interest's opponents at once without any labels. This plot was useful to show the user the overall trends against all opponents for the player of interest. In addition, the second plot was not responsive to changes in selected opponents while the first plot was responsive.
+  
+  
+Works Cited:
+
+Heather Turner, David Firth (2012). Bradley-Terry Models in R: The BradleyTerry2 Package. Journal of Statistical Software,
+  48(9), 1-21. URL https://www.jstatsoft.org/v48/i09/.
+  
+Heather Turner, David Firth (2020). Bradley-Terry Models in R: The BradleyTerry2 Package. *are both of these needed?*
+  https://cran.r-project.org/web/packages/BradleyTerry2/vignettes/BradleyTerry.pdf
+  
+Jeff Sackmann, tennis_atp, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_atp
+
+Jeff Sackmann, tennis_wta, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_wta *are all of these needed*
+
+Jeff Sackmann, tennis_slam_pointbypoint, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_slam_pointbypoint
+
+Kovalchik, S., & Ingram, M. (2016). Hot heads, cool heads, and tacticians: Measuring the mental game in tennis (ID: 1464). In MIT Sloan Sports
+  Analytics Conference.
+
+McCulloch, W. S., & Pitts, W. (1943). A logical calculus of the ideas immanent in nervous activity. The bulletin of mathematical biophysics, 
+  5(4), 115-133.
+
+O'donoghue, P. G. (2001). The most important points in grand slam singles tennis. Research quarterly for exercise and sport, 
+  72(2),125-131.
+
+Stefan Fritsch, Frauke Guenther and Marvin N. Wright (2019). neuralnet: Training of Neural Networks. R package version
+  1.44.2. https://CRAN.R-project.org/package=neuralnet
+
+Stephanie Kovalchik (2019). deuce: Resources for Analysis of Professional Tennis Data. R package version 1.3
+
+
+
 
