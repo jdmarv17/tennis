@@ -27,15 +27,16 @@ knitr::opts_chunk$set(echo = FALSE)
 * Bradley-Terry Model (match data)
     + A paired competetion model based on "ability" that returns predicted match win probability
 * Mixed effects model (point data)
-    + This model showed that while point importance is significant, its role is too small to influence serve prediction
-* Neuralnet (point data)
-    + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location
+    + This model showed that while point importance is significant, its role is too small to influence serve prediction (performed similarly to model without point importance)
+* Neural network (point data)
+    + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location (from Fritsch et al. "neuralnet" R package)
 
-## Neural Net
+## Neural Network
 
-* The neural net performed about 5% better than basic proportion model (45-47% compared to 50-52% successful)
+* The neural network performed about 5% better than basic proportion model (45-47% compared to 50-52% successful)
+    + across 8000 data points this is a difference of 400 correct predictions
 
-```{r, out.width = "700px"}
+```{r, out.width = "600px"}
 knitr::include_graphics("NNplot.png")
 ```
 
@@ -51,10 +52,17 @@ knitr::include_graphics("NNplot.png")
 
 ## Next steps
 
-* Neural net
-* explaining downward trend
-* new variables for BT
+* Trying new neural network packages that reduce training time
+    + training time was a limiting factor
+* Try to find evidence for why certain players have downward trending lines for our Bradley-Terry
+* new variables for BT (second serve, serve speed, etc.)
 
 ## Sources
 
-* jeff sackmann
+*Fritsch, Stefan & Guenther, Frauke & Wright, Marvin N. (2019). `neuralnet`: Training of Neural Networks. `R` package version 1.44.2. https://CRAN.R-project.org/package=neuralnet
+
+* Kovalchik, Stephanie (2019). `deuce`: Resources for Analysis of Professional Tennis Data. `R` package version 1.3
+
+* Sackmann, Jeff. tennis_wta, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_wta 
+
+* Sackmann, Jeff. tennis_slam_pointbypoint, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_slam_pointbypoint
