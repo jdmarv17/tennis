@@ -1,0 +1,60 @@
+---
+title: "Analyzing the Importance of the Serve in Professional Tennis"
+author: "Josh Marvald & Dr. Matt Higham"
+date: "7/10/2020"
+output:
+  revealjs::revealjs_presentation:
+    theme: moon
+    transition: none
+---
+
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+* Purpose: An attempt to characterize the importance of the serve for specific players in professional tennis and predict the serve based on point importance
+* Motivation: It seems like there is a lack of valuable comments on the serve in professional tennis
+* The data used includes match level and point level data (from https://github.com/JeffSackmann)
+    + Also used point importance data (from Stephanie Kovalchik's "deuce" R package)
+
+## Model Building
+
+* Bradley-Terry Model (match data)
+    + A paired competetion model based on "ability" that returns predicted match win probability
+* Mixed effects model (point data)
+    + This model showed that while point importance is significant, its role is too small to influence serve prediction
+* Neuralnet (point data)
+    + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location
+
+## Neural Net
+
+* The neural net performed about 5% better than basic proportion model (45-47% compared to 50-52% successful)
+
+```{r, out.width = "700px"}
+knitr::include_graphics("NNplot.png")
+```
+
+
+## App
+
+* Built with Shiny in R
+* App lets user select player of interest and any number of opponents and plots predicted match win probability with predictor first serve percentage
+* Most players have positive relationships between first serve percentage and predicted match win probability
+    + Surprisingly some have negative relationships
+    + We suspect this may be due to different serve strategies' success
+* https://jdmarv17.shinyapps.io/tennis_app/
+
+## Next steps
+
+* Neural net
+* explaining downward trend
+* new variables for BT
+
+## Sources
+
+* jeff sackmann

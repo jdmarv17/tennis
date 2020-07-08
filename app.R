@@ -543,11 +543,14 @@ server <- function(input, output, session) {
     "This application allows the user to plot lines that show predicted 
   match win probabilities for a selected player of interest against the
   selected opponents as a function of the player of interest's first 
-  serve percentage. To obtain these lines a Bradley-Terry model 
+  serve percentage. To obtain these lines, a Bradley-Terry model 
   was used which predicts the outcome of paired competitions. In
   this case the Bradley-Terry model predicts the probability of
-  one player winning as a function of their first serve percentage
-  (data from https://github.com/JeffSackmann/tennis_atp)."}) 
+  one player winning using a contest-level predictor of first serve percentage.
+  The player of interst's serve range was used while the opponents' mean serve percentage
+  was used to find these lines.
+  (data from https://github.com/JeffSackmann/tennis_atp)"}) # add something about opponent - 
+  # mean serve
   
   
   output$fedBT <- renderPlot({
