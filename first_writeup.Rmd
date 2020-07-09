@@ -31,7 +31,8 @@ matches_to_facet2 <- semi_join(gs_matches_final, matches_to_facet, by = "player"
 <!-- In order to knit this file, need to include all R code relevant to the graphics you included. This includes loading libraries and sourcing any data prep code. An option to avoid re-running all of the data prep steps is to write the final output data set to a .csv file (write.csv()). Then, instead of source("data_cleaning.R"), you'd read in that csv file with read_csv(). This could make things quicker if it's taking too long to source data_cleaning.  -->
 
 ## Abstract
-condense each section to one sentence
+
+  This project is an attempt to provide better analysis on the serve in professional tennis than currently exists. To do this we completed extensive data exploration and wrangling to both find important trends and variables and to shape the data into useable forms to build valuable models. The models we built and tested include a Bradley-Terry model, a mixed effects model, and a neural network. After completing the model building and testing we built a web app that allows users to plot Bradley-Terry model lines for players of interest and specific opponents. The mixed effects model and neural network were not included in the app as they did not add significant value to serve analysis.
 
 ## Introduction 
 
@@ -48,7 +49,6 @@ condense each section to one sentence
   The last data set used is a data set of point importance for each possible score in tennis that was sourced from Stephanie Kovalchik's `deuce` `R` package (Kovalchik, 2019). Importance values for a point give the average change in the probability of the winner of the point winning the match. Point importance would play an important role by being used as a predictor of different serve measurements in one of the models built for the project. During the data cleaning period, the importance data set was merged by score with the Grand Slam point-by-point data to assign importance values to each point played in Grand Slams.
 
 ## Data Exploration
-
 
   Exploring this data consisted of looking for any trends in the data. It is important to note that this entire project was exploratory in nature, not confirmatory. Therefore, we do not use confidence intervals or p-values for any modeling done since these are invalid. Specifically, any trends that were related to the serve in some way were of particular interest. To find these trends, we had to tidy the data sets into more usable forms.
 
@@ -145,13 +145,12 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_ranking
   
   In the process of data manipulation and app building we learned several things about different professional tennis players and serving in general. One interesting and surprising result is that for certain players, their plotted match win probability lines trend downwards with first serve percentage. This was a result we saw before we made our model player-opponent specific that we expected the Bradley-Terry model to be able to account. We were surprised then, when these trends still appeared for some players after fitting the Bradley-Terry model. One theory we have is that for specific player-opponent match ups the player of interest is more successful when they are more aggressive on their serve. This could involve either serving faster or serving closer to the lines. If this were the case, then their first serve percentage would be lower but their win percentage against that opponent would be higher. This could potentially explain the downward trend that some players exhibit.
   
-*how to conclude*
+## Conclusion
 
-MH: Possible future directions to go in would be useful, even if you don't plan to do these future directions yourself. e.g. `neuralnet` stuff. e.g. stuff with the `app`: expanding to include more than just first-serve percentage (winners, unforced errors, difference between them, including surface in the BT-model, etc.)
-
-MH: Besides future directions, an overall picture of what you've learned, in terms of tennis.
-
-MH: A one-paragraph reflection on major take-aways that you learned from doing this large-scale project. Would you do anything differently in a future project? What worked well? This might not go in this document, but I think it's a useful exercise to do (and something you can reference later for, e.g. job/grad school interviews, if someone were to ask you about a large-scale data project and what you learned from that project.)
+  Overall, our app performs as we hoped. It is fast and responsive as well as intuituve. It reacts how the user would expect and plots lines that depict valuable information. It is unfortunate that the point importance data could not be utilized more than it was but we felt that the neural network and mixed effects models did not add enough value to serve analysis to warrant including them in our app.
+  
+  We expect to continue researching this throughout the coming semester. Potential areas we will look at further include trying different neural network packages in hopes of cutting down on network training time, finding new predictors that will enhance the neural network's predictions, and exploring new variables to build different Bradley-Terry models. We also hope to look into the downward trends that appear for some players in the Bradley-Terry model. Finding direct evidence of why these patterns arise would be valuable in interpreting the results the model returns.
+  
 
 
   

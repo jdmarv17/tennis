@@ -24,12 +24,24 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Model Building
 
-* Bradley-Terry Model (match data)
+* Bradley-Terry model (match data)
     + A paired competetion model based on "ability" that returns predicted match win probability
 * Mixed effects model (point data)
     + This model showed that while point importance is significant, its role is too small to influence serve prediction (performed similarly to model without point importance)
 * Neural network (point data)
     + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location (from Fritsch et al. "neuralnet" R package)
+
+## Model attempt before Bradley-Terry model
+* Before deciding on a Bradley-Terry model we looked at logistic regression
+* It was possible for players to have overall downward slope against all opponents but have all upward slopes against each individual opponent
+
+```{r, out.width = "600px"}
+knitr::include_graphics("GLM.png")
+```
+
+## Bradley-Terry Model
+
+ $$log(\frac{P_{ij}}{1 - P_{ij}}) = (\alpha{i} + \beta_{i} * firstserve) - (\alpha{j} + \beta_{j} * firstserve)$$
 
 ## Neural Network
 
@@ -39,7 +51,6 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r, out.width = "600px"}
 knitr::include_graphics("NNplot.png")
 ```
-
 
 ## App
 
@@ -55,11 +66,11 @@ knitr::include_graphics("NNplot.png")
 * Trying new neural network packages that reduce training time
     + training time was a limiting factor
 * Try to find evidence for why certain players have downward trending lines for our Bradley-Terry
-* new variables for BT (second serve, serve speed, etc.)
+* New variables for BT (second serve, serve speed, etc.)
 
 ## Sources
 
-*Fritsch, Stefan & Guenther, Frauke & Wright, Marvin N. (2019). `neuralnet`: Training of Neural Networks. `R` package version 1.44.2. https://CRAN.R-project.org/package=neuralnet
+* Fritsch, Stefan & Guenther, Frauke & Wright, Marvin N. (2019). `neuralnet`: Training of Neural Networks. `R` package version 1.44.2. https://CRAN.R-project.org/package=neuralnet
 
 * Kovalchik, Stephanie (2019). `deuce`: Resources for Analysis of Professional Tennis Data. `R` package version 1.3
 
