@@ -19,8 +19,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 * Purpose: An attempt to characterize the importance of the serve for specific players in professional tennis and predict the serve based on point importance
 * Motivation: It seems like there is a lack of valuable comments on the serve in professional tennis
-* The data used includes match level and point level data (from https://github.com/JeffSackmann)
-    + Also used point importance data (from Stephanie Kovalchik's "deuce" R package)
+* The data used includes match level and point level data (from <https://github.com/JeffSackmann>)
+    + Also used point importance data (from Stephanie Kovalchik's `deuce` `R` package)
 
 ## Model Building
 
@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = FALSE)
 * Mixed effects model (point data)
     + This model showed that while point importance is significant, its role is too small to influence serve prediction (performed similarly to model without point importance)
 * Neural network (point data)
-    + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location (from Fritsch et al. "neuralnet" R package)
+    + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location (from Fritsch et al. `neuralnet` `R` package)
 
 ## Model attempt before Bradley-Terry model
 * Before deciding on a Bradley-Terry model we looked at logistic regression
@@ -41,7 +41,17 @@ knitr::include_graphics("GLM.png")
 
 ## Bradley-Terry Model
 
- $$log(\frac{P_{ij}}{1 - P_{ij}}) = (\alpha{i} + \beta_{i} * firstserve) - (\alpha{j} + \beta_{j} * firstserve)$$
+ $$log(\frac{P_{ij}}{1 - P_{ij}}) = (\alpha_{i} + \beta_{i} * firstserve_i) - (\alpha_{j} + \beta_{j} * firstserve_j)$$
+ 
+
+## App
+
+* Built with Shiny in R
+* App lets user select player of interest and any number of opponents and plots predicted match win probability with predictor first serve percentage
+* Most players have positive relationships between first serve percentage and predicted match win probability
+    + Surprisingly some have negative relationships
+    + We suspect this may be due to different serve strategies' success
+* <https://jdmarv17.shinyapps.io/tennis_app/>
 
 ## Neural Network
 
@@ -51,15 +61,6 @@ knitr::include_graphics("GLM.png")
 ```{r, out.width = "600px"}
 knitr::include_graphics("NNplot.png")
 ```
-
-## App
-
-* Built with Shiny in R
-* App lets user select player of interest and any number of opponents and plots predicted match win probability with predictor first serve percentage
-* Most players have positive relationships between first serve percentage and predicted match win probability
-    + Surprisingly some have negative relationships
-    + We suspect this may be due to different serve strategies' success
-* https://jdmarv17.shinyapps.io/tennis_app/
 
 ## Next steps
 
