@@ -26,19 +26,11 @@ knitr::opts_chunk$set(echo = FALSE)
 
 * Bradley-Terry model (match data)
     + A paired competetion model based on "ability" that returns predicted match win probability
+<!-- mention that this will be the main focus  -->
 * Mixed effects model (point data)
     + This model showed that while point importance is significant, its role is too small to influence serve prediction (performed similarly to model without point importance)
 * Neural network (point data)
     + Used player indicators, side of the court, whether the server was leading in the game, and several other indicators as predictors for the categorical response serve location (from Fritsch et al. `neuralnet` `R` package)
-
-## Neural Network
-
-* The neural network performed about 5% better than basic proportion model (45-47% compared to 50-52% successful)
-    + across 8000 data points this is a difference of 400 correct predictions
-
-```{r, out.width = "600px"}
-knitr::include_graphics("NNplot.png")
-```
 
 ## Model attempt before Bradley-Terry model
 
@@ -62,6 +54,15 @@ knitr::include_graphics("GLM.png")
     + Surprisingly some have negative relationships
     + We suspect this may be due to different serve strategies' success
 * <https://jdmarv17.shinyapps.io/tennis_app/>
+
+## Neural Network
+
+* The neural network performed about 5% better than basic proportion model (45-47% compared to 50-52% successful)
+    + across 8000 data points this is a difference of 400 correct predictions
+
+```{r, out.width = "600px"}
+knitr::include_graphics("NNplot.png")
+```
 
 ## Next steps
 
