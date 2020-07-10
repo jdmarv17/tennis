@@ -1,7 +1,9 @@
 ---
 title: "Analyzing the Importance of the Serve in Professional Tennis"
-author: "Josh Marvald & Dr. Matt Higham"
-date: "7/10/2020"
+author: 
+- Josh Marvald
+- Dr. Matt Higham
+date: 'rformat(Sys.time(), %d %B %Y)
 output:
   revealjs::revealjs_presentation:
     theme: moon
