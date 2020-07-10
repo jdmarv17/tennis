@@ -8,13 +8,24 @@ This project is an attempt to provide an analysis of the serve in professional t
 <https://jdmarv17.shinyapps.io/tennis_app/>
 
 ### References:
-If using any of the data in this repository please see the references below for the source and citation of data.
 
-Kovalchik, Stephanie (2019). `deuce`: Resources for Analysis of Professional Tennis Data. `R` package version 1.3
+If using any of the data in this repository please see the references below for the source and citation of data. 
 
-Sackmann, Jeff. tennis_slam_pointbypoint, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_slam_pointbypoint
+The `wta_matches_year.csv` and `atp_matches_year.csv` files can be obtained under the Creative Commons License <https://creativecommons.org/licenses/by-nc-sa/4.0/> from
 
 Sackmann, Jeff. tennis_wta, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_wta 
 
 Sackmann, Jeff. tennis_atp, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_atp 
+
+
+The `year-major-matches.csv` and `year-major-points.csv` files can be obtained under the Creative Commons License https://creativecommons.org/licenses/by-nc-sa/4.0/ from
+
+Sackmann, Jeff. tennis_slam_pointbypoint, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_slam_pointbypoint
+
+
+And the point importance data can be obtained from the `deuce` `R` package
+
+Kovalchik, Stephanie (2019). `deuce`: Resources for Analysis of Professional Tennis Data. `R` package version 1.3
+
+
 
