@@ -1,6 +1,8 @@
 ---
 title: "Exploration_process"
-author: "Josh Marvald"
+author: 
+- "Josh Marvald"
+- "Dr. Matt Higham"
 date: "6/5/2020"
 output: 
   html_document:
