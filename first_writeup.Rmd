@@ -1,12 +1,15 @@
 ---
-title: "Exploration_process"
-author: 
-- "Josh Marvald"
-- "Dr. Matt Higham"
-date: "6/5/2020"
-output: 
+title: "Analyzing the Importance of the Serve in Professional Tennis"
+author:
+- Josh Marvald
+- Dr. Matt Higham
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
   html_document:
-    toc: true
+    toc: yes
     toc_depth: 4
 ---
 
@@ -112,7 +115,8 @@ ggplot(matches_to_facet2, aes(x = first_serve, y = win, color = opponent_ranking
   While much of the code for Federer was able to be reused, most of the work to build the app involved generalizing it to work for the user-provided player of interest. This proved to be the biggest challenge of making the app. The code needed to be responsive to any changes the user makes with selecting players or switching between ATP and WTA. We also found that labeling the lines plotted for individual opponents was difficult. A legend was helpful but was overwhelming if the user selected more than 5 or 6 opponents. In the end, we decided to include 2 plots in our app. The first plot used individual lines for each opponent with a label pointing directly to the line. This was a helpful plot when looking at a small number of opponents. The second plot displayed lines for all of the player of interest's opponents at once without any labels. This plot was useful to show the user the overall trends against all opponents for the player of interest. In addition, the second plot was not reactive to changes in selected opponents while the first plot was reactive.
   
   In the process of data manipulation and app building we learned several things about different professional tennis players and serving in general. One interesting and surprising result is that for certain players, their plotted match win probability lines trend downwards with first serve percentage. This was a result we saw before we made our model player-opponent specific that we expected the Bradley-Terry model to be able to account. We were surprised then, when these trends still appeared for some players after fitting the Bradley-Terry model. One theory we have is that for specific player-opponent match ups the player of interest is more successful when they are more aggressive on their serve. This could involve either serving faster or serving closer to the lines. If this were the case, then their first serve percentage would be lower but their win percentage against that opponent would be higher. This could potentially explain the downward trend that some players exhibit.
-
+  
+App link: <https://jdmarv17.shinyapps.io/tennis_app/>
   
 ## Point Importance Introduction
 
@@ -126,13 +130,13 @@ The final data set used is a data set of point importance for each possible scor
 
   Moving on to the point data, the exploration process was not as involved. The major relationship we were looking at was point importance versus serve speed and serve placement. The more time consuming process turned out to be manipulating the importance data and the point-by-point data to merge correctly. The importance data set was calculated using the assumption that a tiebreaker would be played at 6-6 in a fifth set; however, in some Grand Slam tournaments no tiebreaker is played for the fifth set. Instead of a tiebreaker, play continues until one player leads the other by two games. Since this was the case, upon merging the point-by-point with the importance data there were points in some matches that were not assigned importance values due to the fact that no fifth set tiebreaker was played. To account for this, we created a grouping variable that accounted for the difference in players' game scores in the fifth set once the score of 6-6 was reached. Once this was done, we grouped the merged data by point score and the grouping variable and filled in the missing importance values based on the groupings.
 
-  At this point it is important to understand how point importance is calculated. Peter O'donoghue, who created the point importance measurement, started by looking at a large data set of points from ATP and WTA matches. They then took each occurence of a particular point and calculated the average difference between the probability that the winner of the point wins the match and the probability that that same player wins the match if they lose the point. For example, if a point has an importance value of 0.05, then on average, the point winner's probability of winning the match is 5% higher than if they lost the point. Obviously this isn't an exact difference in match win probability for matches that reach that particular point but the original data set was large enough that the change in match win probabilty is approximately 5% (O'donoghue). O'Donaghue (PUT YEAR HERE MH) used this large set of matches to verify that importance values calculated algebraically based on the scoring structure system of tennis and a constant server win probability for each server was correct. For our project we used point importance data that was entered by Kovalchik (PUT YEAR HERE MH) as part of the `deuce` `R` package.
+  At this point it is important to understand how point importance is calculated. Peter O'donoghue, who created the point importance measurement, started by looking at a large data set of points from ATP and WTA matches. They then took each occurence of a particular point and calculated the average difference between the probability that the winner of the point wins the match and the probability that that same player wins the match if they lose the point. For example, if a point has an importance value of 0.05, then on average, the point winner's probability of winning the match is 5% higher than if they lost the point. Obviously this isn't an exact difference in match win probability for matches that reach that particular point but the original data set was large enough that the change in match win probabilty is approximately 5% (O'donoghue). O'Donaghue used this large set of matches to verify that importance values calculated algebraically based on the scoring structure system of tennis and a constant server win probability for each server was correct. For our project we used point importance data that was entered by Kovalchik (PUT YEAR HERE MH) as part of the `deuce` `R` package.
   
   
 ## Point Data Modeling
 
 #### Mixed Effects Model
-  For the point level data, we initially decided to use a mixed effects model with the serving player and point importance as predictors for serve speed. This type of model is useful because it allows for fixed and random effects in the model. In this type of model random effects mean that a variable of this type can vary across the group of players and a fixed effect means that a variable has the same impact on all players in the group. *Does this make sense?*
+  For the point level data, we initially decided to use a mixed effects model with the serving player and point importance as predictors for serve speed. This type of model is useful because it allows for fixed and random effects in the model. In this type of model random effects mean that a variable of this type can vary across the group of players and a fixed effect means that a variable has the same impact on all players in the group. 
   
   We built several different models of this type. The first model used just the serving player variable for a random effect with random intercepts. The second model used point importance for a fixed effect and serving player for a random effect with random intercepts. The last model used importance for a fixed effect and serving player for a random effect with random intercepts and slopes. By comparing these three models we hoped to be able to establish how important the point importance values were in predicting serve speed. We found that all three of these models performed very similarly. Most striking was the fact that while the importance predictor was statistically significant, it barely improved serve speed prediction. Seeing as this was the case, we believe that point importance is associated serve speed, but not enough to drastically change predictions of serve speed.
 
