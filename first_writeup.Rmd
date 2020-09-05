@@ -5,6 +5,9 @@ author:
 - Dr. Matt Higham
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
+  word_document:
+    toc: yes
+    toc_depth: '4'
   pdf_document:
     toc: yes
     toc_depth: '4'

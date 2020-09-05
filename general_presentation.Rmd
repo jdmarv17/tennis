@@ -1,0 +1,44 @@
+---
+title: "Analyzing the Importance of the Serve in Professional Tennis"
+author: 
+- "Josh Marvald"
+- "Dr. Matt Higham"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  revealjs::revealjs_presentation:
+    theme: moon
+    transition: none
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Motivation
+* Dr. Higham and I felt that there was often a lack of player-specific statistics in professional tennis commentary
+* By analyzing the serve with a large data set we felt that we could quantify how a player's probability of winning a match changes with their first serve percentage (percent of time first serve goes in)
+
+## Description of Data
+* I used match-level data from the past 11 years of Grand Slam matches for men's and women's professional tennis
+    + Data was compiled and made available by Jeff Sackmann <https://github.com/JeffSackmann>
+
+## Bradley-Terry Model
+
+ $$log(\frac{P_{ij}}{1 - P_{ij}}) = (\alpha_{i} + \beta_{i} * firstserve_i) - (\alpha_{j} + \beta_{j} * firstserve_j)$$
+
+## App
+* Built with Shiny in R
+* App lets user select player of interest and any number of opponents and plots predicted match win probability with predictor first serve percentage
+* Most players have positive relationships between first serve percentage and predicted match win probability
+    + Surprisingly some have negative relationships
+    + We suspect this may be due to different serve strategies' success
+* <https://jdmarv17.shinyapps.io/tennis_app/>
+
+
+## Sources
+* Sackmann, Jeff. tennis_atp, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_atp 
+
+* Sackmann, Jeff. tennis_wta, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_wta 
+
+

@@ -1,0 +1,48 @@
+---
+title: "Untitled"
+author: "Matt Higham"
+date: "5/22/2020"
+output:
+  revealjs::revealjs_presentation:
+    theme: solarized
+    transition: moon
+---
+
+<!-- can mess around with the default themes: Default, Sky, Beige, Simple, Serif, Night, Moon, Solarized -->
+
+<!-- can also mess around with transitions: None, Default, Page, Concave, Fade, Linear, Zoom -->
+
+<!-- See number 5 for markup options: https://rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf -->
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+- Purpose: An attempt to characterize the importance of the serve for specific players in professional tennis
+- Motivation: It seems like there is a lack of valuable comments on the serve in professional tennis
+- The data used includes match level and point level data 
+
+
+## Model Building
+
+- BT model (include formula)
+- Neuralnet
+- Mixed effects model (drop if too long)
+
+## App
+
+- what the app does
+- downward slopes
+- link
+
+## Next steps
+
+- Neural net
+- explaining downward trend
+- new variables for BT
+
+## Sources
+
+- jeff sackmann
