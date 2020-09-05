@@ -549,7 +549,7 @@ server <- function(input, output, session) {
   one player winning using a contest-level predictor of first serve percentage.
   The player of interst's serve range was used while the opponents' mean serve percentage
   was used to find these lines.
-  (data from https://github.com/JeffSackmann/tennis_atp)"}) # add something about opponent - 
+  The data used in the app was obtained from Jeff Sackmann under a Creative Commons License at https://github.com/JeffSackmann/tennis_atp and https://github.com/JeffSackmann/tennis_wta"}) # add something about opponent - 
   # mean serve
   
   

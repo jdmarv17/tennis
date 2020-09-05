@@ -1,0 +1,44 @@
+---
+title: "SYE Schedule"
+author: "Matt Higham"
+date: "8/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 1 and 2
+
+Machine Learning Methods and Different `R` Packages and Examples
+
+
+## Week 3 and 4
+
+Data Cleaning and Exploration
+
+## Week 5 and 7
+
+Building and testing "smaller" models
+
+## Week 8 and 9
+
+HPC Larger Model
+
+## Week 10
+
+Bradley-Terry
+
+## Week 11 and 12
+
+Write-up and Updating the App
+
+## Week 13 
+
+Presentation / Final Report
+
+
+
+
+
