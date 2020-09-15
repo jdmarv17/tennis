@@ -18,6 +18,7 @@ library(palmerpenguins)
 
 <https://fivethirtyeight.com/features/serena-williams-and-the-difference-between-all-time-great-and-greatest-of-all-time/#fn-2>
 
+<https://github.com/hdai/elo_tennis>
 
 
 
