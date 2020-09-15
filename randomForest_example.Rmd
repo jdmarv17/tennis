@@ -5,8 +5,26 @@ date: "9/5/2020"
 output: html_document
 ---
 ```{r}
+library(tidyverse)
 library(randomForest)
+library(caret)
+library(palmerpenguins)
 ```
+
+*elo info*
+<http://sleepomeno.github.io/blog/2015/09/08/Historical-ELO-Tennis-Rating/>
+
+<https://www.ultimatetennisstatistics.com/eloRatings>
+
+<https://fivethirtyeight.com/features/serena-williams-and-the-difference-between-all-time-great-and-greatest-of-all-time/#fn-2>
+
+
+
+
+
+
+
+
 
 
 ```{r setup, include=FALSE}
@@ -25,20 +43,17 @@ training <- iris[indexes,]
 validation1 <- iris[-indexes,]
 ```
 
-
 ```{r}
 rf_classifier = randomForest(Species ~ ., data=training, ntree=100, mtry=2, importance=TRUE)
 rf_classifier
 varImpPlot(rf_classifier)
 ```
 
-
 ```{r}
 # Validation set assessment #1: looking at confusion matrix
 prediction_for_table <- predict(rf_classifier,validation1[,-5])
 table(observed=validation1[,5],predicted=prediction_for_table)
 ```
-
 
 ```{r}
 # Validation set assessment #2: ROC curves and AUC
@@ -74,7 +89,41 @@ for (i in 1:3)
 ```
 
 
+# New example
 
+```{r}
+head(penguins)
+```
+
+
+```{r}
+set.seed(7)
+data <- penguins %>%
+        filter(is.na(bill_length_mm) == F & is.na(bill_depth_mm) == F & is.na(flipper_length_mm) == F & is.na(body_mass_g) == F)
+               
+data_size <- floor(nrow(data)/2)
+# Generate a random sample of "data_set_size" indexes
+indexes <- sample(1:nrow(data), size = data_size)
+# Assign the data to the correct sets
+train <- data[indexes,] 
+test <- data[-indexes,] 
+```
+
+
+```{r}
+rf_mod <- randomForest(species ~ island, data = train, ntree = 100, mtry = 2, importance = T)
+rf_mod
+
+# not sure why this isnt working 
+varImpPlot(rf_mod)
+```
+
+```{r}
+# Validation set assessment #1: looking at confusion matrix
+predictions <- predict(rf_mod, test[-1])
+
+table(observed = test[1], predicted = predictions)
+```
 
 
 
