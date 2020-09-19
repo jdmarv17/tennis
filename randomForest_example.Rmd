@@ -112,7 +112,7 @@ test <- data[-indexes,]
 
 
 ```{r}
-rf_mod <- randomForest(species ~ island, data = train, ntree = 100, mtry = 2, importance = T)
+rf_mod <- randomForest(species ~ island + bill_length_mm + flipper_length_mm, data = train, ntree = 100, mtry = 2, importance = T)
 rf_mod
 
 # not sure why this isnt working 
@@ -121,9 +121,17 @@ varImpPlot(rf_mod)
 
 ```{r}
 # Validation set assessment #1: looking at confusion matrix
-predictions <- predict(rf_mod, test[-1])
+predictions <- predict(rf_mod, test)
+predictions <-
+        as.data.frame(predictions) %>%
+        mutate(actual = test$species)
 
-table(observed = test[1], predicted = predictions)
+predictions <-
+        predictions %>%
+        mutate(correct = ifelse(predictions == actual, 1, 0))
+
+predictions %>%
+        summarise(count = sum(correct))
 ```
 
 
