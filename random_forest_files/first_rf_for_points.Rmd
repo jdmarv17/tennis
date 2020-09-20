@@ -14,8 +14,6 @@ library(tidyverse)
 library(randomForest)
 ```
 
-
-
 ```{r}
 #players to use in model
 players_keep_atp <- 
@@ -163,7 +161,8 @@ rf_mod_df <-
   mutate(returner_dist = case_when(
     PointServer == 1 ~ P2DistanceRun,
     PointServer == 2 ~ P1DistanceRun
-  ))
+  )) %>%
+  mutate(returnerwin = ifelse(serverwin == 1, 0, 1))
 ```
 
 ```{r}
@@ -174,7 +173,7 @@ rf_mod_df <-
   filter(is.na(server_dist) == F & is.na(returner_dist) == F  & is.na(RallyCount) == F & is.na(Speed_MPH) == F & is.na(ServeSide) == F & is.na(hand) == F & is.na(height) == F & is.na(serve_number) == F & is.na(server_up) == F & is.na(servingplayer) == F & is.na(importance2) == F)
 
 rf_mod_df$serverwin <- as.factor(rf_mod_df$serverwin)
-  
+rf_mod_df$returnerwin <- as.factor(rf_mod_df$returnerwin)
 
 data_size <- floor(nrow(rf_mod_df)/2)
 # Generate a random sample of "data_set_size" indexes
@@ -189,21 +188,29 @@ test <- rf_mod_df[-indexes,]
 #point_rf <- randomForest(serverwin ~ server_dist + returner_dist + RallyCount + Speed_MPH + importance2 + ServeSide + Handedness + height + serve_number + server_up, data = train, ntree = 100, mtry = 5, importance = T)
 
 point_rf <- randomForest(serverwin ~ server_dist + returner_dist + RallyCount + Speed_MPH, data = train, ntree = 100, mtry = 3, importance = T )
+
+return_rf <- randomForest(returnerwin ~ server_dist + returner_dist + RallyCount + Speed_MPH, data = train, ntree = 100, mtry = 3, importance = T)
 ```
 
 
 ```{r}
 preds <- predict(point_rf, test)
+preds2 <- predict(return_rf, test)
 test <- 
   test %>%
-  mutate(predictions = preds)
+  mutate(predictions = preds) %>%
+  mutate(predictions2 = preds2)
 
 test <-
   test %>%
-  mutate(correct = ifelse(predictions == serverwin, 1, 0))
+  mutate(correct = ifelse(predictions == serverwin, 1, 0)) %>%
+  mutate(correct2 = ifelse(predictions2 == returnerwin, 1, 0))
 
 test %>%
-  summarise(count = sum(correct))
+  summarise(count = sum(correct),
+            count2 = sum(correct2))
+
+
 ```
 
 
