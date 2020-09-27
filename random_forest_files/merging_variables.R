@@ -1,24 +1,11 @@
----
-title: "first_rf_for_points"
-author: "Josh Marvald"
-date: "9/19/2020"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
 library(tidyverse)
-library(randomForest)
-library(skimr)
+
+
 source("point_files/data_cleaning.R")
 source("match_files/merging_matches.R")
-```
 
-```{r}
-#players to use in model
+
+# can change nmatches to add more players to data set
 players_keep_atp <- 
   final_atp_df1 %>% 
   group_by(match_id) %>%
@@ -67,6 +54,18 @@ tmp2 <-
 tmp2 <- 
   tmp2[!duplicated(tmp2$name),]
 
+tmp3 <-
+  gs_decade %>%
+  separate(tourney_id, into = c("year", "id"), sep = "-", remove = FALSE) %>%
+  filter(year == "2016" | year == "2017") %>%
+  filter(winner_name %in% players_keep_atp$name & loser_name %in% players_keep_atp$name) %>%
+  select(winner_name, winner_rank_points, loser_name, loser_rank_points, tourney_id, match_num) %>%
+  gather(key = win_loss, value = name, winner_name, loser_name) %>%
+  mutate(rank_points = case_when(
+    win_loss == "winner_name" ~ winner_rank_points,
+    win_loss == "loser_name" ~ loser_rank_points
+  )) %>%
+  within(., rm(win_loss, winner_rank_points, loser_rank_points))
 
 
 # assign hand and height variable to servingplayer 
@@ -77,6 +76,10 @@ nn_mod_df <-
 nn_mod_df <-
   left_join(nn_mod_df, tmp2, by = c("returningplayer" = "name"))
 
+# how can I merge ranking points to point data?
+# also need to somehow merge match win
+nn_mod_df <-
+  left_join(nn_mod_df, tmp3, by = c())
 
 # 0, 1 for categorical
 nn_mod_df <-
@@ -136,7 +139,7 @@ nn_mod_df <-
          Querrey = ifelse(servingplayer == "Sam Querrey", 1, 0),
          Johnson = ifelse(servingplayer == "Steve Johnson", 1, 0),
          Berdych = ifelse(servingplayer == "Tomas Berdych", 1, 0),
-         )
+  )
 
 # separate to get slam and add binary variable
 nn_mod_df <-
@@ -144,7 +147,7 @@ nn_mod_df <-
   separate(match_id, into = c("year", "tmp"), sep = "-", extra = "merge") 
 
 nn_mod_df <-
- nn_mod_df %>%
+  nn_mod_df %>%
   separate(tmp, into = c("slam", "tourn_id"), sep = "-", extra = "merge") %>%
   mutate(hard_court = case_when(
     slam == "usopen" | slam == "ausopen" ~ 1,
@@ -168,70 +171,16 @@ rf_mod_df <-
     PointServer == 2 ~ P1DistanceRun
   )) %>%
   mutate(returnerwin = ifelse(serverwin == 1, 0, 1))
-```
-
-```{r}
-set.seed(7)
-
-rf_mod_df <-
-  rf_mod_df %>%
-  filter(is.na(server_dist) == F & is.na(returner_dist) == F  & is.na(RallyCount) == F & is.na(Speed_MPH) == F & is.na(ServeSide) == F & is.na(hand) == F & is.na(height) == F & is.na(serve_number) == F & is.na(server_up) == F & is.na(servingplayer) == F & is.na(importance2) == F & is.na(serverwin) == F) 
-
-#rf_mod_df$serverwin <- as.factor(rf_mod_df$serverwin)
-#rf_mod_df$returnerwin <- as.factor(rf_mod_df$returnerwin)
-
-data_size <- floor(nrow(rf_mod_df)/2)
-# Generate a random sample of "data_set_size" indexes
-indexes <- sample(1:nrow(rf_mod_df), size = data_size)
-# Assign the data to the correct sets
-train <- rf_mod_df[indexes,] 
-test <- rf_mod_df[-indexes,] 
-```
 
 
 
-```{r}
-point_rf <- randomForest(serverwin ~ server_dist + returner_dist + RallyCount + Speed_MPH + importance2 + ServeSide + Handedness + height + serve_number + server_up, data = train, ntree = 100, mtry = 5, importance = T)
-
-point_rf <- randomForest(serverwin ~ server_dist + returner_dist + server_up + serve_number + Speed_MPH, data = train, ntree = 100, mtry = 3, importance = T )
-```
 
 
-```{r}
-preds <- predict(point_rf, test)
-test <- 
-  test %>%
-  mutate(predictions = preds) 
-```
 
 
-```{r}
-# add categorical variable for probability ranges
-test <-
-  test %>%
-  mutate(ranges = case_when(
-    predictions < .1 ~ "ones",
-    predictions >= 0.1 & predictions < 0.2 ~ "tens",
-    predictions >= 0.2 & predictions < 0.3 ~ "twenties",
-    predictions >= 0.3 & predictions < 0.4 ~ "thirties", 
-    predictions >= 0.4 & predictions < 0.5 ~ "fourties",
-    predictions >= 0.5 & predictions < 0.6 ~ "fifties",
-    predictions >= 0.6 & predictions < 0.7 ~ "sixties",
-    predictions >= 0.7 & predictions < 0.8 ~ "seventies",
-    predictions >= 0.8 & predictions < 0.9 ~ "eighties",
-    predictions >= 0.9 ~ "nineties"
-  )) %>%
-  mutate(ranges2 = case_when(
-    predictions >= 0.5 ~ "win",
-    predictions < 0.5 ~ "loss"
-  ))
 
-test %>%
-  group_by(ranges) %>%
-  summarise(count = n(), prop = mean(serverwin))
 
-test %>%
-  group_by(ranges2) %>%
-  summarise(count = n(), prop = mean(serverwin))
-```
+
+
+
 
