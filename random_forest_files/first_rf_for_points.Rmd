@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(randomForest)
 library(skimr)
-source("point_files/data_cleaning.R")
+source("~/Desktop/Fellowship/tennis/point_files/data_cleaning.R")
 source("match_files/merging_matches.R")
 ```
 
@@ -157,17 +157,7 @@ nn_mod_df <-
   nn_mod_df %>%
   filter(is.na(height) == F)
 
-rf_mod_df <-
-  nn_mod_df %>%
-  mutate(server_dist = case_when(
-    PointServer == 1 ~ P1DistanceRun,
-    PointServer == 2 ~ P2DistanceRun
-  )) %>%
-  mutate(returner_dist = case_when(
-    PointServer == 1 ~ P2DistanceRun,
-    PointServer == 2 ~ P1DistanceRun
-  )) %>%
-  mutate(returnerwin = ifelse(serverwin == 1, 0, 1))
+
 ```
 
 ```{r}

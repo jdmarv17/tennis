@@ -54,19 +54,6 @@ tmp2 <-
 tmp2 <- 
   tmp2[!duplicated(tmp2$name),]
 
-tmp3 <-
-  gs_decade %>%
-  separate(tourney_id, into = c("year", "id"), sep = "-", remove = FALSE) %>%
-  filter(year == "2016" | year == "2017") %>%
-  filter(winner_name %in% players_keep_atp$name & loser_name %in% players_keep_atp$name) %>%
-  select(winner_name, winner_rank_points, loser_name, loser_rank_points, tourney_id, match_num) %>%
-  gather(key = win_loss, value = name, winner_name, loser_name) %>%
-  mutate(rank_points = case_when(
-    win_loss == "winner_name" ~ winner_rank_points,
-    win_loss == "loser_name" ~ loser_rank_points
-  )) %>%
-  within(., rm(win_loss, winner_rank_points, loser_rank_points))
-
 
 # assign hand and height variable to servingplayer 
 nn_mod_df <-
@@ -76,10 +63,6 @@ nn_mod_df <-
 nn_mod_df <-
   left_join(nn_mod_df, tmp2, by = c("returningplayer" = "name"))
 
-# how can I merge ranking points to point data?
-# also need to somehow merge match win
-nn_mod_df <-
-  left_join(nn_mod_df, tmp3, by = c())
 
 # 0, 1 for categorical
 nn_mod_df <-
@@ -172,13 +155,86 @@ rf_mod_df <-
   )) %>%
   mutate(returnerwin = ifelse(serverwin == 1, 0, 1))
 
+# try to get match winner from point data so we have variable to merge winner_rank_points and loser_rank_points
+#rf_mod_df2 <-
+#  rf_mod_df %>%
+#  group_by(match_num) %>%
+#  mutate(match_winner = case_when(
+#    (player1 == tmp4$winner_name & player2 == tmp4$loser_name & slam == tmp4$slam & year == tmp4$year) ~ player1 , 
+#    (player1 == tmp4$loser_name & player2 == tmp4$winner_name & slam == tmp4$slam & year == tmp4$year) ~ player2
+#  ))
+    
+
+
+
+# get df with rank points, player, result, tourney
+tmp3 <-
+  gs_decade %>%
+  pivot_longer(c(winner_name, loser_name), values_to = "name", names_to = "win_loss") %>%
+  mutate(rank_points = case_when(
+    win_loss == "winner_name" ~ winner_rank_points,
+    win_loss == "loser_name" ~ loser_rank_points
+  )) %>%
+  mutate(result = case_when(
+    win_loss == "winner_name" ~ 1,
+    win_loss == "loser_name" ~ 0
+  )) %>%
+  select(name, rank_points, tourney_name, tourney_date, tourney_id, result) %>%
+  mutate(slam = case_when(
+    tourney_name == "Australian Open" ~ "ausopen",
+    tourney_name == "US Open" ~ "usopen",
+    tourney_name == "Roland Garros" ~ "frenchopen",
+    tourney_name == "Wimbledon" ~ "wimbledon"
+  )) %>%
+  separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
+  filter(year == "2016" | year == "2017")
+
+tmp4 <-
+  gs_decade %>%
+  select(winner_name, loser_name, winner_rank_points, loser_rank_points, tourney_name, tourney_date, tourney_id) %>%
+  mutate(slam = case_when(
+    tourney_name == "Australian Open" ~ "ausopen",
+    tourney_name == "US Open" ~ "usopen",
+    tourney_name == "Roland Garros" ~ "frenchopen",
+    tourney_name == "Wimbledon" ~ "wimbledon"
+  )) %>%
+  
+  separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
+  filter(year == "2016" | year == "2017")
+
+# merge with point data to assign rank points and keep only important variables
+rf_df_with_rank <-
+  left_join(rf_mod_df, tmp3, by = c("slam", "year", "player1" = "name", "player2" = "name")) %>%
+  select(player1, player2, rank_points, slam, year, Speed_MPH, server_up, RallyCount, ServeSide, Handedness, height, 
+         serve_number, serverwin, returnerwin, importance2, game_score, point_score, serve_set, return_set, ElapsedTime,
+         PointNumber, PointWinner, PointServer, servingplayer, returningplayer, server_dist, returner_dist,
+         serve_score_name, return_score_name)
 
 
 
 
 
+nadal <-
+  rf_df_with_rank %>%
+  filter(player1 == "Rafael Nadal" | player2 == "Rafael Nadal")
+nadal <-
+  nadal[!duplicated(nadal$ElapsedTime),]
+nadal <-
+  nadal %>%
+  mutate(p1_score = case_when(
+    PointServer == 1 ~ serve_score_name,
+    PointServer == 2 ~ return_score_name
+  )) %>%
+  mutate(p2_score = case_when(
+    PointServer == 1 ~ return_score_name,
+    PointServer == 2 ~ serve_score_name
+  )) %>%
+  select(player1, player2, p1_score, p2_score, PointNumber, PointWinner)
+# why are some point scores not consistent with PointWinner variable???
 
-
+temp <-
+  rf_mod_df %>%
+  select(point_score, PointWinner, PointNumber, player1, player2, PointServer)
 
 
 
