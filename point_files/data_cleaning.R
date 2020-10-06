@@ -319,7 +319,9 @@ final_wta_df2 <-
 
 both_df <- rbind(new_atp_df2, new_wta_df2)
 
-
+test <- usopen2016 %>%
+  filter(player1 == "Rafael Nadal" & player2 == "Lucas Pouille" & year == 2016) %>%
+  select(PointWinner, PointServer, P1Score, P2Score, PointNumber, Speed_MPH)
 
 
 

@@ -189,26 +189,38 @@ tmp3 <-
   separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
   filter(year == "2016" | year == "2017")
 
-tmp4 <-
-  gs_decade %>%
-  select(winner_name, loser_name, winner_rank_points, loser_rank_points, tourney_name, tourney_date, tourney_id) %>%
-  mutate(slam = case_when(
-    tourney_name == "Australian Open" ~ "ausopen",
-    tourney_name == "US Open" ~ "usopen",
-    tourney_name == "Roland Garros" ~ "frenchopen",
-    tourney_name == "Wimbledon" ~ "wimbledon"
-  )) %>%
+#tmp4 <-
+#  gs_decade %>%
+#  select(winner_name, loser_name, winner_rank_points, loser_rank_points, tourney_name, tourney_date, tourney_id) %>%
+#  mutate(slam = case_when(
+#    tourney_name == "Australian Open" ~ "ausopen",
+#    tourney_name == "US Open" ~ "usopen",
+#    tourney_name == "Roland Garros" ~ "frenchopen",
+#    tourney_name == "Wimbledon" ~ "wimbledon"
+#  )) %>%
   
-  separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
-  filter(year == "2016" | year == "2017")
+#  separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
+#  filter(year == "2016" | year == "2017")
 
 # merge with point data to assign rank points and keep only important variables
+#rf_df_with_rank <-
+#  left_join(rf_mod_df, tmp3, by = c("slam", "year", "player1" = "name", "player2" = "name")) %>%
+#  select(player1, player2, rank_points, slam, year, Speed_MPH, server_up, RallyCount, ServeSide, Handedness, height, 
+#         serve_number, serverwin, returnerwin, importance2, game_score, point_score, serve_set, return_set, ElapsedTime,
+#         PointNumber, PointWinner, PointServer, servingplayer, returningplayer, server_dist, returner_dist,
+#         serve_score_name, return_score_name)
+
+# pivot point data longer, join with tmp3 and pivot wide..........................................
+rf_df_long <-
+  rf_mod_df %>%
+  pivot_longer(c(player1, player2), values_to = "name", names_to = "player_number") 
+
+rf_df_long <-
+  left_join(rf_df_long, tmp3, by = c("slam", "year", "name"))
+
 rf_df_with_rank <-
-  left_join(rf_mod_df, tmp3, by = c("slam", "year", "player1" = "name", "player2" = "name")) %>%
-  select(player1, player2, rank_points, slam, year, Speed_MPH, server_up, RallyCount, ServeSide, Handedness, height, 
-         serve_number, serverwin, returnerwin, importance2, game_score, point_score, serve_set, return_set, ElapsedTime,
-         PointNumber, PointWinner, PointServer, servingplayer, returningplayer, server_dist, returner_dist,
-         serve_score_name, return_score_name)
+  rf_df_long %>%
+  pivot_wider(names_from = "player_number", values_from = "name")
 
 
 
@@ -229,12 +241,9 @@ nadal <-
     PointServer == 1 ~ return_score_name,
     PointServer == 2 ~ serve_score_name
   )) %>%
-  select(player1, player2, p1_score, p2_score, PointNumber, PointWinner)
+  select(player1, player2, p1_score, p2_score, PointNumber, PointWinner, year, slam)
 # why are some point scores not consistent with PointWinner variable???
 
-temp <-
-  rf_mod_df %>%
-  select(point_score, PointWinner, PointNumber, player1, player2, PointServer)
 
 
 
