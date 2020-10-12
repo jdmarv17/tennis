@@ -179,7 +179,7 @@ tmp3 <-
     win_loss == "winner_name" ~ 1,
     win_loss == "loser_name" ~ 0
   )) %>%
-  select(name, rank_points, tourney_name, tourney_date, tourney_id, result) %>%
+  select(name, rank_points, tourney_name, tourney_date, tourney_id, match_num, result) %>%
   mutate(slam = case_when(
     tourney_name == "Australian Open" ~ "ausopen",
     tourney_name == "US Open" ~ "usopen",
@@ -188,6 +188,15 @@ tmp3 <-
   )) %>%
   separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
   filter(year == "2016" | year == "2017")
+
+tmp4 <-
+  tmp3 %>%
+  within(., rm(tourney_date, tourney_name, match_num, result, tmp))
+  
+tmp4 <-
+  tmp4 %>%
+  distinct()
+
 
 #tmp4 <-
 #  gs_decade %>%
@@ -216,16 +225,26 @@ rf_df_long <-
   pivot_longer(c(player1, player2), values_to = "name", names_to = "player_number") 
 
 rf_df_long <-
-  left_join(rf_df_long, tmp3, by = c("slam", "year", "name"))
+  left_join(rf_df_long, tmp4, by = c("slam", "year", "name"))
 
 rf_df_with_rank <-
   rf_df_long %>%
-  pivot_wider(names_from = "player_number", values_from = "name")
+  pivot_wider(names_from = "player_number", values_from = "name") %>%
+  mutate(opponent = case_when(
+    is.na(player1) == T & servingplayer == player2 ~ returningplayer,
+    is.na(player1) == T & returningplayer == player2 ~ servingplayer,
+    is.na(player2) == T & servingplayer == player1 ~ returningplayer,
+    is.na(player2) == T & returningplayer == player1 ~ servingplayer
+  )) %>%
+  mutate(rank_points_opp = case_when(
+    slam %in% tmp4$slam & year %in% tmp4$year & opponent %in% tmp4$name ~ tmp4$rank_points
+  ))
+
+rf_df_with_rank <-
+  left_join(rf_df_with_rank, tmp4, by = c("slam", "year", "opponent" = "name"))
 
 
-
-
-
+# test for nadal
 nadal <-
   rf_df_with_rank %>%
   filter(player1 == "Rafael Nadal" | player2 == "Rafael Nadal")
