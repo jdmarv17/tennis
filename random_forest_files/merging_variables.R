@@ -191,10 +191,7 @@ tmp3 <-
 
 tmp4 <-
   tmp3 %>%
-  within(., rm(tourney_date, tourney_name, match_num, result, tmp))
-  
-tmp4 <-
-  tmp4 %>%
+  within(., rm(tourney_date, tourney_name, match_num, result, tmp)) %>%
   distinct()
 
 
@@ -219,14 +216,16 @@ tmp4 <-
 #         PointNumber, PointWinner, PointServer, servingplayer, returningplayer, server_dist, returner_dist,
 #         serve_score_name, return_score_name)
 
-# pivot point data longer, join with tmp3 and pivot wide..........................................
+# pivot point data longer, join with tmp4 and pivot wide..........................................
 rf_df_long <-
   rf_mod_df %>%
   pivot_longer(c(player1, player2), values_to = "name", names_to = "player_number") 
 
+# get one player name 
 rf_df_long <-
   left_join(rf_df_long, tmp4, by = c("slam", "year", "name"))
 
+# add other player from serving/returning variables
 rf_df_with_rank <-
   rf_df_long %>%
   pivot_wider(names_from = "player_number", values_from = "name") %>%
@@ -235,13 +234,59 @@ rf_df_with_rank <-
     is.na(player1) == T & returningplayer == player2 ~ servingplayer,
     is.na(player2) == T & servingplayer == player1 ~ returningplayer,
     is.na(player2) == T & returningplayer == player1 ~ servingplayer
-  )) %>%
-  mutate(rank_points_opp = case_when(
-    slam %in% tmp4$slam & year %in% tmp4$year & opponent %in% tmp4$name ~ tmp4$rank_points
   ))
 
+# merge again to get other players name
 rf_df_with_rank <-
   left_join(rf_df_with_rank, tmp4, by = c("slam", "year", "opponent" = "name"))
+
+# make new player variables from old player variables to get just p1, p2 
+rf_rank_attempt <-
+  rf_df_with_rank %>%
+  mutate(p1 = case_when(
+    is.na(player1) == T ~ opponent,
+    is.na(player1) == F ~ player1
+  )) %>%
+  mutate(p2 = case_when(
+    is.na(player2) == T ~ opponent,
+    is.na(player2) == F ~ player2
+  )) 
+
+# make p1_rankpoints and p2_rankpoints variables (reason is.na(player1) works is 
+# due to how rank_points.x and rank_points.y were merged)
+
+rf_rank_attempt <-
+  rf_rank_attempt %>%
+  mutate(p1_rankpoints = case_when(
+    is.na(player1) == T ~ rank_points.y,
+    is.na(player1) == F ~ rank_points.x
+  )) %>%
+  mutate(p2_rankpoints = case_when(
+    is.na(player2) == T ~ rank_points.y,
+    is.na(player2) == F ~ rank_points.x
+  ))
+
+# take every other row to delete
+delete <- seq(0, nrow(rf_rank_attempt), 2)
+
+rf_rank_attempt <- rf_rank_attempt[-delete, ]
+
+
+
+
+
+
+
+
+
+
+test_df <- tibble(player1 = c("Player A", "Player A", "Player B", "Player C"), player2 = c("Player B", "Player B", "Player C", "Player A"), match_id = c(1, 1, 2, 3))
+test_df <-
+  test_df %>% pivot_longer(c(player1, player2), values_to = "name", names_to = "player_num")
+
+test_df <-
+  test_df %>%
+  pivot_wider(names_from = "player_num", values_from = "name")
 
 
 # test for nadal
