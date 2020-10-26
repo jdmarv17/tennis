@@ -269,15 +269,15 @@ who_won <-
   group_by(p1, p2, slam, year) %>%
   filter(ElapsedTime == max(ElapsedTime)) %>%
   mutate(result = case_when(
-    serve_set > return_set & servingplayer == p1 ~ 0,  # if serve_set > return_set then clearly server wins
+    serve_set > return_set & servingplayer == p1 ~ 0,  # one player is ahead in sets so they must have won
     serve_set > return_set & servingplayer == p2 ~ 1,
-    serve_set < return_set & returningplayer == p1 ~ 0, # if return_set > serve_set then returner wins
+    serve_set < return_set & returningplayer == p1 ~ 0, 
     serve_set < return_set & returningplayer == p2 ~ 1,
-    serve_set == return_set & serve_game > return_game & servingplayer == p1 ~ 0, # sets equal, serve_game > return_game then server wins
+    serve_set == return_set & serve_game > return_game & servingplayer == p1 ~ 0, # sets equal, fifth set win for one player
     serve_set == return_set & serve_game > return_game & servingplayer == p2 ~ 1,
-    serve_set == return_set & serve_game < return_game & returningplayer == p1 ~ 0, # sets equal, return_game > serve_game then returner wins
+    serve_set == return_set & serve_game < return_game & returningplayer == p1 ~ 0, 
     serve_set == return_set & serve_game < return_game & returningplayer == p2 ~ 1,
-    serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p1 ~ 0, # whoever is up in points won
+    serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p1 ~ 0, # tiebreak situation
     serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p2 ~ 1,
     serve_set == return_set & serve_game == return_game & P1Score < P2Score & returningplayer == p1 ~ 0,
     serve_set == return_set & serve_game == return_game & P1Score < P2Score & returningplayer == p2 ~ 1,
