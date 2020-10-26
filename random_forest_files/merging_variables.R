@@ -21,8 +21,12 @@ nn_mod_df <-
   new_atp_df2 %>% 
   ungroup() %>%
   filter(player1 %in% players_keep_atp$name & player2 %in% players_keep_atp$name) %>% 
-  mutate(servingplayer = case_when(PointServer == 1 ~ player1, PointServer == 2 ~ player2)) %>%
-  mutate(returningplayer = case_when(PointServer == 1 ~ player2, PointServer == 2 ~ player1)) %>%
+  mutate(servingplayer = case_when(
+    PointServer == 1 ~ player1, 
+    PointServer == 2 ~ player2)) %>%
+  mutate(returningplayer = case_when(
+    PointServer == 1 ~ player2, 
+    PointServer == 2 ~ player1)) %>%
   filter(is.na(importance2) == FALSE) %>%
   mutate(ServeSide = ifelse((serve_point + return_point) %% 2 == 0, "Deuce", "Ad"))
 
@@ -195,28 +199,7 @@ tmp4 <-
   distinct()
 
 
-#tmp4 <-
-#  gs_decade %>%
-#  select(winner_name, loser_name, winner_rank_points, loser_rank_points, tourney_name, tourney_date, tourney_id) %>%
-#  mutate(slam = case_when(
-#    tourney_name == "Australian Open" ~ "ausopen",
-#    tourney_name == "US Open" ~ "usopen",
-#    tourney_name == "Roland Garros" ~ "frenchopen",
-#    tourney_name == "Wimbledon" ~ "wimbledon"
-#  )) %>%
-  
-#  separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
-#  filter(year == "2016" | year == "2017")
 
-# merge with point data to assign rank points and keep only important variables
-#rf_df_with_rank <-
-#  left_join(rf_mod_df, tmp3, by = c("slam", "year", "player1" = "name", "player2" = "name")) %>%
-#  select(player1, player2, rank_points, slam, year, Speed_MPH, server_up, RallyCount, ServeSide, Handedness, height, 
-#         serve_number, serverwin, returnerwin, importance2, game_score, point_score, serve_set, return_set, ElapsedTime,
-#         PointNumber, PointWinner, PointServer, servingplayer, returningplayer, server_dist, returner_dist,
-#         serve_score_name, return_score_name)
-
-# pivot point data longer, join with tmp4 and pivot wide..........................................
 rf_df_long <-
   rf_mod_df %>%
   pivot_longer(c(player1, player2), values_to = "name", names_to = "player_number") 
@@ -269,43 +252,85 @@ rf_rank_attempt <-
 # take every other row to delete
 delete <- seq(0, nrow(rf_rank_attempt), 2)
 
-rf_rank_attempt <- rf_rank_attempt[-delete, ]
+rf_df <- rf_rank_attempt[-delete, ]
+
+# keep relevant variables
+rf_df <-
+  rf_df %>%
+  select(slam, year, p1, p2, p1_rankpoints, p2_rankpoints, PointWinner, P1Score, P2Score, PointNumber, game_score, set_score, serve_set, 
+         return_set, serve_game, return_game, server_dist, returner_dist, hard_court, Handedness, importance2,
+         server_up, serve_number, ServeSide, height, servingplayer, returningplayer, Speed_MPH, ServeIndicator, pointid,
+         match_num, ElapsedTime, PointServer)
+
+
+# get match win variable (0 if p1 wins, 1 if p2 wins)
+who_won <-
+  rf_df %>%
+  group_by(p1, p2, slam, year) %>%
+  filter(ElapsedTime == max(ElapsedTime)) %>%
+  mutate(result = case_when(
+    serve_set > return_set & servingplayer == p1 ~ 0,  # if serve_set > return_set then clearly server wins
+    serve_set > return_set & servingplayer == p2 ~ 1,
+    serve_set < return_set & returningplayer == p1 ~ 0, # if return_set > serve_set then returner wins
+    serve_set < return_set & returningplayer == p2 ~ 1,
+    serve_set == return_set & serve_game > return_game & servingplayer == p1 ~ 0, # sets equal, serve_game > return_game then server wins
+    serve_set == return_set & serve_game > return_game & servingplayer == p2 ~ 1,
+    serve_set == return_set & serve_game < return_game & returningplayer == p1 ~ 0, # sets equal, return_game > serve_game then returner wins
+    serve_set == return_set & serve_game < return_game & returningplayer == p2 ~ 1,
+    serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p1 ~ 0, # whoever is up in points won
+    serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p2 ~ 1,
+    serve_set == return_set & serve_game == return_game & P1Score < P2Score & returningplayer == p1 ~ 0,
+    serve_set == return_set & serve_game == return_game & P1Score < P2Score & returningplayer == p2 ~ 1,
+  )) %>%
+  select(p1, p2, slam, year, result)
+# finding PointWinner for the last point doesn't help since that is really the second to last point
 
 
 
-
-
-
-
-
-
-
-test_df <- tibble(player1 = c("Player A", "Player A", "Player B", "Player C"), player2 = c("Player B", "Player B", "Player C", "Player A"), match_id = c(1, 1, 2, 3))
-test_df <-
-  test_df %>% pivot_longer(c(player1, player2), values_to = "name", names_to = "player_num")
-
-test_df <-
-  test_df %>%
-  pivot_wider(names_from = "player_num", values_from = "name")
-
+# result = 0 if p1 wins, = 1 if p2 wins
+rf_df <-
+  rf_df %>%
+  group_by(p1, p2, year, slam) %>%
+  mutate(result = case_when(
+    PointNumber == max(PointNumber) & PointWinner == 1 ~ 0,
+    PointNumber == max(PointNumber) & PointWinner == 2 ~ 1
+  ))
+# not sure why just this wouldnt work
+# going by max(PointNumber) just returns pointnumbers less than 100
 
 # test for nadal
 nadal <-
-  rf_df_with_rank %>%
-  filter(player1 == "Rafael Nadal" | player2 == "Rafael Nadal")
-nadal <-
-  nadal[!duplicated(nadal$ElapsedTime),]
-nadal <-
-  nadal %>%
-  mutate(p1_score = case_when(
-    PointServer == 1 ~ serve_score_name,
-    PointServer == 2 ~ return_score_name
-  )) %>%
-  mutate(p2_score = case_when(
-    PointServer == 1 ~ return_score_name,
-    PointServer == 2 ~ serve_score_name
-  )) %>%
-  select(player1, player2, p1_score, p2_score, PointNumber, PointWinner, year, slam)
+  rf_df %>%
+  filter(p1 == "Rafael Nadal" | p2 == "Rafael Nadal")
+
+
+
+#test_df <- tibble(player1 = c("Player A", "Player A", "Player B", "Player C"), player2 = c("Player B", "Player B", "Player C", "Player A"), match_id = c(1, 1, 2, 3))
+#test_df <-
+#  test_df %>% pivot_longer(c(player1, player2), values_to = "name", names_to = "player_num")
+
+#test_df <-
+#  test_df %>%
+#  pivot_wider(names_from = "player_num", values_from = "name")
+
+
+# test for nadal
+#nadal <-
+#  rf_df_with_rank %>%
+#  filter(player1 == "Rafael Nadal" | player2 == "Rafael Nadal")
+#nadal <-
+#  nadal[!duplicated(nadal$ElapsedTime),]
+#nadal <-
+#  nadal %>%
+#  mutate(p1_score = case_when(
+#    PointServer == 1 ~ serve_score_name,
+#    PointServer == 2 ~ return_score_name
+#  )) %>%
+#  mutate(p2_score = case_when(
+#    PointServer == 1 ~ return_score_name,
+#    PointServer == 2 ~ serve_score_name
+#  )) %>%
+#  select(player1, player2, p1_score, p2_score, PointNumber, PointWinner, year, slam)
 # why are some point scores not consistent with PointWinner variable???
 
 
