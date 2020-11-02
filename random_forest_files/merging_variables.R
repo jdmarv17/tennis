@@ -20,15 +20,13 @@ players_keep_atp <-
 nn_mod_df <- 
   new_atp_df2 %>% 
   ungroup() %>%
-  filter(player1 %in% players_keep_atp$name & player2 %in% players_keep_atp$name) %>% 
   mutate(servingplayer = case_when(
     PointServer == 1 ~ player1, 
     PointServer == 2 ~ player2)) %>%
   mutate(returningplayer = case_when(
     PointServer == 1 ~ player2, 
     PointServer == 2 ~ player1)) %>%
-  filter(is.na(importance2) == FALSE) %>%
-  mutate(ServeSide = ifelse((serve_point + return_point) %% 2 == 0, "Deuce", "Ad"))
+    mutate(ServeSide = ifelse((serve_point + return_point) %% 2 == 0, "Deuce", "Ad"))
 
 # get df with name and handedness
 tmp <- 
@@ -86,8 +84,7 @@ nn_mod_df <-
     server_up = case_when(
       (serve_point - return_point) > 0 ~ 1,
       (serve_point - return_point) <= 0 ~ 0
-    )) %>%
-  filter(is.na(ServeWidth) == F & is.na(serve_number) == F & is.na(serve_depth) == F & is.na(serve_side) == F & is.na(Handedness) == F & is.na(server_up) == F)
+    ))
 
 nn_mod_df <-
   nn_mod_df %>%
@@ -98,35 +95,6 @@ nn_mod_df <-
     ServeWidth == "B" ~ "B"
   ))
 
-nn_mod_df <-
-  nn_mod_df %>%
-  mutate(Nishikori = ifelse(servingplayer == "Kei Nishikori", 1, 0),
-         Murray = ifelse(servingplayer == "Andy Murray", 1, 0),
-         Thiem = ifelse(servingplayer == "Dominic Thiem", 1, 0),
-         Fed = ifelse(servingplayer == "Roger Federer", 1, 0),
-         Stan = ifelse(servingplayer == "Stan Wawrinka", 1, 0),
-         Nadal = ifelse(servingplayer == "Rafael Nadal", 1, 0),
-         Novak = ifelse(servingplayer == "Novak Djokovic", 1, 0),
-         Milos = ifelse(servingplayer == "Milos Raonic", 1, 0),
-         Isner = ifelse(servingplayer == "John Isner", 1, 0),
-         Tsonga = ifelse(servingplayer == "Jo Wilfried Tsonga", 1, 0),
-         Zverev = ifelse(servingplayer == "Alexander Zverev", 1, 0),
-         Tomic = ifelse(servingplayer == "Bernard Tomic", 1, 0),
-         Ferrer = ifelse(servingplayer == "David Ferrer", 1, 0),
-         Goffin = ifelse(servingplayer == "David Goffin", 1, 0),
-         Monfils = ifelse(servingplayer == "Gael Monfils", 1, 0),
-         Dimitrov = ifelse(servingplayer == "Grigor Dimitrov", 1, 0),
-         Anderson = ifelse(servingplayer == "Kevin Anderson", 1, 0),
-         Edmund = ifelse(servingplayer == "Kyle Edmund", 1, 0),
-         Pouille = ifelse(servingplayer == "Lucas Pouille", 1, 0),
-         Cilic = ifelse(servingplayer == "Marin Cilic", 1, 0),
-         Kyrgios = ifelse(servingplayer == "Nick Kyrgios", 1, 0),
-         Gasquet = ifelse(servingplayer == "Richard Gasquet", 1, 0),
-         Agut = ifelse(servingplayer == "Roberto Bautista Agut", 1, 0),
-         Querrey = ifelse(servingplayer == "Sam Querrey", 1, 0),
-         Johnson = ifelse(servingplayer == "Steve Johnson", 1, 0),
-         Berdych = ifelse(servingplayer == "Tomas Berdych", 1, 0),
-  )
 
 # separate to get slam and add binary variable
 nn_mod_df <-
@@ -263,56 +231,46 @@ rf_df <-
          match_num, ElapsedTime, PointServer)
 
 
-# get match win variable (0 if p1 wins, 1 if p2 wins)
-who_won <-
-  rf_df %>%
-  group_by(p1, p2, slam, year) %>%
-  filter(ElapsedTime == max(ElapsedTime)) %>%
-  mutate(result = case_when(
-    serve_set > return_set & servingplayer == p1 ~ 0,  # one player is ahead in sets so they must have won
-    serve_set > return_set & servingplayer == p2 ~ 1,
-    serve_set < return_set & returningplayer == p1 ~ 0, 
-    serve_set < return_set & returningplayer == p2 ~ 1,
-    serve_set == return_set & serve_game > return_game & servingplayer == p1 ~ 0, # sets equal, fifth set win for one player
-    serve_set == return_set & serve_game > return_game & servingplayer == p2 ~ 1,
-    serve_set == return_set & serve_game < return_game & returningplayer == p1 ~ 0, 
-    serve_set == return_set & serve_game < return_game & returningplayer == p2 ~ 1,
-    serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p1 ~ 0, # tiebreak situation
-    serve_set == return_set & serve_game == return_game & P1Score > P2Score & servingplayer == p2 ~ 1,
-    serve_set == return_set & serve_game == return_game & P1Score < P2Score & returningplayer == p1 ~ 0,
-    serve_set == return_set & serve_game == return_game & P1Score < P2Score & returningplayer == p2 ~ 1,
-  )) %>%
-  select(p1, p2, slam, year, result)
-# finding PointWinner for the last point doesn't help since that is really the second to last point
-
-
-
 # result = 0 if p1 wins, = 1 if p2 wins
 rf_df <-
   rf_df %>%
   group_by(p1, p2, year, slam) %>%
   mutate(result = case_when(
-    PointNumber == max(PointNumber) & PointWinner == 1 ~ 0,
-    PointNumber == max(PointNumber) & PointWinner == 2 ~ 1
+    ElapsedTime == max(ElapsedTime) & PointWinner == 1 ~ 0,
+    ElapsedTime == max(ElapsedTime) & PointWinner == 2 ~ 1
   ))
-# not sure why just this wouldnt work
-# going by max(PointNumber) just returns pointnumbers less than 100
+# still have a lot of NAs
+
+rf_df %>%
+  summarise(na = )
+
+
+
+# separate score variables for game and set, keep important variables
+rf_df <-
+  rf_df %>%
+  separate(game_score, into = c("p1Game", "p2Game"), sep = "-") %>%
+  separate(set_score, into = c("p1Set", "p2Set"), sep = "-") %>%
+  select(slam, year, p1, p2, result, p1_rankpoints, p2_rankpoints, P1Score, P2Score, p1Game, p2Game, p1Set, p2Set, PointWinner,
+         PointNumber, PointServer, ServeIndicator, ServeSide, server_up, hard_court, Handedness, 
+         Speed_MPH, pointid, match_num, ElapsedTime)
+
+
+# variables to show who is up in sets and games in set
+rf_df <-
+  rf_df %>%
+  mutate(set_advantage = as.numeric(p1Set) - as.numeric(p2Set)) %>%
+  mutate(game_advange = as.numeric(p1Game) - as.numeric(p2Game))
+
+
+
+
+
 
 # test for nadal
 nadal <-
   rf_df %>%
-  filter(p1 == "Rafael Nadal" | p2 == "Rafael Nadal")
-
-
-
-#test_df <- tibble(player1 = c("Player A", "Player A", "Player B", "Player C"), player2 = c("Player B", "Player B", "Player C", "Player A"), match_id = c(1, 1, 2, 3))
-#test_df <-
-#  test_df %>% pivot_longer(c(player1, player2), values_to = "name", names_to = "player_num")
-
-#test_df <-
-#  test_df %>%
-#  pivot_wider(names_from = "player_num", values_from = "name")
-
+  filter(p1 == "Rafael Nadal" & p2 == "Lucas Pouille" & slam == "usopen")
 
 # test for nadal
 #nadal <-
