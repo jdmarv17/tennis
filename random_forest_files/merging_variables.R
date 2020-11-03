@@ -238,12 +238,8 @@ rf_df <-
   mutate(result = case_when(
     ElapsedTime == max(ElapsedTime) & PointWinner == 1 ~ 0,
     ElapsedTime == max(ElapsedTime) & PointWinner == 2 ~ 1
-  ))
-# still have a lot of NAs
-
-rf_df %>%
-  summarise(na = )
-
+  )) %>%
+  fill(result, .direction = "up")
 
 
 # separate score variables for game and set, keep important variables
@@ -260,7 +256,9 @@ rf_df <-
 rf_df <-
   rf_df %>%
   mutate(set_advantage = as.numeric(p1Set) - as.numeric(p2Set)) %>%
-  mutate(game_advange = as.numeric(p1Game) - as.numeric(p2Game))
+  mutate(game_advantage = as.numeric(p1Game) - as.numeric(p2Game)) %>%
+  filter(is.na(p1_rankpoints) == F & is.na(p2_rankpoints) == F) %>%
+  mutate(rank_dif = p1_rankpoints - p2_rankpoints) 
 
 
 
