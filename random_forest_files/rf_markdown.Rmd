@@ -11,34 +11,88 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(forcats)
 library(randomForest)
-source("random_forest_files/merging_variables.R")
+source("merging_variables.R")
 ```
 
 
 ```{r}
+# more variables for rf
+
+# get indicator variables for each player winning the point
+rf_df <-
+  rf_df %>%
+  mutate(p1_point = case_when(
+    PointWinner == 1 ~ 1,
+    PointWinner == 2 ~ 0
+  )) %>%
+  mutate(p2_point = case_when(
+    PointWinner == 1 ~ 0,
+    PointWinner == 2 ~ 1
+  ))
+
+# add variables for cumulative point totals at every point
+rf_df <-
+  rf_df %>%
+  group_by(slam, year, p1, p2) %>%
+  mutate(p1_total_points = 
+           cumsum(p1_point)) %>%
+  mutate(p2_total_points = 
+           cumsum(p2_point)) %>%
+  ungroup() %>%
+  mutate(point_dif = 
+           p1_total_points - p2_total_points)
+  
+```
+
+
+```{r}
+### preparing test and train
+  
+# get rid of NAs
 rf_df <-
   rf_df %>%
   filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F
-        & is.na(rank_dif) == F & is.na(result) == F)
+        & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F)
 
+rf_df <-
+  rf_df %>%
+  mutate(surface = case_when(
+    slam == "ausopen" ~ "hard",
+    slam == "usopen" ~ "hard",
+    slam == "frenchopen" ~ "clay",
+    slam == "wimbledon" ~ "grass"
+  ))
+
+# make score a factor so there arent problems with 40-Ad or Ad-40
 rf_df$P1Score <- as.factor(rf_df$P1Score)
 rf_df$P2Score <- as.factor(rf_df$P2Score)
 
+# get list of matches
+match_list <-
+  rf_df %>%
+  select(year, slam, p1, p2) %>%
+  distinct()
+
 set.seed(7)
 
+# sample matches
+sample_size <- floor(.7 * nrow(match_list))
+index <- sample(seq_len(nrow(match_list)), size = sample_size)
 
-data_size <- floor(nrow(rf_df)/2)
-# Generate a random sample of "data_set_size" indexes
-indexes <- sample(1:nrow(rf_df), size = data_size)
-# Assign the data to the correct sets
-train <- rf_df[indexes,] 
-test <- rf_df[-indexes,] 
+train_matches <- match_list[index, ]
+test_matches <- match_list[-index, ]
+
+# join with rf_df to get train and test points
+train <- inner_join(rf_df, train_matches)
+test <- inner_join(rf_df, test_matches)
+
 ```
 
 
 ```{r}
-rf1 <- randomForest(result ~ set_advantage + game_advantage + P1Score + P2Score + rank_dif, data = train, ntree = 100, mtry = 3, importance = T)
+rf1 <- randomForest(result ~ set_advantage + game_advantage + P1Score + P2Score + rank_dif + point_dif, data = train, ntree = 200, mtry = 4, importance = T)
 
 
 ```

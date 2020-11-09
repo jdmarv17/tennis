@@ -6,15 +6,15 @@ source("match_files/merging_matches.R")
 
 
 # can change nmatches to add more players to data set
-players_keep_atp <- 
-  final_atp_df1 %>% 
-  group_by(match_id) %>%
-  slice(1) %>%
-  ungroup() %>%
-  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
-  group_by(name) %>%
-  summarise(nmatches = n()) %>%
-  filter(nmatches >= 15 & is.na(name) == FALSE)
+#players_keep_atp <- 
+#  final_atp_df1 %>% 
+#  group_by(match_id) %>%
+#  slice(1) %>%
+#  ungroup() %>%
+#  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
+#  group_by(name) %>%
+#  summarise(nmatches = n()) %>%
+#  filter(nmatches >= 15 & is.na(name) == FALSE)
 
 # add variables for server, returner, and side of court
 nn_mod_df <- 
