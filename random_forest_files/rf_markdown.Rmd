@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(forcats)
 library(randomForest)
-source("merging_variables.R")
+source("/random_forest_files/merging_variables.R")
 ```
 
 
@@ -42,7 +42,13 @@ rf_df <-
            cumsum(p2_point)) %>%
   ungroup() %>%
   mutate(point_dif = 
-           p1_total_points - p2_total_points)
+           p1_total_points - p2_total_points) %>%
+  mutate(surface = case_when(
+    slam == "ausopen" ~ "hard",
+    slam == "usopen" ~ "hard",
+    slam == "frenchopen" ~ "clay",
+    slam == "wimbledon" ~ "grass"
+  ))
   
 ```
 
@@ -56,14 +62,7 @@ rf_df <-
   filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F
         & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F)
 
-rf_df <-
-  rf_df %>%
-  mutate(surface = case_when(
-    slam == "ausopen" ~ "hard",
-    slam == "usopen" ~ "hard",
-    slam == "frenchopen" ~ "clay",
-    slam == "wimbledon" ~ "grass"
-  ))
+
 
 # make score a factor so there arent problems with 40-Ad or Ad-40
 rf_df$P1Score <- as.factor(rf_df$P1Score)
@@ -92,7 +91,7 @@ test <- inner_join(rf_df, test_matches)
 
 
 ```{r}
-rf1 <- randomForest(result ~ set_advantage + game_advantage + P1Score + P2Score + rank_dif + point_dif, data = train, ntree = 200, mtry = 4, importance = T)
+rf1 <- randomForest(result ~ set_advantage + game_advantage + P1Score + P2Score + rank_dif + point_dif, data = train, ntree = 100, mtry = 4, importance = T)
 
 
 ```

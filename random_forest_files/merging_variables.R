@@ -1,8 +1,8 @@
 library(tidyverse)
 
 
-source("point_files/data_cleaning.R")
-source("match_files/merging_matches.R")
+source("~/Desktop/Fellowship/tennis/point_files/data_cleaning.R")
+source("~/Desktop/Fellowship/tennis/match_files/merging_matches.R")
 
 
 # can change nmatches to add more players to data set
