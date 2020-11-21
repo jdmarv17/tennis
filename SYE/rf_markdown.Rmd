@@ -61,7 +61,7 @@ rf_df <-
 rf_df <-
   rf_df %>%
   filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F
-        & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F)
+        & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F & is.na(surface) == F)
 
 
 
@@ -97,10 +97,14 @@ test <- inner_join(rf_df, test_matches)
 # add importance, P1Score, P2Score
 rf1 <- randomForest(result ~ set_advantage + game_advantage + rank_dif + point_dif, data = train, ntree = 25, mtry = 3, importance = T)
 
-train$result <- as.factor(train$result)
-rf2 <- ctree(result ~ rank_dif + point_dif, data = train)
 
-plot(rf2, type = "simple")
+```
+
+
+```{r}
+# this rf came from 1000 tree done on hpc
+load("rf1.RData")
+print(rf1)
 ```
 
 
@@ -157,19 +161,18 @@ test <-
 
 ```{r}
 test$num_sets <- as.factor(test$num_sets)
+test$PointNumber <- as.numeric(test$PointNumber)
 
 # table showing proportion correct in each set
 test %>%
   group_by(num_sets) %>%
   summarise(correct = sum(correct), total = n(), prop = correct/total)
 
-# plot point number vs whether prediction correct
+# track predictions throughout match 
 test %>% 
-  filter(p1 == "Roger Federer" & p2 == "Stan Wawrinka" & slam == "ausopen" & year == "2017") %>%
-  ggplot(., aes(y = correct, x = PointNumber, color = num_sets)) +
-  geom_point()
-# why are points where num_sets = 0 at point numbers past 1, 2 sets
-
+  filter(p1 == "David Ferrer" & p2 == "Donald Young" & slam == "frenchopen" & year == "2017") %>%
+  ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
+  geom_line()
 ```
 
 
