@@ -247,7 +247,7 @@ rf_df <-
   separate(set_score, into = c("p1Set", "p2Set"), sep = "-") %>%
   select(slam, year, p1, p2, result, p1_rankpoints, p2_rankpoints, P1Score, P2Score, p1Game, p2Game, p1Set, p2Set, PointWinner,
          PointNumber, PointServer, ServeIndicator, ServeSide, server_up, hard_court, Handedness, 
-         Speed_MPH, pointid, match_num, ElapsedTime)
+         Speed_MPH, pointid, match_num, ElapsedTime, importance2)
 
 
 # variables to show who is up in sets and games in set

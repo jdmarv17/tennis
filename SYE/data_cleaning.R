@@ -1,7 +1,24 @@
 library(tidyverse)
 
-## load in all data from 2017
 ## can source this file to do all of this data cleaning automatically
+
+# 2018
+wimbledonpoints2018 <- read_csv("data/2018-wimbledon-points.csv")
+wimbledonmatches2018 <- read_csv("data/2018-wimbledon-matches.csv")
+wimbledon2018 <- left_join(wimbledonmatches2018,
+                           wimbledonpoints2018, by = "match_id")
+
+usopenpoints2018 <- read_csv("data/2018-usopen-points.csv")
+usopenmatches2018 <- read_csv("data/2018-usopen-matches.csv")
+usopen2018 <- left_join(usopenmatches2018, usopenpoints2018, by = "match_id")
+
+ausopenpoints2018 <- read_csv("data/2018-ausopen-points.csv")
+ausopenmatches2018 <- read_csv("data/2018-ausopen-matches.csv")
+ausopen2018 <- left_join(ausopenmatches2018, ausopenpoints2018, by = "match_id")
+
+frenchopenpoints2018 <- read_csv("data/2018-frenchopen-points.csv")
+frenchopenmatches2018 <- read_csv("data/2018-frenchopen-matches.csv")
+frenchopen2018 <- left_join(frenchopenmatches2018, frenchopenpoints2018, by = "match_id")
 
 
 # 2017
@@ -22,7 +39,7 @@ frenchopenpoints2017 <- read_csv("data/2017-frenchopen-points.csv")
 frenchopenmatches2017 <- read_csv("data/2017-frenchopen-matches.csv")
 frenchopen2017 <- left_join(frenchopenmatches2017, frenchopenpoints2017, by = "match_id")
 
-# 201
+# 2016
 wimbledonpoints2016 <- read_csv("data/2016-wimbledon-points.csv")
 wimbledonmatches2016 <- read_csv("data/2016-wimbledon-matches.csv")
 wimbledon2016 <- left_join(wimbledonmatches2016,
@@ -46,7 +63,8 @@ frenchopen2016 <- left_join(frenchopenmatches2016, frenchopenpoints2016, by = "m
 
 #combined data
 
-allslams2017_16 <- rbind(wimbledon2017, usopen2017, ausopen2017, frenchopen2017, 
+allslams2018_17_16 <- rbind(wimbledon2018, usopen2018, ausopen2018, frenchopen2018,
+                             wimbledon2017, usopen2017, ausopen2017, frenchopen2017, 
                          wimbledon2016, usopen2016, ausopen2016, frenchopen2016)
 ## Warning message:
 # Lossy cast from <character> to <hms> at position(s) 301, 302, 303, 441, 442, ... (and 11 more)
@@ -55,33 +73,33 @@ allslams2017_16 <- rbind(wimbledon2017, usopen2017, ausopen2017, frenchopen2017,
 ## create variables for whether point ended in unforced error
 ## or winner
 
-allslams2017_16$unforcedind <- allslams2017_16$P1UnfErr + allslams2017_16$P2UnfErr
-allslams2017_16$winnerind <- allslams2017_16$P1Winner + allslams2017_16$P2Winner
+allslams2018_17_16$unforcedind <- allslams2018_17_16$P1UnfErr + allslams2018_17_16$P2UnfErr
+allslams2018_17_16$winnerind <- allslams2018_17_16$P1Winner + allslams2018_17_16$P2Winner
 ## check to make sure these seem reasonable
 
 
-ggplot(data = allslams2017_16, aes(x = unforcedind)) + geom_bar() 
-ggplot(data = allslams2017_16, aes(x = winnerind)) + geom_bar()
+ggplot(data = allslams2018_17_16, aes(x = unforcedind)) + geom_bar() 
+ggplot(data = allslams2018_17_16, aes(x = winnerind)) + geom_bar()
 
 
 ## create some other variables of interest
-allslams2017_16$netpoint <- allslams2017_16$P1NetPoint + allslams2017_16$P2NetPoint
-allslams2017_16$breaksserve <- allslams2017_16$P1BreakPointWon +
-  allslams2017_16$P2BreakPointWon
-allslams2017_16$ace <- allslams2017_16$P1Ace +
-  allslams2017_16$P2Ace
-allslams2017_16$doublefault <- allslams2017_16$P1DoubleFault +
-  allslams2017_16$P2DoubleFault
-allslams2017_16$serverwin <- as.numeric((allslams2017_16$PointServer == 1 & allslams2017_16$PointWinner == 1) | 
-                                          (allslams2017_16$PointServer == 2 & allslams2017_16$PointWinner == 2))
+allslams2018_17_16$netpoint <- allslams2018_17_16$P1NetPoint + allslams2018_17_16$P2NetPoint
+allslams2018_17_16$breaksserve <- allslams2018_17_16$P1BreakPointWon +
+  allslams2018_17_16$P2BreakPointWon
+allslams2018_17_16$ace <- allslams2018_17_16$P1Ace +
+  allslams2018_17_16$P2Ace
+allslams2018_17_16$doublefault <- allslams2018_17_16$P1DoubleFault +
+  allslams2018_17_16$P2DoubleFault
+allslams2018_17_16$serverwin <- as.numeric((allslams2018_17_16$PointServer == 1 & allslams2018_17_16$PointWinner == 1) | 
+                                          (allslams2018_17_16$PointServer == 2 & allslams2018_17_16$PointWinner == 2))
 
 
 ## there are some observations where nobody wins a point....these seem
 ## to be filler so should be removed
 
-allslams2017_16 %>% filter(PointWinner != 1 & PointWinner != 2) %>%
+allslams2018_17_16 %>% filter(PointWinner != 1 & PointWinner != 2) %>%
   select(PointWinner, everything())
-allslams2017_16 <- allslams2017_16 %>%
+allslams2018_17_16 <- allslams2018_17_16 %>%
   filter(PointWinner == 1 | PointWinner == 2)
 
 
@@ -94,7 +112,7 @@ allslams2017_16 <- allslams2017_16 %>%
 
 ## create a variable for set score
 
-allslams2017_16 <- allslams2017_16 %>% group_by(match_id) %>% 
+allslams2018_17_16 <- allslams2018_17_16 %>% group_by(match_id) %>% 
   mutate(settotal = cumsum(SetWinner != 0)) %>%
   mutate(setaddition = cumsum(SetWinner)) %>%
   mutate(set_score = case_when(
@@ -114,14 +132,14 @@ allslams2017_16 <- allslams2017_16 %>% group_by(match_id) %>%
     settotal == 5 & setaddition == 7 ~ "3-2",
     settotal == 5 & setaddition == 8 ~ "2-3"))
 
-allslams2017_16 %>% select(set_score, everything())
+allslams2018_17_16 %>% select(set_score, everything())
 
 ## similarly, create variables for game score and point score
 
-allslams2017_16$point_score <- paste(allslams2017_16$P1Score,
-                                  allslams2017_16$P2Score, sep="-")
-allslams2017_16$game_score <- paste(allslams2017_16$P1GamesWon,
-                                 allslams2017_16$P2GamesWon, sep="-")
+allslams2018_17_16$point_score <- paste(allslams2018_17_16$P1Score,
+                                  allslams2018_17_16$P2Score, sep="-")
+allslams2018_17_16$game_score <- paste(allslams2018_17_16$P1GamesWon,
+                                 allslams2018_17_16$P2GamesWon, sep="-")
 
 
 #########################################
@@ -160,14 +178,14 @@ wta_importance_ad <- rbind(wta_importance, rowsdupw, rowsdup2w)
 ## numbered in the 2000s and men's are in the 1000s. Should verify this
 ## and then delete this comment.
 
-allslams2017_16 <- allslams2017_16 %>%
+allslams2018_17_16 <- allslams2018_17_16 %>%
   mutate(gender = if_else(match_num < 2000, true = "Men",
                           false = "Women"))
 
 ## get rid of rows that are exact duplicates
 atp_importance5 <- atp_importance5 %>% distinct()
 
-placeholder_df2 <- allslams2017_16 %>% filter(gender == "Men")
+placeholder_df2 <- allslams2018_17_16 %>% filter(gender == "Men")
 atp_df2 <- right_join(atp_importance5, placeholder_df2,
                      by = c("point_score", "game_score", "set_score"))
 atp_df2 %>% select(importance, everything())  
@@ -233,14 +251,14 @@ new_atp_df2 <-
       slam != "usopen", 0.108, importance))
 
 # data for first serves
-final_atp_df1 <-
-  new_atp_df2 %>%
-  filter(Speed_MPH != 0 & ServeIndicator != 2)
+#final_atp_df1 <-
+#  new_atp_df2 %>%
+#  filter(Speed_MPH != 0 & ServeIndicator != 2)
 
 # data for second serve
-final_atp_df2 <-
-  new_atp_df2 %>%
-  filter(Speed_MPH != 0 & ServeIndicator != 1)
+#final_atp_df2 <-
+#  new_atp_df2 %>%
+#  filter(Speed_MPH != 0 & ServeIndicator != 1)
 # end of merging atp point data
 
 
@@ -259,7 +277,7 @@ rowsdup2w$point_score <- "AD-40"
 wta_importance_ad <- rbind(wta_importance, rowsdupw, rowsdup2w)
 
 
-placeholder_df3 <- allslams2017_16 %>% filter(gender == "Women") 
+placeholder_df3 <- allslams2018_17_16 %>% filter(gender == "Women") 
 wta_df2 <- right_join(wta_importance_ad, placeholder_df3,
                      by = c("point_score", "game_score", "set_score"))
 wta_df2 %>% select(importance, everything()) %>%
@@ -306,22 +324,20 @@ new_wta_df2 <-
       slam != "usopen", 0.144, importance))
 
 # data for first serves
-final_wta_df1 <-
-  new_wta_df2 %>%
-  filter(Speed_MPH != 0 & ServeIndicator != 2)
+#final_wta_df1 <-
+#  new_wta_df2 %>%
+#  filter(Speed_MPH != 0 & ServeIndicator != 2)
 
 # data for second serve
-final_wta_df2 <-
-  new_wta_df2 %>%
-  filter(Speed_MPH != 0 & ServeIndicator != 1)
+#final_wta_df2 <-
+#  new_wta_df2 %>%
+#  filter(Speed_MPH != 0 & ServeIndicator != 1)
 
 
 
 both_df <- rbind(new_atp_df2, new_wta_df2)
 
-test <- usopen2016 %>%
-  filter(player1 == "Rafael Nadal" & player2 == "Lucas Pouille" & year == 2016) %>%
-  select(PointWinner, PointServer, P1Score, P2Score, PointNumber, Speed_MPH)
+
 
 
 

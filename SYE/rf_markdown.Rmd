@@ -49,8 +49,15 @@ rf_df <-
     slam == "usopen" ~ "hard",
     slam == "frenchopen" ~ "clay",
     slam == "wimbledon" ~ "grass"
+  )) %>%
+  mutate(log_rank = log(p1_rankpoints/p2_rankpoints)) %>%
+  mutate(surface_numerical = case_when(
+    surface == "grass" ~ 0,
+    surface == "hard" ~ 1,
+    surface == "clay" ~ 2
   ))
   
+
 ```
 
 
@@ -60,8 +67,8 @@ rf_df <-
 # get rid of NAs
 rf_df <-
   rf_df %>%
-  filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F
-        & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F & is.na(surface) == F)
+  filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F & is.na(surface) == F & is.na(surface_numerical) == F & is.na(log_rank) == F 
+& is.na(importance2) == F)
 
 
 
@@ -95,15 +102,19 @@ test <- inner_join(rf_df, test_matches)
 # fit random forest
 
 # add importance, P1Score, P2Score
-rf1 <- randomForest(result ~ set_advantage + game_advantage + rank_dif + point_dif, data = train, ntree = 25, mtry = 3, importance = T)
+rf1 <- randomForest(result ~ set_advantage + game_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 25, mtry = 3, importance = T)
 
+# using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
+# ntree = 3 does better than ntree = 4
 
+# with set_advantage + game_advantage + point_dif + surface_numerical, ntree = 3 (3 better than 4 as well)
+# rank_dif does better than log_rank
 ```
 
 
 ```{r}
 # this rf came from 1000 tree done on hpc
-load("rf1.RData")
+#load("rf1.RData")
 print(rf1)
 ```
 
@@ -170,7 +181,7 @@ test %>%
 
 # track predictions throughout match 
 test %>% 
-  filter(p1 == "David Ferrer" & p2 == "Donald Young" & slam == "frenchopen" & year == "2017") %>%
+  filter(p1 == "Albano Olivetti" & p2 == "Matthew Barton" & slam == "wimbledon" & year == "2016") %>%
   ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
   geom_line()
 ```
