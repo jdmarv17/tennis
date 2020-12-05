@@ -33,6 +33,11 @@ rf_df <-
     PointWinner == 2 ~ 1
   ))
 
+rf_df$p1Game <- as.numeric(rf_df$p1Game)
+rf_df$p2Game <- as.numeric(rf_df$p2Game)
+
+rf_df$PointNumber <- as.numeric(rf_df$PointNumber)
+
 # add variables for cumulative point totals at every point
 rf_df <-
   rf_df %>%
@@ -55,9 +60,47 @@ rf_df <-
     surface == "grass" ~ 0,
     surface == "hard" ~ 1,
     surface == "clay" ~ 2
-  ))
-  
+  )) %>%
+  mutate(num_games = p1Game + p2Game) %>%
+  mutate(num_sets = (as.numeric(p1Set) + as.numeric(p2Set)))
 
+
+# get person who serves first in set, break advantage positive if favors p1, negative if favors p2
+rf_df <-
+  rf_df %>%
+  group_by(p1, p2, slam, year, num_sets) %>%
+  mutate(serve_first = case_when(
+    PointNumber == min(PointNumber) & PointServer == 1 ~ "p1",
+    PointNumber == min(PointNumber) & PointServer == 2 ~ "p2"
+  )) %>%
+  fill(serve_first, .direction = "down") %>%
+  ungroup() %>%
+  mutate(break_advantage = case_when(
+    serve_first == "p1" & game_advantage == 0 | game_advantage == 1 ~ 0, # on serve
+    serve_first == "p1" & game_advantage == 2 | game_advantage == 3 ~ 1, # p1 holds, breaks, (holds)
+    serve_first == "p1" & game_advantage == 4 | game_advantage == 5 ~ 2, # p1 holds, breaks, holds, breaks, (holds)
+    serve_first == "p1" & game_advantage == -1 | game_advantage == -2 ~ -1, # p1 broken, (p2 holds)
+    serve_first == "p1" & game_advantage == -3 | game_advantage == -4 ~ -2, # p1 broken, p2 holds, p1 broken, (p2 holds)
+    serve_first == "p1" & game_advantage == -5 | game_advantage == -6 ~ -3, # p1 broken, p2 holds, p1 broken, p2 holds, p1 broken, (p2 holds)
+    # should game_advantage == -6 be included?
+    serve_first == "p2" & game_advantage == 0 | game_advantage == -1 ~ 0, # on serve
+    serve_first == "p2" & game_advantage == -2 | game_advantage == -3 ~ -1, # p2 holds, breaks, (holds)
+    serve_first == "p2" & game_advantage == -4 | game_advantage == -5 ~ -2, # p2 holds, breaks, holds, breaks, (holds)
+    serve_first == "p2" & game_advantage == 1 | game_advantage == 2 ~ 1, # p2 broken, (p1 holds)
+    serve_first == "p2" & game_advantage == 3 | game_advantage == 4 ~ 2, # p2 broken, p1 holds, p2 broken, (p1 holds)
+    serve_first == "p2" & game_advantage == 5 | game_advantage == 6 ~ 3, # p2 broken, p1 holds, p2 broken, p1 holds, p2 broken, (p1 holds)
+    # should game_advantage == 6 be included?
+  ))
+
+```
+
+
+```{r}
+# check to see if variables were created correctly
+check <-
+  rf_df %>%
+  filter(slam == "wimbledon" & year == "2017" & p1 == "Joao Sousa" & p2 == "Dustin Brown") %>%
+  select(p1, p2, p1Set, p2Set, p1Game, p2Game, game_advantage, P1Score, P2Score, serve_first, break_advantage, PointNumber )
 ```
 
 
@@ -68,7 +111,7 @@ rf_df <-
 rf_df <-
   rf_df %>%
   filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F & is.na(surface) == F & is.na(surface_numerical) == F & is.na(log_rank) == F 
-& is.na(importance2) == F)
+& is.na(importance2) == F & is.na(serve_first) == F & is.na(break_advantage) == F)
 
 
 
@@ -102,12 +145,12 @@ test <- inner_join(rf_df, test_matches)
 # fit random forest
 
 # add importance, P1Score, P2Score
-rf1 <- randomForest(result ~ set_advantage + game_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 25, mtry = 3, importance = T)
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 25, mtry = 6, importance = T)
 
 # using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
-# ntree = 3 does better than ntree = 4
+# mtru = 3 does better than mtry = 4
 
-# with set_advantage + game_advantage + point_dif + surface_numerical, ntree = 3 (3 better than 4 as well)
+# with set_advantage + game_advantage + point_dif + surface_numerical, mtry = 3 (3 better than 4 as well)
 # rank_dif does better than log_rank
 ```
 
@@ -165,8 +208,7 @@ test <-
     predictions >= 0.5 & result == 0 ~ 0,
     predictions < 0.5 & result == 1 ~ 0,
     predictions < 0.5 & result == 0 ~ 1
-  )) %>%
-  mutate(num_sets = (as.numeric(p1Set) + as.numeric(p2Set)))
+  )) 
 ```
 
 

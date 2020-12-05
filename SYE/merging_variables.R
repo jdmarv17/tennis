@@ -250,7 +250,7 @@ rf_df <-
          Speed_MPH, pointid, match_num, ElapsedTime, importance2)
 
 
-# variables to show who is up in sets and games in set
+# variables to show who is up in sets and games in set (variables positive if favors p1, negative if favors p2)
 rf_df <-
   rf_df %>%
   mutate(set_advantage = as.numeric(p1Set) - as.numeric(p2Set)) %>%
