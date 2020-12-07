@@ -145,7 +145,7 @@ test <- inner_join(rf_df, test_matches)
 # fit random forest
 
 # add importance, P1Score, P2Score
-rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 25, mtry = 6, importance = T)
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 75, mtry = 6, importance = T)
 
 # using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
 # mtru = 3 does better than mtry = 4
@@ -159,6 +159,10 @@ rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_gam
 # this rf came from 1000 tree done on hpc
 #load("rf1.RData")
 print(rf1)
+
+# this rf came from 2000 tree done on hpc
+load("rf2.RData")
+print(rf2)
 ```
 
 
@@ -223,7 +227,12 @@ test %>%
 
 # track predictions throughout match 
 test %>% 
-  filter(p1 == "Albano Olivetti" & p2 == "Matthew Barton" & slam == "wimbledon" & year == "2016") %>%
+  filter(p1 == "Richard Gasquet" & p2 == "David Ferrer" & slam == "wimbledon" & year == "2017") %>%
+  ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
+  geom_line()
+
+test %>% 
+  filter(p1 == "Andy Murray" & p2 == "Sam Querrey" & slam == "wimbledon" & year == "2017") %>%
   ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
   geom_line()
 ```
