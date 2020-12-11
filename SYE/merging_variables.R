@@ -108,11 +108,6 @@ nn_mod_df <-
   ))
 
 
-# get rid of players without height
-nn_mod_df <-
-  nn_mod_df %>%
-  filter(is.na(height) == F)
-
 rf_mod_df <-
   nn_mod_df %>%
   mutate(server_dist = case_when(

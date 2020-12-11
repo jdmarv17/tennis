@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(here)
 library(party)
 library(tidyverse)
 library(forcats)
@@ -35,10 +36,9 @@ rf_df <-
 
 rf_df$p1Game <- as.numeric(rf_df$p1Game)
 rf_df$p2Game <- as.numeric(rf_df$p2Game)
-
 rf_df$PointNumber <- as.numeric(rf_df$PointNumber)
 
-# add variables for cumulative point totals at every point
+# more variables (total points at each point, surface, rank, games)
 rf_df <-
   rf_df %>%
   group_by(slam, year, p1, p2) %>%
@@ -92,6 +92,14 @@ rf_df <-
     # should game_advantage == 6 be included?
   ))
 
+rf_df2 <-
+  rf_df %>%
+  unite("all_score", c(p1Set, p2Set, p1Game, p2Game, P1Score, P2Score, surface_numerical), sep = "-") 
+
+rf_df2 <-
+  rf_df2 %>%
+  ungroup() %>%
+  mutate(scoreID = group_indices(., all_score))
 ```
 
 
@@ -137,44 +145,90 @@ test_matches <- match_list[-index, ]
 # join with rf_df to get train and test points
 train <- inner_join(rf_df, train_matches)
 test <- inner_join(rf_df, test_matches)
+```
 
+
+```{r}
+### preparing test and train
+  
+# get rid of NAs
+rf_df2 <-
+  rf_df2 %>%
+  filter(is.na(scoreID) == F & is.na(result) == F)
+
+
+# get list of matches
+match_list <-
+  rf_df2 %>%
+  select(year, slam, p1, p2) %>%
+  distinct()
+
+set.seed(11)
+
+# sample matches
+sample_size <- floor(.7 * nrow(match_list))
+index <- sample(seq_len(nrow(match_list)), size = sample_size)
+
+train_matches <- match_list[index, ]
+test_matches <- match_list[-index, ]
+
+# join with rf_df to get train and test points
+train2 <- inner_join(rf_df2, train_matches)
+test2 <- inner_join(rf_df2, test_matches)
 ```
 
 
 ```{r}
 # fit random forest
 
-# add importance, P1Score, P2Score
-rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 25, mtry = 6, importance = T)
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + point_dif + surface_numerical, data = train, ntree = 50, mtry = 5, importance = T)
 
 # using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
-# mtru = 3 does better than mtry = 4
+# mtry = 3 does better than mtry = 4
 
 # with set_advantage + game_advantage + point_dif + surface_numerical, mtry = 3 (3 better than 4 as well)
 # rank_dif does better than log_rank
+
+
+# rf with all score
+rf_allscore <- randomForest(result ~ scoreID, data = train2, ntree = 100, mtry = 1, importance = T)
 ```
 
 
 ```{r}
-# this rf came from 1000 tree done on hpc
-#load("rf1.RData")
+# 1000 tree hpc
 print(rf1)
+
+# 2000 tree hpc
+print(rf2)
+
+# 1000 tree with all_score
+print(rf_allscore1)
+
+# 2000 tree with all_score, surface
+load(here("SYE", "rf_allscoreSurface.RData"))
+print(rf_allscoreSurface)
+
+load("rf_allscoreSurface_small.RData")
+print(rf_allscoreSurface_small)
 ```
 
 
 ```{r}
-preds <- predict(rf1, test)
-test <- 
-  test %>%
+# get predictions
+preds <- predict(rf_allscore, test2)
+test2 <- 
+  test2 %>%
   ungroup %>%
   mutate(predictions = preds) 
+
 ```
 
 
 ```{r}
 # add categorical variable for probability ranges
-test <-
-  test %>%
+test2 <-
+  test2 %>%
   mutate(ranges = case_when(
     predictions < .1 ~ "ones",
     predictions >= 0.1 & predictions < 0.2 ~ "tens",
@@ -192,17 +246,17 @@ test <-
     predictions < 0.5 ~ "loss"
   ))
 
-test %>%
+test2 %>%
   group_by(ranges) %>%
   summarise(prop = mean(result))
 
-test %>%
+test2 %>%
   group_by(ranges2) %>%
   summarise(prop = mean(result))
 
 # make indicator variable to see if prediction was correct
-test <- 
-  test %>%
+test2 <- 
+  test2 %>%
   mutate(correct = case_when(
     predictions >= 0.5 & result == 1 ~ 1,
     predictions >= 0.5 & result == 0 ~ 0,
@@ -223,7 +277,12 @@ test %>%
 
 # track predictions throughout match 
 test %>% 
-  filter(p1 == "Albano Olivetti" & p2 == "Matthew Barton" & slam == "wimbledon" & year == "2016") %>%
+  filter(p1 == "Richard Gasquet" & p2 == "David Ferrer" & slam == "wimbledon" & year == "2017") %>%
+  ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
+  geom_line()
+
+test %>% 
+  filter(p1 == "Andy Murray" & p2 == "Sam Querrey" & slam == "wimbledon" & year == "2017") %>%
   ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
   geom_line()
 ```
