@@ -1,0 +1,303 @@
+---
+title: "rf_markdown"
+author: "Josh Marvald"
+date: "11/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+library(party)
+library(tidyverse)
+library(forcats)
+library(randomForest)
+source("merging_variables.R")
+```
+
+
+```{r}
+# more variables for rf
+
+# get indicator variables for each player winning the point
+rf_df <-
+  rf_df %>%
+  mutate(p1_point = case_when(
+    PointWinner == 1 ~ 1,
+    PointWinner == 2 ~ 0
+  )) %>%
+  mutate(p2_point = case_when(
+    PointWinner == 1 ~ 0,
+    PointWinner == 2 ~ 1
+  ))
+
+rf_df$p1Game <- as.numeric(rf_df$p1Game)
+rf_df$p2Game <- as.numeric(rf_df$p2Game)
+rf_df$PointNumber <- as.numeric(rf_df$PointNumber)
+
+# more variables (total points at each point, surface, rank, games)
+rf_df <-
+  rf_df %>%
+  group_by(slam, year, p1, p2) %>%
+  mutate(p1_total_points = 
+           cumsum(p1_point)) %>%
+  mutate(p2_total_points = 
+           cumsum(p2_point)) %>%
+  ungroup() %>%
+  mutate(point_dif = 
+           p1_total_points - p2_total_points) %>%
+  mutate(surface = case_when(
+    slam == "ausopen" ~ "hard",
+    slam == "usopen" ~ "hard",
+    slam == "frenchopen" ~ "clay",
+    slam == "wimbledon" ~ "grass"
+  )) %>%
+  mutate(log_rank = log(p1_rankpoints/p2_rankpoints)) %>%
+  mutate(surface_numerical = case_when(
+    surface == "grass" ~ 0,
+    surface == "hard" ~ 1,
+    surface == "clay" ~ 2
+  )) %>%
+  mutate(num_games = p1Game + p2Game) %>%
+  mutate(num_sets = (as.numeric(p1Set) + as.numeric(p2Set)))
+
+
+# get person who serves first in set, break advantage positive if favors p1, negative if favors p2
+rf_df <-
+  rf_df %>%
+  group_by(p1, p2, slam, year, num_sets) %>%
+  mutate(serve_first = case_when(
+    PointNumber == min(PointNumber) & PointServer == 1 ~ "p1",
+    PointNumber == min(PointNumber) & PointServer == 2 ~ "p2"
+  )) %>%
+  fill(serve_first, .direction = "down") %>%
+  ungroup() %>%
+  mutate(break_advantage = case_when(
+    serve_first == "p1" & game_advantage == 0 | game_advantage == 1 ~ 0, # on serve
+    serve_first == "p1" & game_advantage == 2 | game_advantage == 3 ~ 1, # p1 holds, breaks, (holds)
+    serve_first == "p1" & game_advantage == 4 | game_advantage == 5 ~ 2, # p1 holds, breaks, holds, breaks, (holds)
+    serve_first == "p1" & game_advantage == -1 | game_advantage == -2 ~ -1, # p1 broken, (p2 holds)
+    serve_first == "p1" & game_advantage == -3 | game_advantage == -4 ~ -2, # p1 broken, p2 holds, p1 broken, (p2 holds)
+    serve_first == "p1" & game_advantage == -5 | game_advantage == -6 ~ -3, # p1 broken, p2 holds, p1 broken, p2 holds, p1 broken, (p2 holds)
+    # should game_advantage == -6 be included?
+    serve_first == "p2" & game_advantage == 0 | game_advantage == -1 ~ 0, # on serve
+    serve_first == "p2" & game_advantage == -2 | game_advantage == -3 ~ -1, # p2 holds, breaks, (holds)
+    serve_first == "p2" & game_advantage == -4 | game_advantage == -5 ~ -2, # p2 holds, breaks, holds, breaks, (holds)
+    serve_first == "p2" & game_advantage == 1 | game_advantage == 2 ~ 1, # p2 broken, (p1 holds)
+    serve_first == "p2" & game_advantage == 3 | game_advantage == 4 ~ 2, # p2 broken, p1 holds, p2 broken, (p1 holds)
+    serve_first == "p2" & game_advantage == 5 | game_advantage == 6 ~ 3, # p2 broken, p1 holds, p2 broken, p1 holds, p2 broken, (p1 holds)
+    # should game_advantage == 6 be included?
+  ))
+
+rf_df2 <-
+  rf_df %>%
+  unite("all_score", c(p1Set, p2Set, p1Game, p2Game, P1Score, P2Score, surface_numerical), sep = "-") 
+
+rf_df2 <-
+  rf_df2 %>%
+  ungroup() %>%
+  mutate(scoreID = group_indices(., all_score))
+```
+
+
+```{r}
+# check to see if variables were created correctly
+check <-
+  rf_df %>%
+  filter(slam == "wimbledon" & year == "2017" & p1 == "Joao Sousa" & p2 == "Dustin Brown") %>%
+  select(p1, p2, p1Set, p2Set, p1Game, p2Game, game_advantage, P1Score, P2Score, serve_first, break_advantage, PointNumber )
+```
+
+
+```{r}
+### preparing test and train
+  
+# get rid of NAs
+rf_df <-
+  rf_df %>%
+  filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F & is.na(surface) == F & is.na(surface_numerical) == F & is.na(log_rank) == F 
+& is.na(importance2) == F & is.na(serve_first) == F & is.na(break_advantage) == F)
+
+
+
+# make score a factor so there arent problems with 40-Ad or Ad-40
+rf_df$P1Score <- as.factor(rf_df$P1Score)
+rf_df$P2Score <- as.factor(rf_df$P2Score)
+
+# get list of matches
+match_list <-
+  rf_df %>%
+  select(year, slam, p1, p2) %>%
+  distinct()
+
+set.seed(7)
+
+# sample matches
+sample_size <- floor(.7 * nrow(match_list))
+index <- sample(seq_len(nrow(match_list)), size = sample_size)
+
+train_matches <- match_list[index, ]
+test_matches <- match_list[-index, ]
+
+# join with rf_df to get train and test points
+train <- inner_join(rf_df, train_matches)
+test <- inner_join(rf_df, test_matches)
+```
+
+
+```{r}
+### preparing test and train
+  
+# get rid of NAs
+rf_df2 <-
+  rf_df2 %>%
+  filter(is.na(scoreID) == F & is.na(result) == F)
+
+
+# get list of matches
+match_list <-
+  rf_df2 %>%
+  select(year, slam, p1, p2) %>%
+  distinct()
+
+set.seed(11)
+
+# sample matches
+sample_size <- floor(.7 * nrow(match_list))
+index <- sample(seq_len(nrow(match_list)), size = sample_size)
+
+train_matches <- match_list[index, ]
+test_matches <- match_list[-index, ]
+
+# join with rf_df to get train and test points
+train2 <- inner_join(rf_df2, train_matches)
+test2 <- inner_join(rf_df2, test_matches)
+```
+
+
+```{r}
+# fit random forest
+
+<<<<<<< HEAD
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + point_dif + surface_numerical, data = train, ntree = 50, mtry = 5, importance = T)
+=======
+# add importance, P1Score, P2Score
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 75, mtry = 6, importance = T)
+>>>>>>> e14e6e7c03fc2bad6803de8d2fb5b811f12f5e11
+
+# using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
+# mtry = 3 does better than mtry = 4
+
+# with set_advantage + game_advantage + point_dif + surface_numerical, mtry = 3 (3 better than 4 as well)
+# rank_dif does better than log_rank
+
+
+# rf with all score
+rf_allscore <- randomForest(result ~ scoreID, data = train2, ntree = 100, mtry = 1, importance = T)
+```
+
+
+```{r}
+# 1000 tree hpc
+print(rf1)
+
+<<<<<<< HEAD
+# 2000 tree hpc
+print(rf2)
+
+# 1000 tree with all_score
+print(rf_allscore1)
+
+# 2000 tree with all_score, surface
+load(here("SYE", "rf_allscoreSurface.RData"))
+print(rf_allscoreSurface)
+
+load("rf_allscoreSurface_small.RData")
+print(rf_allscoreSurface_small)
+=======
+# this rf came from 2000 tree done on hpc
+load("rf2.RData")
+print(rf2)
+>>>>>>> e14e6e7c03fc2bad6803de8d2fb5b811f12f5e11
+```
+
+
+```{r}
+# get predictions
+preds <- predict(rf_allscore, test2)
+test2 <- 
+  test2 %>%
+  ungroup %>%
+  mutate(predictions = preds) 
+
+```
+
+
+```{r}
+# add categorical variable for probability ranges
+test2 <-
+  test2 %>%
+  mutate(ranges = case_when(
+    predictions < .1 ~ "ones",
+    predictions >= 0.1 & predictions < 0.2 ~ "tens",
+    predictions >= 0.2 & predictions < 0.3 ~ "twenties",
+    predictions >= 0.3 & predictions < 0.4 ~ "thirties", 
+    predictions >= 0.4 & predictions < 0.5 ~ "fourties",
+    predictions >= 0.5 & predictions < 0.6 ~ "fifties",
+    predictions >= 0.6 & predictions < 0.7 ~ "sixties",
+    predictions >= 0.7 & predictions < 0.8 ~ "seventies",
+    predictions >= 0.8 & predictions < 0.9 ~ "eighties",
+    predictions >= 0.9 ~ "nineties"
+  )) %>%
+  mutate(ranges2 = case_when(
+    predictions >= 0.5 ~ "win",
+    predictions < 0.5 ~ "loss"
+  ))
+
+test2 %>%
+  group_by(ranges) %>%
+  summarise(prop = mean(result))
+
+test2 %>%
+  group_by(ranges2) %>%
+  summarise(prop = mean(result))
+
+# make indicator variable to see if prediction was correct
+test2 <- 
+  test2 %>%
+  mutate(correct = case_when(
+    predictions >= 0.5 & result == 1 ~ 1,
+    predictions >= 0.5 & result == 0 ~ 0,
+    predictions < 0.5 & result == 1 ~ 0,
+    predictions < 0.5 & result == 0 ~ 1
+  )) 
+```
+
+
+```{r}
+test$num_sets <- as.factor(test$num_sets)
+test$PointNumber <- as.numeric(test$PointNumber)
+
+# table showing proportion correct in each set
+test %>%
+  group_by(num_sets) %>%
+  summarise(correct = sum(correct), total = n(), prop = correct/total)
+
+# track predictions throughout match 
+test %>% 
+  filter(p1 == "Richard Gasquet" & p2 == "David Ferrer" & slam == "wimbledon" & year == "2017") %>%
+  ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
+  geom_line()
+
+test %>% 
+  filter(p1 == "Andy Murray" & p2 == "Sam Querrey" & slam == "wimbledon" & year == "2017") %>%
+  ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
+  geom_line()
+```
+
+
+
+
