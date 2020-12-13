@@ -150,7 +150,7 @@ test <- inner_join(rf_df, test_matches)
 
 ```{r}
 ### preparing test and train
-  
+
 # get rid of NAs
 rf_df2 <-
   rf_df2 %>%
@@ -196,7 +196,7 @@ rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_gam
 
 
 # rf with all score
-rf_allscore <- randomForest(result ~ scoreID, data = train2, ntree = 100, mtry = 1, importance = T)
+rf_allscore <- randomForest(result ~ all_score, data = train2, ntree = 150, mtry = 1, importance = T)
 ```
 
 
