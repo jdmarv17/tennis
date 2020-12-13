@@ -1,0 +1,77 @@
+---
+title: "Analyzing the Importance of the Serve in Professional Tennis"
+author:
+- Josh Marvald
+- Dr. Matt Higham
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  word_document:
+    toc: yes
+    toc_depth: '4'
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  html_document:
+    toc: yes
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, results = "hide")
+
+```
+
+
+```{r, echo = FALSE}
+library(tidyverse)
+source("merging_variables.R")
+```
+
+## Abstract
+
+  This semester, myself and Dr. Higham completed this project in an attempt to predict match outcome of professional tennis matches. Specifically, we built a random forest model for prediction using a large data set of Grand Slam matches for the ATP. While not an exact continuation, this project is related to my summer SLU Fellowship titled “Analyzing the Importance of the Serve in Professional Tennis.” These two projects are fairly different in their purposes, but they share a common data set and much of the code was used for both.  
+  Upon completion of our project, we have built and tested a(several) random forest model(s) that is(are) reasonably accurate for prediction. The model(s) takes the score and surface and returns a prediction for match outcome at each point within a match. Since there are a large number of points played in each match, this allows us to plot graphs depicting the change in predicted match outcome over the course of a match.
+
+## Introduction 
+
+  Much of the inspiration for this project came from a paper called “Using random forests to estimate win probability before each play of an NFL game” by Dennis Lock and Dan Nettleton (Lock, 2013). In this paper, Lock and Nettleton build a random forest to predict the outcome of an NFL game at each play. After building this model, the authors were able to plot win probability of specific matches against a given variable by holding the other variables constant. This gives the reader a sense of how the win probability changes with each variable. 
+  Our project attempted to do something analogous for tennis. While on the surface our project may appear quite similar to Lock and Nettleton’s, tennis introduces complications that are not present in football games. Specifically, Lock and Nettleton were able to take advantage of the fact that football games last a specific amount of time. This means that at each play in a game, there is a specific amount of time left to play. Since this is the case, some of the other variables included in the random forest become more meaningful over the course of a game. For example, consider a score of 21-7 in a football game. If this score occurs with 5 minutes left in the first quarter, it is an indication of who is favored at that time, but it is not deterministic of the outcome. On the other hand, if this score occurs with 5 minutes left in the fourth quarter, it is much more probable than it was in the first quarter that the team with 21 points will win the game.
+  However, tennis has no equivalent variable. Tennis has no game clock that limits the length of matches. In fact, there have been tennis matches that have lasted over 10 hours. Since this is the case, improving the accuracy of predictions over the course of a tennis match is a slightly more difficult task. Much of the difficulty in the later stages of our project stemmed from this inherent difference between football and tennis.
+
+## Random Forests
+
+  In order to explain what a random forest is, it is first important to introduce decision trees. A decision tree can be considered a set of rules that separates data into groups based on some variable. At the beginning, the first rule splits the data into two branches. Each of these branches then have another rule which splits the two branches into four. This process can be repeated until the data left on each branch are separated into unique groups. For example, we may have a data set with a response variable that is a categorical variable. We could specify a number variables for a decision tree to use to split the data so that the data points on a given branch are all of the same category.   
+	Once the decision tree has been trained, we can take new data and feed it into the tree. The tree will feed the data point into the correct branch based on the rules it established at each branch split. It will then return a prediction for the response variable based on value corresponding with the branch that the data point was led to by the rules of the tree.
+	As may be implied with its name, a random forest consists of a large number of decision trees that are random in two ways. First, a random sample with replacement from the training data set is used to train each tree. Sampling randomly for each tree can cut down on the random forest’s sensitivity to training data that might hinder its predictive capabilities with new data. Second, each decision tree randomly samples from the predictors and only uses a subset of the features specified. By having random predictors for each decision tree, the trees as a whole are less correlated which can further help the model be less sensitive to training data. Once a random forest is trained, new data can be introduced, and the model will return a category prediction for each data point. 
+	For our project, we used a specific type of random forest called a regression random forest. Instead of returning a group prediction, a regression random forest returns a value. A regression random forest uses a quantitative variable for the response and returns the average of the response from the decision trees. In our case, since we were trying to predict match outcome, a zero corresponded with player 1 winning and a one corresponded with player 2 winning. Then for a single data point, each decision tree will give a prediction of zero or one and the forest as a whole returns a prediction that is the average of the ones and zeros. This value will always be between zero and one and will represent the probability that player 1 loses the match.
+
+## Description of Data
+
+  The first data set we used had match-level data of Grand Slam matches for men’s ATP players from the years 2016-2018. This data set was sourced from Jeff Sackmann’s Github repository and contained statistics for matches as a whole (Sackmann, 2020). The second data set we used contained point-level data for the same matches included in the match-level data set. The point-level data set was also sourced from Jeff Sackmann’s Github and contained statistics for every point that occurred in every men’s Grand Slam match. 
+  The main reason we chose to focus on men’s Grand Slam matches is due to the difference in length of matches between men’s and women’s tennis. Men’s Grand Slam matches are best three out of five sets while women’s Grand Slam matches are best two out of three sets. With a longer format, we suspected that a random forest would be better able to differentiate situations that are favorable to winning a match from those that are unfavorable. In other words, since a random forest works by finding cutoffs in certain variables within the data, having a longer match would make those cutoffs easier to find.
+  
+## Data Wrangling
+  
+  Much of the initial work involved shaping the data into a more usable form for a random forest model. Most of the remaining wrangling was to extract variables from the match-level data set in order to create corresponding variables in the point-level data set. For example, our initial instinct was to take characteristics about the players in each match to include in the random forest. However, the random forest would be built using the point-level data but the variables we wanted were from the match-level data set. 
+  The main challenge in obtaining the variables we wanted was that the two data sets different in terms of size. Since the point-level data set included every point from the matches included in the match-level data set the point-level data set was significantly larger. This issue, along with other, smaller issues that arose throughout the process of cleaning and wrangling the data was where we focused our efforts for much of the project.
+
+## Model
+
+  Once we had prepared our data properly, we were able to begin building our random forest. Our initial instinct was to find a mix of pre-match variables and in-match variables to include as features for our model. For example, one of the pre-match variables we used for our first random forest was the difference in ranking points between the two players in a given match. Professional tennis players earn ranking points for winning matches, but the ranking points expire every year. We reasoned that since ranking points are indicative of a player’s performance over the past year leading up to a match, including the difference in ranking points as a predictor would help the random forest make better predictions early on in matches where in-match variables are not yet influential. We eventually realized that using the difference in ranking points as a feature was not practical because the trends in the feature in the training data set will not necessarily correspond to any trend in the test data set. That is, cutoffs in the ranking difference feature in the training data may not correspond with any meaningful cutoff in the test data. 
+	One of the in-match variables we used in our first random forest was the difference in game score within a set. If, for a given match and a given set, player 1 is leading, the difference in game scores will indicate how many games player 1 is ahead by in the set. If player 2 is leading the difference will be negative and the absolute value will indicate player 2’s lead in the set. This, along with other in-match variables that indicate score differences, would allow the random forest to find certain scores that are more favorable for one player over the other. 
+	Before training our random forest, we had to decide how many decision trees to include and how many variables for each tree to sample from the pool of predictors(features). We ended up finding that as the number of decision trees is increased, predictions become more accurate, but it seems to be a case of diminishing return. The increase in predictions’ accuracy as the number of trees increases starts to decrease in rate. Our first random forests used 50-100 trees. This range allowed for generally high accuracy with relatively low training time. Depending on how many features we would include a random forest with 100 trees would take several minutes for a laptop to train. The parameter to set how many features each tree will sample was more difficult to gauge. Including too few features and the predictions were not very accurate but we also saw that too many features was also detrimental. Since decision trees are sensitive to training data, then having each tree sample most of the features would make the trees highly correlated. As a result, the random forest would be too sensitive to training data and would not predict accurately with new data.
+	After building and testing many random forests, the model we settled on included only one feature. We took the set score, game score, and point score at every point and combined these into one variable to use as the feature for our random forest. By knowing the exact score at all points, the random forest is best able to differentiate between points favorable for success and those that are unfavorable. 
+	While using only one feature is not most common way to use a random forest, in the case of tennis, it makes the most sense to have only one variable that includes all aspects of the score. If we included separate variables for set score, game score, and point score then each decision tree would have missing pieces of information since each tree samples from the pool of features. Then any cutoffs a given decision tree makes may not be meaningful in reality because it probably has missing information. 
+	Unfortunately, this strategy did not come without disadvantages. Chiefly, the decision trees in our random forest model are much more correlated than decision trees of a random forest with more features. Since there is only one feature in our model, all of the decision trees use the same feature. This makes our random forest much more sensitive to the training data, but due to the size of the training data and the fact that each tree samples from the training data, we feel that the correlation between the trees are sufficiently low.
+  
+## Results
+
+  Our final 
+
+  
+ 
+## Works Cited
+
+
+Sackmann, Jeff. tennis_slam_pointbypoint, (2020), GitHub Repository, https://github.com/JeffSackmann/tennis_slam_pointbypoint
+

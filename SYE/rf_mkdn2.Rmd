@@ -47,8 +47,8 @@ rf_df <-
   mutate(p2_total_points = 
            cumsum(p2_point)) %>%
   ungroup() %>%
-  mutate(point_dif = 
-           p1_total_points - p2_total_points) %>%
+  mutate(point_dif = p1_total_points - p2_total_points) %>%
+  mutate(point_total = p1_total_points + p2_total_points) %>%
   mutate(surface = case_when(
     slam == "ausopen" ~ "hard",
     slam == "usopen" ~ "hard",
@@ -119,7 +119,7 @@ check <-
 rf_df <-
   rf_df %>%
   filter(is.na(set_advantage) == F & is.na(game_advantage) == F & is.na(P1Score) == F & is.na(P2Score) == F & is.na(rank_dif) == F & is.na(result) == F & is.na(point_dif) == F & is.na(surface) == F & is.na(surface_numerical) == F & is.na(log_rank) == F 
-& is.na(importance2) == F & is.na(serve_first) == F & is.na(break_advantage) == F)
+& is.na(importance2) == F & is.na(serve_first) == F & is.na(break_advantage) == F & is.na(point_total) == F)
 
 
 
@@ -182,10 +182,7 @@ test2 <- inner_join(rf_df2, test_matches)
 # fit random forest
 
 
-rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + point_dif + surface_numerical, data = train, ntree = 50, mtry = 5, importance = T)
-
-# add importance, P1Score, P2Score
-rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + rank_dif + point_dif + surface_numerical, data = train, ntree = 75, mtry = 6, importance = T)
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + point_dif + point_total, data = train, ntree = 75, mtry = 5, importance = T)
 
 
 # using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
@@ -230,12 +227,13 @@ print(rf_allscore_real)
 
 ```{r}
 # make sure only points in train are in test
-test2 <-
-  semi_join(x = test2, y = train2, by = "all_score")
+#test2 <-
+#  semi_join(x = test2, y = train2, by = "all_score")
+
 # get predictions
-preds <- predict(rf_allscore_real, test2)
-test2 <- 
-  test2 %>%
+preds <- predict(rf1, test)
+test <- 
+  test %>%
   ungroup %>%
   mutate(predictions = preds) 
 
@@ -244,8 +242,8 @@ test2 <-
 
 ```{r}
 # add categorical variable for probability ranges
-test2 <-
-  test2 %>%
+test <-
+  test %>%
   mutate(ranges = case_when(
     predictions < .1 ~ "ones",
     predictions >= 0.1 & predictions < 0.2 ~ "tens",
@@ -263,11 +261,11 @@ test2 <-
     predictions < 0.5 ~ "loss"
   ))
 
-test2 %>%
+test %>%
   group_by(ranges) %>%
   summarise(prop = mean(result))
 
-test2 %>%
+test %>%
   group_by(ranges2) %>%
   summarise(prop = mean(result))
 
