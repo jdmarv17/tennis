@@ -230,6 +230,7 @@ nottmp_importance2 <- atp_df2 %>% filter(!pointid %in% tmp_importance2$pointid)
 new_atp_df2 <- bind_rows(tmp_importance2, nottmp_importance2)
 nrow(new_atp_df2); nrow(atp_df2)
 
+
 ## one last thing that needs to be done to get the importance data set into 
 ## shape is to replace the importance values where the game score is 6-6
 ## and the point score is 0-0 with what they should be when there is no
@@ -250,6 +251,8 @@ new_atp_df2 <-
     set_score == "2-2" & game_score == "6-6" & point_score == "0-0" &
       slam != "usopen", 0.108, importance))
 
+new_atp_df2 %>%
+  filter(year == "2018")
 # data for first serves
 #final_atp_df1 <-
 #  new_atp_df2 %>%

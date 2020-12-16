@@ -102,6 +102,13 @@ rf_df2 <-
   mutate(scoreID = group_indices(., all_score))
 ```
 
+```{r}
+temp <-
+  rf_df %>%
+  filter(match_num == 1101) %>%
+  select(serve_first, ServeIndicator, p1Set, p2Set, p1Game, p2Game, p1, p2)
+
+```
 
 ```{r}
 # check to see if variables were created correctly
@@ -182,7 +189,7 @@ test2 <- inner_join(rf_df2, test_matches)
 # fit random forest
 
 
-rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + point_dif + point_total, data = train, ntree = 75, mtry = 5, importance = T)
+rf1 <- randomForest(result ~ set_advantage + num_sets + game_advantage + num_games + break_advantage + point_dif + point_total, data = train, ntree = 50, mtry = 5, importance = T)
 
 
 # using set_advantage + game_advantage + log_rank + point_dif + surface_numerical
@@ -198,30 +205,21 @@ rf_allscore <- randomForest(result ~ all_score, data = train2, ntree = 150, mtry
 
 
 ```{r}
-# 1000 tree hpc
-print(rf1)
+### HPC Models
 
-
-# 2000 tree hpc
-print(rf2)
-
-# 1000 tree with all_score
-print(rf_allscore1)
-load("rf_allscore1.RData")
-
-# 2000 tree with all_score, surface
-#load(here("SYE", "rf_allscoreSurface.RData"))
-print(rf_allscoreSurface)
 
 #load("rf_allscoreSurface_small.RData")
 print(rf_allscore)
 
 # this rf came from 2000 tree done on hpc
-#load("rf2.RData")
+load("rf2.RData")
 print(rf2)
 
-load("rf_allscore_real.RData")
-print(rf_allscore_real)
+#load("rf_allscore_real.RData")
+#print(rf_allscore_real)
+
+load("rf3.RData")
+load("rf4.RData")
 ```
 
 
@@ -231,7 +229,7 @@ print(rf_allscore_real)
 #  semi_join(x = test2, y = train2, by = "all_score")
 
 # get predictions
-preds <- predict(rf1, test)
+preds <- predict(rf4, test)
 test <- 
   test %>%
   ungroup %>%
@@ -270,37 +268,63 @@ test %>%
   summarise(prop = mean(result))
 
 # make indicator variable to see if prediction was correct
-test2 <- 
-  test2 %>%
+test <- 
+  test %>%
   mutate(correct = case_when(
     predictions >= 0.5 & result == 1 ~ 1,
     predictions >= 0.5 & result == 0 ~ 0,
     predictions < 0.5 & result == 1 ~ 0,
     predictions < 0.5 & result == 0 ~ 1
   )) 
+
+test %>%
+  summarise(prop = mean(correct))
+
+test %>%
+  group_by(num_sets) %>%
+  summarise(prop = mean(correct))
 ```
 
 
 ```{r}
 test$num_sets <- as.factor(test$num_sets)
-test2$PointNumber <- as.numeric(test2$PointNumber)
+test$PointNumber <- as.numeric(test$PointNumber)
 
-# table showing proportion correct in each set
-test %>%
-  group_by(num_sets) %>%
-  summarise(correct = sum(correct), total = n(), prop = correct/total)
+# fed
+fed <- 
+  test %>%
+  filter(p1 == "Roger Federer" & p2 == "Juan Martin del Potro") %>%
+  select(p1, p2, p1Set, p2Set, p1Game, p2Game, P1Score, 
+         P2Score, PointNumber, PointServer, set_advantage,
+         game_advantage, point_dif, num_sets, num_games, point_total, predictions)
+  
 
-# track predictions throughout match 
-test2 %>% 
-  filter(p1 == "Donald Young" & p2 == "Gael Monfils" & slam == "usopen" & year == "2017") %>%
-  ggplot(., aes(y = predictions, x = PointNumber)) +
-  geom_line()
+nadal <-
+  test %>%
+  filter(p1 == "Rafael Nadal" | p2 == "Rafael Nadal")
 
-test2 %>% 
-  filter(p1 == "Andy Murray" & p2 == "Sam Querrey" & slam == "wimbledon" & year == "2017") %>%
+
+fed %>% 
   ggplot(., aes(y = predictions, x = PointNumber, color = num_sets)) +
-  geom_line()
+  geom_line() +
+  coord_cartesian(ylim = c(0, 1)) 
 ```
+
+```{r}
+sets_tied <-
+  rf_df %>%
+  mutate(tied = ifelse(set_advantage == 0 & num_sets == 2, 1, 0)) %>%
+  filter(tied == 1)
+
+#tied <-
+#  semi_join(x = sets_tied, y = match_list, by = c("p1", "p2", "slam", "year"))
+
+```
+
+
+
+
+
 
 
 

@@ -1,20 +1,9 @@
 library(tidyverse)
 
 
-source("~/Desktop/Fellowship/tennis/point_files/data_cleaning.R")
+source("~/Desktop/Fellowship/tennis/SYE/data_cleaning.R")
 source("~/Desktop/Fellowship/tennis/match_files/merging_matches.R")
 
-
-# can change nmatches to add more players to data set
-#players_keep_atp <- 
-#  final_atp_df1 %>% 
-#  group_by(match_id) %>%
-#  slice(1) %>%
-#  ungroup() %>%
-#  pivot_longer(c(player1, player2), names_to = "player", values_to = "name") %>%
-#  group_by(name) %>%
-#  summarise(nmatches = n()) %>%
-#  filter(nmatches >= 15 & is.na(name) == FALSE)
 
 # add variables for server, returner, and side of court
 nn_mod_df <- 
@@ -152,7 +141,7 @@ tmp3 <-
     tourney_name == "Wimbledon" ~ "wimbledon"
   )) %>%
   separate(tourney_id, into = c("year", "tmp"), sep = "-", extra = "merge") %>%
-  filter(year == "2016" | year == "2017")
+  filter(year == "2016" | year == "2017" | year == "2018")
 
 tmp4 <-
   tmp3 %>%
@@ -252,7 +241,6 @@ rf_df <-
   mutate(game_advantage = as.numeric(p1Game) - as.numeric(p2Game)) %>%
   filter(is.na(p1_rankpoints) == F & is.na(p2_rankpoints) == F) %>%
   mutate(rank_dif = p1_rankpoints - p2_rankpoints) 
-
 
 
 
