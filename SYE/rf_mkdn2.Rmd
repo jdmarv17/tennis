@@ -9,13 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, echo = FALSE}
 library(here)
 library(party)
 library(tidyverse)
 library(forcats)
 library(randomForest)
-source("merging_variables.R")
+source(here("SYE", "merging_variables.R"))
 ```
 
 
@@ -358,6 +358,32 @@ sets_tied %>%
 ```
 
 
+```{r}
+prop_test <-
+  rf_df %>% 
+  mutate(first_set_winner = case_when(
+    num_sets == 1 & set_advantage == 1 ~ 0, 
+    num_sets == 1 & set_advantage == -1 ~ 1)) %>%
+  group_by(p1, p2, slam, year) %>%
+  fill(first_set_winner, .direction = "updown") %>% 
+  filter(p1Set == 1 & p2Set == 1) %>%
+  ungroup() %>%
+  unite("match", c(p1, p2, slam, year), sep = "-")
+
+prop_test <- prop_test[!duplicated(prop_test$match), ]
+
+prop_test <-
+  prop_test %>%
+  mutate(match_result_and_set1 = case_when(
+    first_set_winner == 0 & result == 0 ~ 1,
+    first_set_winner == 1 & result == 1 ~ 1,
+    first_set_winner == 0 & result == 1 ~ 0,
+    first_set_winner == 1 & result == 0 ~ 0
+  ))
+
+prop_test %>%
+  summarise(prop = mean(match_result_and_set1))
+```
 
 
 

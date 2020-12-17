@@ -3,61 +3,61 @@ library(tidyverse)
 ## can source this file to do all of this data cleaning automatically
 
 # 2018
-wimbledonpoints2018 <- read_csv("data/2018-wimbledon-points.csv")
-wimbledonmatches2018 <- read_csv("data/2018-wimbledon-matches.csv")
+wimbledonpoints2018 <- read_csv(here("SYE", "data", "2018-wimbledon-points.csv"))
+wimbledonmatches2018 <- read_csv(here("SYE", "data", "2018-wimbledon-matches.csv"))
 wimbledon2018 <- left_join(wimbledonmatches2018,
                            wimbledonpoints2018, by = "match_id")
 
-usopenpoints2018 <- read_csv("data/2018-usopen-points.csv")
-usopenmatches2018 <- read_csv("data/2018-usopen-matches.csv")
+usopenpoints2018 <- read_csv(here("SYE", "data", "2018-usopen-points.csv"))
+usopenmatches2018 <- read_csv(here("SYE", "data", "2018-usopen-matches.csv"))
 usopen2018 <- left_join(usopenmatches2018, usopenpoints2018, by = "match_id")
 
-ausopenpoints2018 <- read_csv("data/2018-ausopen-points.csv")
-ausopenmatches2018 <- read_csv("data/2018-ausopen-matches.csv")
+ausopenpoints2018 <- read_csv(here("SYE", "data", "2018-ausopen-points.csv"))
+ausopenmatches2018 <- read_csv(here("SYE", "data", "2018-ausopen-matches.csv"))
 ausopen2018 <- left_join(ausopenmatches2018, ausopenpoints2018, by = "match_id")
 
-frenchopenpoints2018 <- read_csv("data/2018-frenchopen-points.csv")
-frenchopenmatches2018 <- read_csv("data/2018-frenchopen-matches.csv")
+frenchopenpoints2018 <- read_csv(here("SYE", "data", "2018-frenchopen-points.csv"))
+frenchopenmatches2018 <- read_csv(here("SYE", "data", "2018-frenchopen-matches.csv"))
 frenchopen2018 <- left_join(frenchopenmatches2018, frenchopenpoints2018, by = "match_id")
 
 
 # 2017
-wimbledonpoints2017 <- read_csv("data/2017-wimbledon-points.csv")
-wimbledonmatches2017 <- read_csv("data/2017-wimbledon-matches.csv")
+wimbledonpoints2017 <- read_csv(here("SYE", "data", "2017-wimbledon-points.csv"))
+wimbledonmatches2017 <- read_csv(here("SYE", "data", "2017-wimbledon-matches.csv"))
 wimbledon2017 <- left_join(wimbledonmatches2017,
   wimbledonpoints2017, by = "match_id")
 
-usopenpoints2017 <- read_csv("data/2017-usopen-points.csv")
-usopenmatches2017 <- read_csv("data/2017-usopen-matches.csv")
+usopenpoints2017 <- read_csv(here("SYE", "data", "2017-usopen-points.csv"))
+usopenmatches2017 <- read_csv(here("SYE", "data", "2017-usopen-matches.csv"))
 usopen2017 <- left_join(usopenmatches2017, usopenpoints2017, by = "match_id")
 
-ausopenpoints2017 <- read_csv("data/2017-ausopen-points.csv")
-ausopenmatches2017 <- read_csv("data/2017-ausopen-matches.csv")
+ausopenpoints2017 <- read_csv(here("SYE", "data", "2017-ausopen-points.csv"))
+ausopenmatches2017 <- read_csv(here("SYE", "data", "2017-ausopen-matches.csv"))
 ausopen2017 <- left_join(ausopenmatches2017, ausopenpoints2017, by = "match_id")
 
-frenchopenpoints2017 <- read_csv("data/2017-frenchopen-points.csv")
-frenchopenmatches2017 <- read_csv("data/2017-frenchopen-matches.csv")
+frenchopenpoints2017 <- read_csv(here("SYE", "data", "2017-frenchopen-points.csv"))
+frenchopenmatches2017 <- read_csv(here("SYE", "data", "2017-frenchopen-matches.csv"))
 frenchopen2017 <- left_join(frenchopenmatches2017, frenchopenpoints2017, by = "match_id")
 
 # 2016
-wimbledonpoints2016 <- read_csv("data/2016-wimbledon-points.csv")
-wimbledonmatches2016 <- read_csv("data/2016-wimbledon-matches.csv")
+wimbledonpoints2016 <- read_csv(here("SYE", "data", "2016-wimbledon-points.csv"))
+wimbledonmatches2016 <- read_csv(here("SYE", "data", "2016-wimbledon-matches.csv"))
 wimbledon2016 <- left_join(wimbledonmatches2016,
                            wimbledonpoints2016, by = "match_id")
 
-usopenpoints2016 <- read_csv("data/2016-usopen-points.csv")
-usopenmatches2016 <- read_csv("data/2016-usopen-matches.csv")
+usopenpoints2016 <- read_csv(here("SYE", "data", "2016-usopen-points.csv"))
+usopenmatches2016 <- read_csv(here("SYE", "data", "2016-usopen-matches.csv"))
 usopen2016 <- left_join(usopenmatches2016, usopenpoints2016, by = "match_id")
 
-ausopenpoints2016 <- read_csv("data/2016-ausopen-points.csv")
-ausopenmatches2016 <- read_csv("data/2016-ausopen-matches.csv")
+ausopenpoints2016 <- read_csv(here("SYE", "data", "2016-ausopen-points.csv"))
+ausopenmatches2016 <- read_csv(here("SYE", "data", "2016-ausopen-matches.csv"))
 ausopen2016 <- left_join(ausopenmatches2016, ausopenpoints2016, by = "match_id")
 ausopen2016 <-
   ausopen2016 %>%
   mutate(RallyCount = NA_integer_, ServeWidth = NA_character_, ServeDepth = NA_character_, ReturnDepth = NA_character_)
 
-frenchopenpoints2016 <- read_csv("data/2016-frenchopen-points.csv")
-frenchopenmatches2016 <- read_csv("data/2016-frenchopen-matches.csv")
+frenchopenpoints2016 <- read_csv(here("SYE", "data", "2016-frenchopen-points.csv"))
+frenchopenmatches2016 <- read_csv(here("SYE", "data", "2016-frenchopen-matches.csv"))
 frenchopen2016 <- left_join(frenchopenmatches2016, frenchopenpoints2016, by = "match_id")
 
 

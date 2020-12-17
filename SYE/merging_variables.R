@@ -1,8 +1,8 @@
 library(tidyverse)
 
 
-source("~/Desktop/Fellowship/tennis/SYE/data_cleaning.R")
-source("~/Desktop/Fellowship/tennis/match_files/merging_matches.R")
+source(here("SYE", "data_cleaning.R"))
+source(here("SYE", "merging_matches.R"))
 
 
 # add variables for server, returner, and side of court
