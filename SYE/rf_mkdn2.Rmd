@@ -311,13 +311,49 @@ fed %>%
 ```
 
 ```{r}
+# matches that get to 1-1
+tied_matches <-
+  rf_df %>%
+  filter(p1Set == 1 & p2Set == 1) %>%
+  unite("match", c(p1, p2, slam, year), sep = "-")
+
+tied_matches <- tied_matches[!duplicated(tied_matches$match),]
+
+# first_set (0 p1 wins, 1 p2 wins) -- this is a list of matches with who won first set
 sets_tied <-
   rf_df %>%
-  mutate(tied = ifelse(set_advantage == 0 & num_sets == 2, 1, 0)) %>%
-  filter(tied == 1)
+  group_by(p1, p2, slam, year) %>% 
+  filter(num_sets == 0) %>%
+  mutate(first_set = case_when(
+    PointNumber == max(PointNumber) & p1Game > p2Game ~ 0, # whichever player has more games won the set
+    PointNumber == max(PointNumber) & p1Game < p2Game ~ 1 
+    )) %>%
+  filter(is.na(first_set) == F) %>%
+  ungroup() %>%
+  unite("match", c(p1, p2, slam, year), sep = "-")
+# lost 170 matches or so somehow
 
-#tied <-
-#  semi_join(x = sets_tied, y = match_list, by = c("p1", "p2", "slam", "year"))
+# keep matches that reached 1-1 sets
+sets_tied <-
+  sets_tied %>%
+  filter(match %in% tied_matches$match)
+
+# first_setWinner (0 if player who won first 
+# set lost match, 1 if player who won first set wins match) 
+sets_tied <-
+  sets_tied %>%
+  mutate(first_setWinner = case_when(
+    first_set == 0 & result == 0 ~ 1,
+    first_set == 1 & result == 1 ~ 1,
+    first_set == 0 & result == 1 ~ 0,
+    first_set == 1 & result == 0 ~ 0
+  ))
+
+### need to figure out how to get one entry per match
+sets_tied %>%
+  summarise(prop = mean(first_setWinner))
+  
+  
 
 ```
 
