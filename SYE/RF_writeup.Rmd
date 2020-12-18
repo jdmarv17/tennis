@@ -41,7 +41,6 @@ library(here)
   
   However, tennis has no equivalent variable. Tennis has no game clock that limits the length of matches. In fact, there have been tennis matches that have lasted over 10 hours. Since this is the case, improving the accuracy of predictions over the course of a tennis match is a slightly more difficult task. Much of the difficulty in the later stages of our project stemmed from this inherent difference between football and tennis.
 
-
 ## Random Forests
 
   In order to explain what a random forest is, it is first important to introduce decision trees. A decision tree can be considered a set of rules that separates data into groups based on some variable. At the beginning, the first rule splits the data into two branches. Each of these branches then have another rule which splits the two branches into four. This process can be repeated until the data left on each branch are separated into unique groups. For example, we may have a data set with a response variable that is a categorical variable. We could specify a number variables for a decision tree to use to split the data so that the data points on a given branch are all of the same category. 
