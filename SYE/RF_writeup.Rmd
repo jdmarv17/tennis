@@ -17,7 +17,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, results = "hide")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 ```
 
@@ -81,7 +81,7 @@ Our final random forest model also used 1500 decision trees and five features pe
   If we look at the graph we can see the random forest suddenly adjust its predictions in the second set. Up until point 90 the random forest is predicting del Potro to win but Federer is able to swing all of random forest's features in his favor except for set advantage. Obviously, a set advantage is more important than the other features so we see that the random forest is still predicting del Potro will win with 62% probability. Although this match was completed years ago, it is interesting to watch this game played while considering the path of the match-outcome probability plotted.
   
 ```{r}
-knitr::include_graphics("~/Desktop/Fellowship/tennis/SYE/pics/fed_delpo.png")
+knitr::include_graphics(here("SYE", "pics", "fed_delpo.png"))
 ```
 
 ## Conclusion and Future Work
