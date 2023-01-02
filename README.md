@@ -5,7 +5,7 @@ This project is an attempt to provide an analysis of the serve in professional t
 
 ### Link to Shiny app:
 
-<https://jdmarv17.shinyapps.io/tennis_app/>
+<https://stlawu.shinyapps.io/Tennis_Serve/>
 
 ### References:
 
