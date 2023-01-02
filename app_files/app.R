@@ -235,7 +235,7 @@ matches_keep_wta <-
 
 # read in new files
 gs_decade_small <-
-  read_csv("data/final_atp.csv") 
+  read_csv("data/final_atp.csv")
 
 wta_decade_small <-
   read_csv("data/final_wta.csv")
@@ -434,8 +434,21 @@ ui <- fluidPage(
     mainPanel(
       
       tabsetPanel(type = "tabs",
-                  tabPanel("Plot", plotOutput("fedBT"), br(), plotOutput("fedBT2")),
-                  tabPanel("Explanation", textOutput("summary"))
+                  tabPanel("Plot", plotOutput("fedBT"), br(), plotOutput("fedBT2"),
+                           br(),
+                           "A write-up of the entire project, including further description of the app, can be found at",
+                           a("https://github.com/jdmarv17/tennis/blob/master/write_up_files/first_writeup.pdf", href="https://github.com/jdmarv17/tennis/blob/master/write_up_files/first_writeup.pdf", target="_blank"),
+                           br(),
+                           "________________________________"),
+                  
+                  
+                  tabPanel("Explanation", 
+                           "A write-up of the entire project, including further description of the app, can be found at",
+                           a("https://github.com/jdmarv17/tennis/blob/master/write_up_files/first_writeup.pdf", href="https://github.com/jdmarv17/tennis/blob/master/write_up_files/first_writeup.pdf", target="_blank"),
+                           "Code for the app can be found at",
+                           a("https://github.com/jdmarv17/tennis/blob/master/app_files/app.R",
+                             href="https://github.com/jdmarv17/tennis/blob/master/app_files/app.R", target="_blank"),
+                           textOutput("summary"))
       )
     )
   )
@@ -519,10 +532,11 @@ server <- function(input, output, session) {
     tmp()[rep(seq_len(nrow(tmp())), each = 30),])  
   
   #data.frame(rep(fed_ability, times = length(matches_keep) - 1))
-  combined_abilities <- reactive(
+  combined_abilities <- reactive({
     bind_cols(final_ability(), opponent_ability()) %>%
-      mutate(fed_logodds = (ability - ability1)) %>%
-      mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds))))
+      mutate(fed_logodds = (ability...1 - ability...4)) %>%
+      mutate(pred_prob = exp(fed_logodds) / (1 + exp(fed_logodds)))
+    })
   
   
   plot_df <- reactive(
@@ -549,7 +563,7 @@ server <- function(input, output, session) {
   one player winning using a contest-level predictor of first serve percentage.
   The player of interst's serve range was used while the opponents' mean serve percentage
   was used to find these lines.
-  The data used in the app was obtained from Jeff Sackmann under a Creative Commons License at https://github.com/JeffSackmann/tennis_atp and https://github.com/JeffSackmann/tennis_wta"}) # add something about opponent - 
+  The data used in the app was obtained from Jeff Sackmann under a Creative Commons License at https://github.com/JeffSackmann/tennis_atp and https://github.com/JeffSackmann/tennis_wta . We thank Jeff Sackmann for making this data available for use in student projects."}) # add something about opponent - 
   # mean serve
   
   
@@ -566,7 +580,8 @@ server <- function(input, output, session) {
            y = "Predicted Match Win Probability", colour = "Opponents") +
       coord_cartesian(ylim = c(0, 1), xlim = c(0.35, 1)) +
       theme_economist(base_size = 20) +
-      theme(legend.position = "none") 
+      theme(legend.position = "none") +
+      scale_colour_viridis_d()
   })
   
   output$fedBT2 <-
@@ -577,7 +592,7 @@ server <- function(input, output, session) {
              y = "Predicted Match Win Probability") +
         coord_cartesian(ylim = c(0, 1), xlim = c(0.35, 1)) +
         theme_economist(base_size = 20) +
-        theme(legend.position = "none") 
+        theme(legend.position = "none")
       
     })
 }

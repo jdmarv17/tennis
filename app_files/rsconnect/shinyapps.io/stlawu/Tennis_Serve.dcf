@@ -1,0 +1,14 @@
+name: Tennis_Serve
+title: Tennis_Serve
+username:
+account: stlawu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7965896
+bundleId: 6690711
+url: https://stlawu.shinyapps.io/Tennis_Serve/
+when: 1672688254.60409
+lastSyncTime: 1672688254.6041
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: app_test.R
